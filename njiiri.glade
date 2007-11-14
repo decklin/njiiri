@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.2.2 on Wed Nov 14 11:27:29 2007 by dfoster@bechet-->
+<!--Generated with glade3 3.2.2 on Wed Nov 14 12:15:19 2007 by dfoster@bechet-->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="visible">True</property>
@@ -167,6 +167,8 @@
                     <property name="spacing">5</property>
                     <child>
                       <widget class="GtkImage" id="cover_img">
+                        <property name="width_request">100</property>
+                        <property name="height_request">1</property>
                         <property name="visible">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                         <property name="pixbuf">think.jpg</property>
@@ -188,7 +190,6 @@
                             <property name="label" translatable="yes" context="yes">&lt;big&gt;&lt;big&gt;&lt;b&gt;Just Won't Do Right&lt;/b&gt;&lt;/big&gt;&lt;/big&gt;</property>
                             <property name="use_markup">True</property>
                             <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
-                            <property name="single_line_mode">True</property>
                           </widget>
                         </child>
                         <child>
@@ -198,7 +199,6 @@
                             <property name="label" translatable="yes" context="yes">&lt;big&gt;Lyn Collins&lt;/big&gt;</property>
                             <property name="use_markup">True</property>
                             <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
-                            <property name="single_line_mode">True</property>
                           </widget>
                           <packing>
                             <property name="position">1</property>
@@ -211,7 +211,6 @@
                             <property name="label" translatable="yes" context="yes">&lt;small&gt;track 2/9, &lt;i&gt;Think (About It)&lt;/i&gt;&lt;/small&gt;</property>
                             <property name="use_markup">True</property>
                             <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
-                            <property name="single_line_mode">True</property>
                           </widget>
                           <packing>
                             <property name="position">2</property>
