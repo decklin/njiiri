@@ -27,7 +27,7 @@ class Njiiri
         Gtk.main_quit
     end
 
-    def on_library_btn_clicked(*widget)
+    def on_browse_btn_clicked(*widget)
         @glade.get_widget("browser_win").show
     end
 
