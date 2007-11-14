@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.2.2 on Wed Nov 14 03:35:00 2007 by decklin@dolphy-->
+<!--Generated with glade3 3.2.2 on Wed Nov 14 03:42:14 2007 by decklin@dolphy-->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="visible">True</property>
@@ -10,7 +10,7 @@
     <property name="default_height">440</property>
     <signal name="delete_event" handler="on_quit"/>
     <child>
-      <widget class="GtkVBox" id="player_toplevel_vbox">
+      <widget class="GtkVBox" id="player_vbox">
         <property name="visible">True</property>
         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
         <child>
@@ -112,7 +112,7 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkToolButton" id="shuf_btn">
+              <widget class="GtkToolButton" id="shuffle_btn">
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="label" translatable="yes" context="yes">Shuffle</property>
@@ -182,7 +182,7 @@
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkVBox" id="title_vbox">
+                          <widget class="GtkVBox" id="song_vbox">
                             <property name="visible">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                             <child>
@@ -222,7 +222,7 @@
                               </packing>
                             </child>
                             <child>
-                              <widget class="GtkProgressBar" id="pos">
+                              <widget class="GtkProgressBar" id="pos_bar">
                                 <property name="visible">True</property>
                                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                                 <property name="fraction">0.86000001430511475</property>
@@ -241,7 +241,7 @@
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkVScale" id="vscale1">
+                          <widget class="GtkVScale" id="volume_vscale">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -264,14 +264,14 @@
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkScrolledWindow" id="plist_sw">
+                      <widget class="GtkScrolledWindow" id="playlist_sw">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                         <property name="hscrollbar_policy">GTK_POLICY_NEVER</property>
                         <property name="shadow_type">GTK_SHADOW_IN</property>
                         <child>
-                          <widget class="GtkTreeView" id="plist_tree">
+                          <widget class="GtkTreeView" id="playlist_tree">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -293,7 +293,7 @@
           </packing>
         </child>
         <child>
-          <widget class="GtkStatusbar" id="status">
+          <widget class="GtkStatusbar" id="player_status">
             <property name="visible">True</property>
             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
             <property name="spacing">3</property>
