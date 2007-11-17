@@ -89,8 +89,12 @@ class Njiiri
   end
 
   def on_info_box_size_allocate(widget, a)
-    @widgets.cover_img.width_request = a.height
-    @widgets.cover_img.height_request = a.height
+    if @widgets.cover_img.width_request == a.height
+      @widgets.cover_img.height_request = 1
+    else
+      @widgets.cover_img.width_request = a.height
+      @widgets.cover_img.height_request = a.height
+    end
   end
 
   # TOOLBAR
