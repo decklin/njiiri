@@ -110,6 +110,9 @@ class Njiiri
       title_label.label = TITLE_FORMAT % clean(current.title)
       artist_label.label = ARTIST_FORMAT % clean(current.artist)
       album_label.label = ALBUM_FORMAT % clean(current.album)
+
+      #elapsed, total = @mpd.status["time"].split(":")
+      #self.time_cb(elapsed, total)
     end
   end
 
@@ -120,7 +123,7 @@ class Njiiri
       pos_bar.text = POSITION_FORMAT % \
         [elapsed / 60, elapsed % 60, total / 60, total % 60]
     else
-      pos_bar.fraction = 0
+      pos_bar.fraction = 0.0
       pos_bar.text = BLANK
     end
   end
