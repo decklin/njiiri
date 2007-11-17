@@ -1,30 +1,81 @@
 #!/usr/bin/env ruby
 
+require 'rubygems'
+require 'librmpd'
 require 'libglade2'
 
 class Njiiri
-    TITLE = "Njiiri MPD Client"
-    NAME = "Njiiri"
-    VERSION = "0.1"
+  TITLE = "Njiiri MPD Client"
+  NAME = "Njiiri"
+  VERSION = "0.1"
 
-    def initialize(path, root = nil, domain = nil, localedir = nil,
-                   flag = GladeXML::FILE)
-        @glade = GladeXML.new(path) { |handler| method(handler) }
-    end
+  def initialize(path, root = nil, domain = nil, localedir = nil,
+          flag = GladeXML::FILE)
+    @glade = GladeXML.new(path) { |handler| method(handler) }
+  end
 
-    def on_quit(*widget)
-        Gtk.main_quit
-    end
+  def connect(host, port, pass)
+    @mpd = MPD.new host, port
+    @mpd.connect
+    @mpd.password pass if pass
 
-    def on_browse_btn_clicked(*widget)
-        @glade.get_widget("browser_win").show
-    end
+    song = @mpd.current_song
+    puts "Current Song: #{song.artist} - #{song.title}"
+  end
 
-    def on_close_btn_clicked(*widget)
-        @glade.get_widget("browser_win").hide
-    end
+  def on_quit(*widget)
+    @mpd.disconnect
+    Gtk.main_quit
+  end
+
+  def on_browse_btn_clicked(*widget)
+    @glade.get_widget("browser_win").show
+  end
+
+  def on_close_btn_clicked(*widget)
+    @glade.get_widget("browser_win").hide
+  end
+
+  def on_play_btn_clicked
+    @mpd.play
+  end
+
+  def on_prev_btn_clicked
+    @mpd.prev
+  end
+
+  def on_next_btn_clicked
+    @mpd.next
+  end
+
+  def on_clear_btn_clicked
+    @mpd.clear
+  end
+
+  def on_repeat_btn_clicked
+    @mpd.repeat = !@mpd.repeat?
+  end
+
+  def on_shuffle_btn_clicked
+    @mpd.random = !@mpd.random?
+  end
+end
+
+config = {
+  'host' => 'localhost',
+  'password' => nil,
+  'port' => 6600
+  }
+
+File.open(File.expand_path("~/.njiirirc")) do |y|
+  YAML.load_documents(y) do |doc|
+    config = doc
+  end
 end
 
 Gtk.init
+
 njiiri = Njiiri.new(File.dirname($0)+"/njiiri.glade", nil, Njiiri::NAME)
+njiiri.connect config['host'], config['port'], config['password']
+
 Gtk.main

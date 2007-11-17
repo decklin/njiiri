@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.2.2 on Wed Nov 14 12:15:19 2007 by dfoster@bechet-->
+<!--Generated with glade3 3.2.2 on Fri Nov 16 19:07:29 2007 by decklin@dolphy-->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="visible">True</property>
@@ -23,6 +23,7 @@
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="stock_id">gtk-media-play</property>
+                <signal name="clicked" handler="on_play_btn_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -33,6 +34,7 @@
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="stock_id">gtk-media-previous</property>
+                <signal name="clicked" handler="on_prev_btn_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -43,6 +45,7 @@
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="stock_id">gtk-media-next</property>
+                <signal name="clicked" handler="on_next_btn_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -85,6 +88,7 @@
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="stock_id">gtk-clear</property>
+                <signal name="clicked" handler="on_clear_btn_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -106,6 +110,7 @@
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="label" translatable="yes" context="yes">Repeat</property>
                 <property name="icon_name">stock_repeat</property>
+                <signal name="clicked" handler="on_repeat_btn_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -117,6 +122,7 @@
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="label" translatable="yes" context="yes">Shuffle</property>
                 <property name="icon_name">stock_shuffle</property>
+                <signal name="clicked" handler="on_shuffle_btn_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
