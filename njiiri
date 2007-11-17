@@ -42,11 +42,15 @@ class Njiiri
     @mpd.connect true
     @mpd.password pass if pass
 
-    @old_volume = @mpd.volume
-
     @glade.get_widget("repeat_btn").active = @mpd.repeat?
     @glade.get_widget("shuffle_btn").active = @mpd.random?
+
+    @old_volume = @mpd.volume
     @glade.get_widget("volume_scale").value = @mpd.volume.to_f
+
+    if @mpd.playing?
+      @glade.get_widget("play_btn").stock_id = Gtk::Stock::MEDIA_PAUSE
+    end
   end
 
   # MAIN WINDOW
@@ -58,8 +62,14 @@ class Njiiri
 
   # TOOLBAR
 
-  def on_play_btn_clicked
-    @mpd.play
+  def on_play_btn_clicked(widget)
+    if @mpd.playing?
+      @mpd.pause = true
+      widget.stock_id = Gtk::Stock::MEDIA_PLAY
+    else
+      @mpd.pause = false
+      widget.stock_id = Gtk::Stock::MEDIA_PAUSE
+    end
   end
 
   def on_prev_btn_clicked
