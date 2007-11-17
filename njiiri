@@ -25,6 +25,7 @@ class Njiiri
   ARTIST_FORMAT = "<big>%s</big>"
   ALBUM_FORMAT = "<small>%s</small>"
   POSITION_FORMAT = "%d:%02d / %d:%02d"
+  WINDOW_FORMAT = "%s - %s"
 
   # This is here to fill in GTK labels so that they don't shrink from a lack
   # of text, which is visually annoying.
@@ -213,28 +214,35 @@ class Njiiri
   end
 
   def update_info(current)
-    title_label = @widgets.title_label
-    artist_label = @widgets.artist_label
-    album_label = @widgets.album_label
-    if current.nil?
-      title_label.label = TITLE_FORMAT % BLANK
-      artist_label.label = ARTIST_FORMAT % BLANK
-      album_label.label = ALBUM_FORMAT % BLANK
+    if @mpd.connected? and current
+      @widgets.player_win.title = WINDOW_FORMAT % [current.artist, current.title]
+      @widgets.title_label.label = TITLE_FORMAT % CGI::escapeHTML(current.title)
+      @widgets.artist_label.label = ARTIST_FORMAT % CGI::escapeHTML(current.artist)
+      @widgets.album_label.label = ALBUM_FORMAT % CGI::escapeHTML(current.album)
+      if @mpd.playing?
+        elapsed, total = @mpd.status["time"].split(":").collect {|t| t.to_i }
+        self.update_pos(elapsed, total)
+      else
+        self.update_pos(0, 0)
+      end
     else
-      title_label.label = TITLE_FORMAT % CGI::escapeHTML(current.title)
-      artist_label.label = ARTIST_FORMAT % CGI::escapeHTML(current.artist)
-      album_label.label = ALBUM_FORMAT % CGI::escapeHTML(current.album)
-      elapsed, total = @mpd.status["time"].split(":").collect {|t| t.to_i }
-      self.update_pos(elapsed, total)
+      @widgets.player_win.title = NAME
+      @widgets.title_label.label = TITLE_FORMAT % BLANK
+      @widgets.artist_label.label = ARTIST_FORMAT % BLANK
+      @widgets.album_label.label = ALBUM_FORMAT % BLANK
     end
   end
 
   def update_status
-    if @status_msg
-      @widgets.player_status.remove(@status_ctx, @status_msg)
+    if @mpd.connected?
+        if @status_msg
+          @widgets.player_status.remove(@status_ctx, @status_msg)
+        end
+        text = "Volume: #{@mpd.volume}%"
+        @status_msg = @widgets.player_status.push(@status_ctx, text)
+    else
+      @status_msg = @widgets.player_status.push(@status_ctx, "Disconnected")
     end
-    text = "Volume: #{@old_volume}%"
-    @status_msg = @widgets.player_status.push(@status_ctx, text)
   end
 
 end
