@@ -36,21 +36,41 @@ class Njiiri
   end
 
   def connect(host, port, pass)
+    @glade.get_widget("host_entry").text = host
+    @glade.get_widget("port_entry").text = port.to_s
+    @glade.get_widget("pass_entry").text = pass
+
     @mpd = MPD.new host, port
     @mpd.register_callback(self.method('song_cb'), MPD::CURRENT_SONG_CALLBACK)
     @mpd.register_callback(self.method('time_cb'), MPD::TIME_CALLBACK)
-    @mpd.connect true
-    @mpd.password pass if pass
+
+    begin
+      @mpd.connect true
+      @mpd.password pass if pass
+      self.enable_toolbuttons(true)
+      @glade.get_widget("connect_btn").stock_id = Gtk::Stock::DISCONNECT
+      self.connected
+    rescue
+      self.enable_toolbuttons(false)
+    end
+  end
+
+  def enable_toolbuttons(sensitive)
+    %w{play_btn prev_btn next_btn open_btn saveas_btn clear_btn repeat_btn shuffle_btn}.each do |b|
+      @glade.get_widget(b).sensitive = sensitive
+    end
+  end
+
+  def connected
+    if @mpd.playing?
+      @glade.get_widget("play_btn").stock_id = Gtk::Stock::MEDIA_PAUSE
+    end
 
     @glade.get_widget("repeat_btn").active = @mpd.repeat?
     @glade.get_widget("shuffle_btn").active = @mpd.random?
 
     @old_volume = @mpd.volume
     @glade.get_widget("volume_scale").value = @mpd.volume.to_f
-
-    if @mpd.playing?
-      @glade.get_widget("play_btn").stock_id = Gtk::Stock::MEDIA_PAUSE
-    end
   end
 
   # MAIN WINDOW
@@ -100,8 +120,14 @@ class Njiiri
     @mpd.random = widget.active?
   end
 
-  def on_hangup_btn_clicked
-    @mpd.disconnect
+  def on_connect_btn_clicked(widget)
+    if @mpd.connected?
+      self.enable_toolbuttons(false)
+      widget.stock_id = Gtk::Stock::CONNECT
+      @mpd.disconnect
+    else
+      @glade.get_widget("connect_dlg").show
+    end
   end
 
   def on_volume_scale_value_changed(widget)
@@ -125,6 +151,20 @@ class Njiiri
   def on_save_btn_clicked
     @mpd.save(@glade.get_widget("name_entry").text)
     @glade.get_widget("saveas_dlg").hide
+  end
+
+  # CONNECT DIALOG
+
+  def on_conn_cancel_btn_clicked
+    @glade.get_widget("connect_dlg").hide
+  end
+
+  def on_do_connect_btn_clicked
+    @glade.get_widget("connect_dlg").hide
+    host = @glade.get_widget("host_entry").text
+    port = @glade.get_widget("port_entry").text.to_i
+    pass = @glade.get_widget("pass_entry").text
+    self.connect(host, port, pass)
   end
 
   # CALLBACKS
