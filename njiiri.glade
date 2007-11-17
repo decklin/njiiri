@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.2.2 on Sat Nov 17 01:20:35 2007 by decklin@dolphy-->
+<!--Generated with glade3 3.2.2 on Sat Nov 17 01:52:00 2007 by decklin@dolphy-->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="visible">True</property>
@@ -254,6 +254,7 @@
                         <property name="restrict_to_fill_level">False</property>
                         <property name="fill_level">0</property>
                         <property name="digits">0</property>
+                        <property name="draw_value">False</property>
                         <signal name="value_changed" handler="on_volume_scale_value_changed"/>
                       </widget>
                       <packing>

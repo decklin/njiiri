@@ -65,6 +65,10 @@ class Njiiri
 
     @old_volume = @mpd.volume
     @glade.get_widget("volume_scale").value = @mpd.volume.to_f
+
+    @status_msg = nil
+    @status_ctx = @glade.get_widget("player_status").get_context_id(TITLE)
+    self.update_status
   end
 
   # MAIN WINDOW
@@ -72,6 +76,11 @@ class Njiiri
   def on_quit(widget, event)
     @mpd.disconnect
     Gtk.main_quit
+  end
+
+  def update_status
+    @glade.get_widget("player_status").remove(@status_ctx, @status_msg) if @status_msg
+    @status_msg = @glade.get_widget("player_status").push(@status_ctx, "Volume: #{@old_volume}%")
   end
 
   # TOOLBAR
@@ -127,6 +136,7 @@ class Njiiri
   def on_volume_scale_value_changed(widget)
     if widget.value.to_i != @old_volume
       @old_volume = @mpd.volume = widget.value.to_i
+      self.update_status
     end
   end
 
