@@ -100,6 +100,10 @@ class Njiiri
     @mpd.random = widget.active?
   end
 
+  def on_hangup_btn_clicked
+    @mpd.disconnect
+  end
+
   def on_volume_scale_value_changed(widget)
     if widget.value.to_i != @old_volume
       @old_volume = @mpd.volume = widget.value.to_i
