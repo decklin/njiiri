@@ -115,7 +115,7 @@ class Njiiri
 
   def time_cb(elapsed, total)
     pos_bar = @glade.get_widget("pos_bar")
-    if elapsed > 0:
+    if total > 0:
       pos_bar.fraction = elapsed.to_f / total
       pos_bar.text = POSITION_FORMAT % \
         [elapsed / 60, elapsed % 60, total / 60, total % 60]
