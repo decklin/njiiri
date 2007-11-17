@@ -118,6 +118,11 @@ class Njiiri
     @glade.get_widget("saveas_dlg").hide
   end
 
+  def on_save_btn_clicked
+    @mpd.save(@glade.get_widget("name_entry").text)
+    @glade.get_widget("saveas_dlg").hide
+  end
+
   # CALLBACKS
 
   def song_cb(current)
