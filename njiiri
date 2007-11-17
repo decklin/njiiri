@@ -6,6 +6,15 @@ require 'thread'
 require 'libglade2'
 require 'cgi'
 
+class WidgetBucket
+  def initialize(glade)
+    @glade = glade
+  end
+  def method_missing(m, *a)
+    @glade.get_widget(m.to_s)
+  end
+end
+
 class Njiiri
 
   TITLE = "Njiiri MPD Client"
@@ -27,12 +36,13 @@ class Njiiri
   def initialize(path, root = nil, domain = nil, localedir = nil,
                  flag = GladeXML::FILE)
     @glade = GladeXML.new(path) { |handler| method(handler) }
+    @widgets = WidgetBucket.new(@glade)
   end
 
   def connect(host, port, pass)
-    @glade.get_widget("host_entry").text = host
-    @glade.get_widget("port_entry").text = port.to_s
-    @glade.get_widget("pass_entry").text = pass
+    @widgets.host_entry.text = host
+    @widgets.port_entry.text = port.to_s
+    @widgets.pass_entry.text = pass
 
     @mpd = MPD.new host, port
     @mpd.register_callback(self.method('song_cb'), MPD::CURRENT_SONG_CALLBACK)
@@ -42,7 +52,7 @@ class Njiiri
       @mpd.connect true
       @mpd.password pass if pass
       self.enable_toolbuttons(true)
-      @glade.get_widget("connect_btn").stock_id = Gtk::Stock::DISCONNECT
+      @widgets.connect_btn.stock_id = Gtk::Stock::DISCONNECT
       self.connected
     rescue
       self.enable_toolbuttons(false)
@@ -57,17 +67,17 @@ class Njiiri
 
   def connected
     if @mpd.playing?
-      @glade.get_widget("play_btn").stock_id = Gtk::Stock::MEDIA_PAUSE
+      @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PAUSE
     end
 
-    @glade.get_widget("repeat_btn").active = @mpd.repeat?
-    @glade.get_widget("shuffle_btn").active = @mpd.random?
+    @widgets.repeat_btn.active = @mpd.repeat?
+    @widgets.shuffle_btn.active = @mpd.random?
 
     @old_volume = @mpd.volume
-    @glade.get_widget("volume_scale").value = @mpd.volume.to_f
+    @widgets.volume_scale.value = @mpd.volume.to_f
 
     @status_msg = nil
-    @status_ctx = @glade.get_widget("player_status").get_context_id(TITLE)
+    @status_ctx = @widgets.player_status.get_context_id(TITLE)
     self.update_status
   end
 
@@ -79,8 +89,11 @@ class Njiiri
   end
 
   def update_status
-    @glade.get_widget("player_status").remove(@status_ctx, @status_msg) if @status_msg
-    @status_msg = @glade.get_widget("player_status").push(@status_ctx, "Volume: #{@old_volume}%")
+    if @status_msg
+      @widgets.player_status.remove(@status_ctx, @status_msg)
+    end
+    text = "Volume: #{@old_volume}%"
+    @status_msg = @widgets.player_status.push(@status_ctx, text)
   end
 
   # TOOLBAR
@@ -104,11 +117,11 @@ class Njiiri
   end
 
   def on_open_btn_clicked
-    @glade.get_widget("browser_win").show
+    @widgets.browser_win.show
   end
 
   def on_saveas_btn_clicked
-    @glade.get_widget("saveas_dlg").show
+    @widgets.saveas_dlg.show
   end
 
   def on_clear_btn_clicked
@@ -129,7 +142,7 @@ class Njiiri
       widget.stock_id = Gtk::Stock::CONNECT
       @mpd.disconnect
     else
-      @glade.get_widget("connect_dlg").show
+      @widgets.connect_dlg.show
     end
   end
 
@@ -143,40 +156,40 @@ class Njiiri
   # BROWSER WINDOW
 
   def on_close_btn_clicked(widget)
-    @glade.get_widget("browser_win").hide
+    @widgets.browser_win.hide
   end
 
   # SAVE AS DIALOG
 
   def on_cancel_btn_clicked
-    @glade.get_widget("saveas_dlg").hide
+    @widgets.saveas_dlg.hide
   end
 
   def on_save_btn_clicked
-    @mpd.save(@glade.get_widget("name_entry").text)
-    @glade.get_widget("saveas_dlg").hide
+    @mpd.save(@widgets.name_entry.text)
+    @widgets.saveas_dlg.hide
   end
 
   # CONNECT DIALOG
 
   def on_conn_cancel_btn_clicked
-    @glade.get_widget("connect_dlg").hide
+    @widgets.connect_dlg.hide
   end
 
   def on_do_connect_btn_clicked
-    @glade.get_widget("connect_dlg").hide
-    host = @glade.get_widget("host_entry").text
-    port = @glade.get_widget("port_entry").text.to_i
-    pass = @glade.get_widget("pass_entry").text
+    @widgets.connect_dlg.hide
+    host = @widgets.host_entry.text
+    port = @widgets.port_entry.text.to_i
+    pass = @widgets.pass_entry.text
     self.connect(host, port, pass)
   end
 
   # CALLBACKS
 
   def song_cb(current)
-    title_label = @glade.get_widget("title_label")
-    artist_label = @glade.get_widget("artist_label")
-    album_label = @glade.get_widget("album_label")
+    title_label = @widgets.title_label
+    artist_label = @widgets.artist_label
+    album_label = @widgets.album_label
     if current.nil?
       title_label.label = TITLE_FORMAT % BLANK
       artist_label.label = ARTIST_FORMAT % BLANK
@@ -192,7 +205,7 @@ class Njiiri
   end
 
   def time_cb(elapsed, total)
-    pos_bar = @glade.get_widget("pos_bar")
+    pos_bar = @widgets.pos_bar
     if total > 0:
       pos_bar.fraction = elapsed.to_f / total
       pos_bar.text = POSITION_FORMAT % \
