@@ -57,7 +57,7 @@ class Njiiri
   end
 
   def on_prev_btn_clicked
-    @mpd.prev
+    @mpd.previous
   end
 
   def on_next_btn_clicked
