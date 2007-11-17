@@ -88,6 +88,11 @@ class Njiiri
     Gtk.main_quit
   end
 
+  def on_info_box_size_allocate(widget, a)
+    @widgets.cover_img.width_request = a.height
+    @widgets.cover_img.height_request = a.height
+  end
+
   # TOOLBAR
 
   def on_play_btn_clicked(widget)
