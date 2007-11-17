@@ -44,11 +44,12 @@ class Njiiri
 
     @glade.get_widget("repeat_btn").active = @mpd.repeat?
     @glade.get_widget("shuffle_btn").active = @mpd.random?
+    @glade.get_widget("volume_scale").value = @mpd.volume.to_f
   end
 
   # MAIN WINDOW
 
-  def on_quit(*widget)
+  def on_quit(widget, event)
     @mpd.disconnect
     Gtk.main_quit
   end
@@ -67,11 +68,11 @@ class Njiiri
     @mpd.next
   end
 
-  def on_open_btn_clicked(*widget)
+  def on_open_btn_clicked
     @glade.get_widget("browser_win").show
   end
 
-  def on_saveas_btn_clicked(*widget)
+  def on_saveas_btn_clicked
     @glade.get_widget("saveas_dlg").show
   end
 
@@ -87,9 +88,13 @@ class Njiiri
     @mpd.random = widget.active?
   end
 
+  def on_volume_scale_value_changed(widget)
+    @mpd.volume = widget.value.to_i
+  end
+
   # BROWSER WINDOW
 
-  def on_close_btn_clicked(*widget)
+  def on_close_btn_clicked(widget)
     @glade.get_widget("browser_win").hide
   end
 
