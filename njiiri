@@ -88,14 +88,6 @@ class Njiiri
     Gtk.main_quit
   end
 
-  def update_status
-    if @status_msg
-      @widgets.player_status.remove(@status_ctx, @status_msg)
-    end
-    text = "Volume: #{@old_volume}%"
-    @status_msg = @widgets.player_status.push(@status_ctx, text)
-  end
-
   # TOOLBAR
 
   def on_play_btn_clicked(widget)
@@ -141,6 +133,9 @@ class Njiiri
       self.enable_toolbuttons(false)
       widget.stock_id = Gtk::Stock::CONNECT
       @mpd.disconnect
+      self.update_info(nil)
+      self.update_pos(0, 0)
+      self.update_status
     else
       @widgets.connect_dlg.show
     end
@@ -187,6 +182,28 @@ class Njiiri
   # CALLBACKS
 
   def song_cb(current)
+    update_info(current)
+  end
+
+  def time_cb(elapsed, total)
+    update_pos(elapsed, total)
+  end
+
+  # MISC
+
+  def update_pos(elapsed, total)
+    pos_bar = @widgets.pos_bar
+    if total > 0:
+      pos_bar.fraction = elapsed.to_f / total
+      pos_bar.text = POSITION_FORMAT % \
+        [elapsed / 60, elapsed % 60, total / 60, total % 60]
+    else
+      pos_bar.fraction = 0.0
+      pos_bar.text = BLANK
+    end
+  end
+
+  def update_info(current)
     title_label = @widgets.title_label
     artist_label = @widgets.artist_label
     album_label = @widgets.album_label
@@ -198,22 +215,17 @@ class Njiiri
       title_label.label = TITLE_FORMAT % CGI::escapeHTML(current.title)
       artist_label.label = ARTIST_FORMAT % CGI::escapeHTML(current.artist)
       album_label.label = ALBUM_FORMAT % CGI::escapeHTML(current.album)
-
-      #elapsed, total = @mpd.status["time"].split(":")
-      #self.time_cb(elapsed, total)
+      elapsed, total = @mpd.status["time"].split(":").collect {|t| t.to_i }
+      self.update_pos(elapsed, total)
     end
   end
 
-  def time_cb(elapsed, total)
-    pos_bar = @widgets.pos_bar
-    if total > 0:
-      pos_bar.fraction = elapsed.to_f / total
-      pos_bar.text = POSITION_FORMAT % \
-        [elapsed / 60, elapsed % 60, total / 60, total % 60]
-    else
-      pos_bar.fraction = 0.0
-      pos_bar.text = BLANK
+  def update_status
+    if @status_msg
+      @widgets.player_status.remove(@status_ctx, @status_msg)
     end
+    text = "Volume: #{@old_volume}%"
+    @status_msg = @widgets.player_status.push(@status_ctx, text)
   end
 
 end
