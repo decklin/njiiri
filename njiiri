@@ -2,12 +2,19 @@
 
 require 'rubygems'
 require 'librmpd'
+require 'thread'
 require 'libglade2'
 
 class Njiiri
+
   TITLE = "Njiiri MPD Client"
   NAME = "Njiiri"
   VERSION = "0.1"
+
+  TITLE_FORMAT = "<big><big><b>%s</b></big></big>"
+  ARTIST_FORMAT = "<big>%s</big>"
+  ALBUM_FORMAT = "<small>%s</small>"
+  POSITION_FORMAT = "%d:%02d / %d:%02d"
 
   def initialize(path, root = nil, domain = nil, localedir = nil,
                  flag = GladeXML::FILE)
@@ -16,11 +23,10 @@ class Njiiri
 
   def connect(host, port, pass)
     @mpd = MPD.new host, port
-    @mpd.connect
+    @mpd.register_callback(self.method('song_cb'), MPD::CURRENT_SONG_CALLBACK)
+    @mpd.register_callback(self.method('time_cb'), MPD::TIME_CALLBACK)
+    @mpd.connect true
     @mpd.password pass if pass
-
-    song = @mpd.current_song
-    puts "Current Song: #{song.artist} - #{song.title}"
   end
 
   # MAIN WINDOW
@@ -44,7 +50,7 @@ class Njiiri
     @mpd.next
   end
 
-  def on_browse_btn_clicked(*widget)
+  def on_open_btn_clicked(*widget)
     @glade.get_widget("browser_win").show
   end
 
@@ -75,6 +81,31 @@ class Njiiri
   def on_cancel_btn_clicked
     @glade.get_widget("saveas_dlg").hide
   end
+
+  # CALLBACKS
+
+  def song_cb(current)
+    title_label = @glade.get_widget("title_label")
+    artist_label = @glade.get_widget("artist_label")
+    album_label = @glade.get_widget("album_label")
+    if current.nil?
+      title_label.label = ''
+      artist_label.label = ''
+      album_label.label = ''
+    else
+      title_label.label = TITLE_FORMAT % current.title
+      artist_label.label = ARTIST_FORMAT % current.artist
+      album_label.label = ALBUM_FORMAT % current.album
+    end
+  end
+
+  def time_cb(elapsed, total)
+    pos_bar = @glade.get_widget("pos_bar")
+    pos_bar.fraction = elapsed.to_f / total
+    pos_bar.text = POSITION_FORMAT % \
+      [elapsed / 60, elapsed % 60, total / 60, total % 60]
+  end
+
 end
 
 config = {
