@@ -4,13 +4,7 @@ require 'rubygems'
 require 'librmpd'
 require 'thread'
 require 'libglade2'
-
-def clean(s)
-  s.gsub!("&", "&amp;")
-  s.gsub!("<", "&lt;")
-  s.gsub!(">", "&gt;")
-  s
-end
+require 'cgi'
 
 class Njiiri
 
@@ -178,9 +172,9 @@ class Njiiri
       artist_label.label = ARTIST_FORMAT % BLANK
       album_label.label = ALBUM_FORMAT % BLANK
     else
-      title_label.label = TITLE_FORMAT % clean(current.title)
-      artist_label.label = ARTIST_FORMAT % clean(current.artist)
-      album_label.label = ALBUM_FORMAT % clean(current.album)
+      title_label.label = TITLE_FORMAT % CGI::escapeHTML(current.title)
+      artist_label.label = ARTIST_FORMAT % CGI::escapeHTML(current.artist)
+      album_label.label = ALBUM_FORMAT % CGI::escapeHTML(current.album)
 
       #elapsed, total = @mpd.status["time"].split(":")
       #self.time_cb(elapsed, total)
