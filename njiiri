@@ -41,6 +41,9 @@ class Njiiri
     @mpd.register_callback(self.method('time_cb'), MPD::TIME_CALLBACK)
     @mpd.connect true
     @mpd.password pass if pass
+
+    @glade.get_widget("repeat_btn").active = @mpd.repeat?
+    @glade.get_widget("shuffle_btn").active = @mpd.random?
   end
 
   # MAIN WINDOW
@@ -76,12 +79,12 @@ class Njiiri
     @mpd.clear
   end
 
-  def on_repeat_btn_clicked
-    @mpd.repeat = !@mpd.repeat?
+  def on_repeat_btn_toggled(widget)
+    @mpd.repeat = widget.active?
   end
 
-  def on_shuffle_btn_clicked
-    @mpd.random = !@mpd.random?
+  def on_shuffle_btn_toggled(widget)
+    @mpd.random = widget.active?
   end
 
   # BROWSER WINDOW
