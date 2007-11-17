@@ -42,6 +42,8 @@ class Njiiri
     @mpd.connect true
     @mpd.password pass if pass
 
+    @old_volume = @mpd.volume
+
     @glade.get_widget("repeat_btn").active = @mpd.repeat?
     @glade.get_widget("shuffle_btn").active = @mpd.random?
     @glade.get_widget("volume_scale").value = @mpd.volume.to_f
@@ -89,7 +91,9 @@ class Njiiri
   end
 
   def on_volume_scale_value_changed(widget)
-    @mpd.volume = widget.value.to_i
+    if widget.value.to_i != @old_volume
+      @old_volume = @mpd.volume = widget.value.to_i
+    end
   end
 
   # BROWSER WINDOW
