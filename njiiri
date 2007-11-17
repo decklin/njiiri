@@ -5,6 +5,13 @@ require 'librmpd'
 require 'thread'
 require 'libglade2'
 
+def clean(s)
+  s.gsub!("&", "&amp;")
+  s.gsub!("<", "&lt;")
+  s.gsub!(">", "&gt;")
+  s
+end
+
 class Njiiri
 
   TITLE = "Njiiri MPD Client"
@@ -15,6 +22,13 @@ class Njiiri
   ARTIST_FORMAT = "<big>%s</big>"
   ALBUM_FORMAT = "<small>%s</small>"
   POSITION_FORMAT = "%d:%02d / %d:%02d"
+
+  # This is here to fill in GTK labels so that they don't shrink from a lack
+  # of text, which is visually annoying.
+
+  BLANK = ' '
+
+  # CLASS
 
   def initialize(path, root = nil, domain = nil, localedir = nil,
                  flag = GladeXML::FILE)
@@ -89,21 +103,26 @@ class Njiiri
     artist_label = @glade.get_widget("artist_label")
     album_label = @glade.get_widget("album_label")
     if current.nil?
-      title_label.label = ''
-      artist_label.label = ''
-      album_label.label = ''
+      title_label.label = TITLE_FORMAT % BLANK
+      artist_label.label = ARTIST_FORMAT % BLANK
+      album_label.label = ALBUM_FORMAT % BLANK
     else
-      title_label.label = TITLE_FORMAT % current.title
-      artist_label.label = ARTIST_FORMAT % current.artist
-      album_label.label = ALBUM_FORMAT % current.album
+      title_label.label = TITLE_FORMAT % clean(current.title)
+      artist_label.label = ARTIST_FORMAT % clean(current.artist)
+      album_label.label = ALBUM_FORMAT % clean(current.album)
     end
   end
 
   def time_cb(elapsed, total)
     pos_bar = @glade.get_widget("pos_bar")
-    pos_bar.fraction = elapsed.to_f / total
-    pos_bar.text = POSITION_FORMAT % \
-      [elapsed / 60, elapsed % 60, total / 60, total % 60]
+    if elapsed > 0:
+      pos_bar.fraction = elapsed.to_f / total
+      pos_bar.text = POSITION_FORMAT % \
+        [elapsed / 60, elapsed % 60, total / 60, total % 60]
+    else
+      pos_bar.fraction = 0
+      pos_bar.text = BLANK
+    end
   end
 
 end
