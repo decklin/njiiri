@@ -24,6 +24,14 @@ class NjConfig
   end
 end
 
+def fmt_pos(*times)
+  times.collect { |t| "%d:%02d" % [t/60, t%60] }.join(" / ")
+end
+
+def fmt_wintitle(*titles)
+  s.join(" - ")
+end
+
 class Njiiri
 
   TITLE = "Njiiri MPD Client"
@@ -34,9 +42,7 @@ class Njiiri
   TITLE_FMT = "<big><big><b>%s</b></big></big>"
   ARTIST_FMT = "<big>%s</big>"
   ALBUM_FMT = "<small>%s</small>"
-  POSITION_FMT = "%d:%02d / %d:%02d"
-  WINDOW_FMT = "%s - %s"
-  BLANK = ' '
+  BLANK = " "
 
   # CLASS
 
@@ -209,8 +215,7 @@ class Njiiri
     pos_bar = @glade['pos_bar']
     if total > 0:
       pos_bar.fraction = elapsed.to_f / total
-      pos_bar.text = POSITION_FMT % \
-        [elapsed / 60, elapsed % 60, total / 60, total % 60]
+      pos_bar.text = fmt_pos(elapsed, total)
     else
       pos_bar.fraction = 0.0
       pos_bar.text = BLANK
@@ -219,7 +224,7 @@ class Njiiri
 
   def update_info(current)
     if @mpd.connected? and current
-      @glade['player_win'].title = WINDOW_FMT % [current.artist, current.title]
+      @glade['player_win'].title = fmt_wintitle(current.artist, current.title)
       @glade['title_label'].label = TITLE_FMT % CGI::escapeHTML(current.title)
       @glade['artist_label'].label = ARTIST_FMT % CGI::escapeHTML(current.artist)
       @glade['album_label'].label = ALBUM_FMT % CGI::escapeHTML(current.album)
