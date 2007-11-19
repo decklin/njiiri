@@ -28,8 +28,8 @@ def fmt_pos(*times)
   times.collect { |t| "%d:%02d" % [t/60, t%60] }.join(" / ")
 end
 
-def fmt_wintitle(*titles)
-  s.join(" - ")
+def fmt_wintitle(*parts)
+  parts.join(" - ")
 end
 
 class Njiiri
