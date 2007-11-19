@@ -10,8 +10,8 @@ class WidgetBucket
   def initialize(glade)
     @glade = glade
   end
-  def method_missing(m, *a)
-    @glade.get_widget(m.to_s)
+  def [](w)
+    @glade.get_widget(w.to_s)
   end
 end
 
@@ -50,23 +50,23 @@ class Njiiri
   # CLASS
 
   def initialize(rc_path)
-    @config = NjConfig.new(rc_path)
+    @conf = NjConfig.new(rc_path)
     @glade = GladeXML.new(GLADE_PATH) { |handler| method(handler) }
-    @widgets = WidgetBucket.new(@glade)
-    @widgets.host_entry.text = @config.host
-    @widgets.port_entry.text = @config.port.to_s
-    @widgets.pass_entry.text = @config.pass
+    @w = WidgetBucket.new(@glade)
+    @w[:host_entry].text = @conf.host
+    @w[:port_entry].text = @conf.port.to_s
+    @w[:pass_entry].text = @conf.pass
   end
 
   def connect
-    @mpd = MPD.new @config.host, @config.port
+    @mpd = MPD.new @conf.host, @conf.port
     @mpd.register_callback(self.method('song_cb'), MPD::CURRENT_SONG_CALLBACK)
     @mpd.register_callback(self.method('time_cb'), MPD::TIME_CALLBACK)
 
     begin
       @mpd.connect true
-      @mpd.password @config.pass if @config.pass
-      @widgets.connect_btn.stock_id = Gtk::Stock::DISCONNECT
+      @mpd.password @conf.pass if @conf.pass
+      @w[:connect_btn].stock_id = Gtk::Stock::DISCONNECT
       self.enable_toolbuttons(true)
       self.connected
     rescue
@@ -82,17 +82,17 @@ class Njiiri
 
   def connected
     if @mpd.playing?
-      @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PAUSE
+      @w[:play_btn].stock_id = Gtk::Stock::MEDIA_PAUSE
     end
 
-    @widgets.repeat_btn.active = @mpd.repeat?
-    @widgets.shuffle_btn.active = @mpd.random?
+    @w[:repeat_btn].active = @mpd.repeat?
+    @w[:shuffle_btn].active = @mpd.random?
 
     @old_volume = @mpd.volume
-    @widgets.volume_scale.value = @mpd.volume.to_f
+    @w[:volume_scale].value = @mpd.volume.to_f
 
     @status_msg = nil
-    @status_ctx = @widgets.player_status.get_context_id(TITLE)
+    @status_ctx = @w[:player_status].get_context_id(TITLE)
     self.update_status
   end
 
@@ -104,11 +104,11 @@ class Njiiri
   end
 
   def on_info_box_size_allocate(widget, a)
-    if @widgets.cover_img.width_request == a.height
-      @widgets.cover_img.height_request = 1
+    if @w[:cover_img].width_request == a.height
+      @w[:cover_img].height_request = 1
     else
-      @widgets.cover_img.width_request = a.height
-      @widgets.cover_img.height_request = a.height
+      @w[:cover_img].width_request = a.height
+      @w[:cover_img].height_request = a.height
     end
   end
 
@@ -133,11 +133,11 @@ class Njiiri
   end
 
   def on_open_btn_clicked
-    @widgets.browser_win.show
+    @w[:browser_win].show
   end
 
   def on_saveas_btn_clicked
-    @widgets.saveas_dlg.show
+    @w[:saveas_dlg].show
   end
 
   def on_clear_btn_clicked
@@ -161,7 +161,7 @@ class Njiiri
       self.update_pos(0, 0)
       self.update_status
     else
-      @widgets.connect_dlg.show
+      @w[:connect_dlg].show
     end
   end
 
@@ -175,31 +175,31 @@ class Njiiri
   # BROWSER WINDOW
 
   def on_close_btn_clicked(widget)
-    @widgets.browser_win.hide
+    @w[:browser_win].hide
   end
 
   # SAVE AS DIALOG
 
   def on_cancel_btn_clicked
-    @widgets.saveas_dlg.hide
+    @w[:saveas_dlg].hide
   end
 
   def on_save_btn_clicked
-    @mpd.save(@widgets.name_entry.text)
-    @widgets.saveas_dlg.hide
+    @mpd.save(@w[:name_entry].text)
+    @w[:saveas_dlg].hide
   end
 
   # CONNECT DIALOG
 
   def on_conn_cancel_btn_clicked
-    @widgets.connect_dlg.hide
+    @w[:connect_dlg].hide
   end
 
   def on_do_connect_btn_clicked
-    @widgets.connect_dlg.hide
-    @config.host = @widgets.host_entry.text
-    @config.port = @widgets.port_entry.text.to_i
-    @config.pass = @widgets.pass_entry.text
+    @w[:connect_dlg].hide
+    @conf.host = @w[:host_entry].text
+    @conf.port = @w[:port_entry].text.to_i
+    @conf.pass = @w[:pass_entry].text
     self.connect
   end
 
@@ -216,7 +216,7 @@ class Njiiri
   # MISC
 
   def update_pos(elapsed, total)
-    pos_bar = @widgets.pos_bar
+    pos_bar = @w[:pos_bar]
     if total > 0:
       pos_bar.fraction = elapsed.to_f / total
       pos_bar.text = POSITION_FORMAT % \
@@ -229,10 +229,10 @@ class Njiiri
 
   def update_info(current)
     if @mpd.connected? and current
-      @widgets.player_win.title = WINDOW_FORMAT % [current.artist, current.title]
-      @widgets.title_label.label = TITLE_FORMAT % CGI::escapeHTML(current.title)
-      @widgets.artist_label.label = ARTIST_FORMAT % CGI::escapeHTML(current.artist)
-      @widgets.album_label.label = ALBUM_FORMAT % CGI::escapeHTML(current.album)
+      @w[:player_win].title = WINDOW_FORMAT % [current.artist, current.title]
+      @w[:title_label].label = TITLE_FORMAT % CGI::escapeHTML(current.title)
+      @w[:artist_label].label = ARTIST_FORMAT % CGI::escapeHTML(current.artist)
+      @w[:album_label].label = ALBUM_FORMAT % CGI::escapeHTML(current.album)
       if @mpd.playing?
         elapsed, total = @mpd.status["time"].split(":").collect {|t| t.to_i }
         self.update_pos(elapsed, total)
@@ -240,22 +240,22 @@ class Njiiri
         self.update_pos(0, 0)
       end
     else
-      @widgets.player_win.title = NAME
-      @widgets.title_label.label = TITLE_FORMAT % BLANK
-      @widgets.artist_label.label = ARTIST_FORMAT % BLANK
-      @widgets.album_label.label = ALBUM_FORMAT % BLANK
+      @w[:player_win].title = NAME
+      @w[:title_label].label = TITLE_FORMAT % BLANK
+      @w[:artist_label].label = ARTIST_FORMAT % BLANK
+      @w[:album_label].label = ALBUM_FORMAT % BLANK
     end
   end
 
   def update_status
     if @mpd.connected?
         if @status_msg
-          @widgets.player_status.remove(@status_ctx, @status_msg)
+          @w[:player_status].remove(@status_ctx, @status_msg)
         end
         text = "Volume: #{@mpd.volume}%"
-        @status_msg = @widgets.player_status.push(@status_ctx, text)
+        @status_msg = @w[:player_status].push(@status_ctx, text)
     else
-      @status_msg = @widgets.player_status.push(@status_ctx, "Disconnected")
+      @status_msg = @w[:player_status].push(@status_ctx, "Disconnected")
     end
   end
 
