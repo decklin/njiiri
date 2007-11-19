@@ -78,8 +78,8 @@ class Njiiri
     begin
       @mpd.connect true
       @mpd.password @conf.serv[:pass] if @conf.serv[:pass]
-      @glade['connect_btn'].stock_id = Gtk::Stock::DISCONNECT
       self.enable_toolbuttons(true)
+      @glade['connect_btn'].stock_id = Gtk::Stock::DISCONNECT
       self.connected
     rescue
       self.enable_toolbuttons(false)
