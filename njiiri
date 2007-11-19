@@ -248,6 +248,9 @@ class Njiiri
     if total > 0:
       pos_bar.fraction = elapsed.to_f / total
       pos_bar.text = fmt_pos(elapsed, total)
+    elsif elapsed > 0:
+      pos_bar.fraction = 1.0
+      pos_bar.text = fmt_pos(elapsed)
     else
       pos_bar.fraction = 0.0
       pos_bar.text = BLANK
