@@ -6,19 +6,10 @@ require 'thread'
 require 'libglade2'
 require 'cgi'
 
-class WidgetBucket
-  def initialize(glade)
-    @glade = glade
-  end
-  def [](w)
-    @glade.get_widget(w.to_s)
-  end
-end
-
 class NjConfig
   attr_accessor :host, :port, :pass
   def initialize(path)
-    defaults = { :host => 'localhost', :port => 6600, :password => nil }
+    defaults = { 'host' => 'localhost', 'port' => 6600, 'password' => nil }
     rc = begin
       File.open(path) do |yf|
         YAML::load(yf)
@@ -52,10 +43,9 @@ class Njiiri
   def initialize(rc_path)
     @conf = NjConfig.new(rc_path)
     @glade = GladeXML.new(GLADE_PATH) { |handler| method(handler) }
-    @w = WidgetBucket.new(@glade)
-    @w[:host_entry].text = @conf.host
-    @w[:port_entry].text = @conf.port.to_s
-    @w[:pass_entry].text = @conf.pass
+    @glade['host_entry'].text = @conf.host
+    @glade['port_entry'].text = @conf.port.to_s
+    @glade['pass_entry'].text = @conf.pass
   end
 
   def connect
@@ -66,7 +56,7 @@ class Njiiri
     begin
       @mpd.connect true
       @mpd.password @conf.pass if @conf.pass
-      @w[:connect_btn].stock_id = Gtk::Stock::DISCONNECT
+      @glade['connect_btn'].stock_id = Gtk::Stock::DISCONNECT
       self.enable_toolbuttons(true)
       self.connected
     rescue
@@ -82,17 +72,17 @@ class Njiiri
 
   def connected
     if @mpd.playing?
-      @w[:play_btn].stock_id = Gtk::Stock::MEDIA_PAUSE
+      @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE
     end
 
-    @w[:repeat_btn].active = @mpd.repeat?
-    @w[:shuffle_btn].active = @mpd.random?
+    @glade['repeat_btn'].active = @mpd.repeat?
+    @glade['shuffle_btn'].active = @mpd.random?
 
     @old_volume = @mpd.volume
-    @w[:volume_scale].value = @mpd.volume.to_f
+    @glade['volume_scale'].value = @mpd.volume.to_f
 
     @status_msg = nil
-    @status_ctx = @w[:player_status].get_context_id(TITLE)
+    @status_ctx = @glade['player_status'].get_context_id(TITLE)
     self.update_status
   end
 
@@ -104,11 +94,11 @@ class Njiiri
   end
 
   def on_info_box_size_allocate(widget, a)
-    if @w[:cover_img].width_request == a.height
-      @w[:cover_img].height_request = 1
+    if @glade['cover_img'].width_request == a.height
+      @glade['cover_img'].height_request = 1
     else
-      @w[:cover_img].width_request = a.height
-      @w[:cover_img].height_request = a.height
+      @glade['cover_img'].width_request = a.height
+      @glade['cover_img'].height_request = a.height
     end
   end
 
@@ -133,11 +123,11 @@ class Njiiri
   end
 
   def on_open_btn_clicked
-    @w[:browser_win].show
+    @glade['browser_win'].show
   end
 
   def on_saveas_btn_clicked
-    @w[:saveas_dlg].show
+    @glade['saveas_dlg'].show
   end
 
   def on_clear_btn_clicked
@@ -161,7 +151,7 @@ class Njiiri
       self.update_pos(0, 0)
       self.update_status
     else
-      @w[:connect_dlg].show
+      @glade['connect_dlg'].show
     end
   end
 
@@ -175,31 +165,31 @@ class Njiiri
   # BROWSER WINDOW
 
   def on_close_btn_clicked(widget)
-    @w[:browser_win].hide
+    @glade['browser_win'].hide
   end
 
   # SAVE AS DIALOG
 
   def on_cancel_btn_clicked
-    @w[:saveas_dlg].hide
+    @glade['saveas_dlg'].hide
   end
 
   def on_save_btn_clicked
-    @mpd.save(@w[:name_entry].text)
-    @w[:saveas_dlg].hide
+    @mpd.save(@glade['name_entry'].text)
+    @glade['saveas_dlg'].hide
   end
 
   # CONNECT DIALOG
 
   def on_conn_cancel_btn_clicked
-    @w[:connect_dlg].hide
+    @glade['connect_dlg'].hide
   end
 
   def on_do_connect_btn_clicked
-    @w[:connect_dlg].hide
-    @conf.host = @w[:host_entry].text
-    @conf.port = @w[:port_entry].text.to_i
-    @conf.pass = @w[:pass_entry].text
+    @glade['connect_dlg'].hide
+    @conf.host = @glade['host_entry'].text
+    @conf.port = @glade['port_entry'].text.to_i
+    @conf.pass = @glade['pass_entry'].text
     self.connect
   end
 
@@ -216,7 +206,7 @@ class Njiiri
   # MISC
 
   def update_pos(elapsed, total)
-    pos_bar = @w[:pos_bar]
+    pos_bar = @glade['pos_bar']
     if total > 0:
       pos_bar.fraction = elapsed.to_f / total
       pos_bar.text = POSITION_FORMAT % \
@@ -229,10 +219,10 @@ class Njiiri
 
   def update_info(current)
     if @mpd.connected? and current
-      @w[:player_win].title = WINDOW_FORMAT % [current.artist, current.title]
-      @w[:title_label].label = TITLE_FORMAT % CGI::escapeHTML(current.title)
-      @w[:artist_label].label = ARTIST_FORMAT % CGI::escapeHTML(current.artist)
-      @w[:album_label].label = ALBUM_FORMAT % CGI::escapeHTML(current.album)
+      @glade['player_win'].title = WINDOW_FORMAT % [current.artist, current.title]
+      @glade['title_label'].label = TITLE_FORMAT % CGI::escapeHTML(current.title)
+      @glade['artist_label'].label = ARTIST_FORMAT % CGI::escapeHTML(current.artist)
+      @glade['album_label'].label = ALBUM_FORMAT % CGI::escapeHTML(current.album)
       if @mpd.playing?
         elapsed, total = @mpd.status["time"].split(":").collect {|t| t.to_i }
         self.update_pos(elapsed, total)
@@ -240,22 +230,22 @@ class Njiiri
         self.update_pos(0, 0)
       end
     else
-      @w[:player_win].title = NAME
-      @w[:title_label].label = TITLE_FORMAT % BLANK
-      @w[:artist_label].label = ARTIST_FORMAT % BLANK
-      @w[:album_label].label = ALBUM_FORMAT % BLANK
+      @glade['player_win'].title = NAME
+      @glade['title_label'].label = TITLE_FORMAT % BLANK
+      @glade['artist_label'].label = ARTIST_FORMAT % BLANK
+      @glade['album_label'].label = ALBUM_FORMAT % BLANK
     end
   end
 
   def update_status
     if @mpd.connected?
         if @status_msg
-          @w[:player_status].remove(@status_ctx, @status_msg)
+          @glade['player_status'].remove(@status_ctx, @status_msg)
         end
         text = "Volume: #{@mpd.volume}%"
-        @status_msg = @w[:player_status].push(@status_ctx, text)
+        @status_msg = @glade['player_status'].push(@status_ctx, text)
     else
-      @status_msg = @w[:player_status].push(@status_ctx, "Disconnected")
+      @status_msg = @glade['player_status'].push(@status_ctx, "Disconnected")
     end
   end
 
