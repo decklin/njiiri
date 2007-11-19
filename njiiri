@@ -71,6 +71,7 @@ class Njiiri
   def connect
     @mpd = MPD.new @conf.serv[:host], @conf.serv[:port]
     @mpd.register_callback(self.method('song_cb'), MPD::CURRENT_SONG_CALLBACK)
+    @mpd.register_callback(self.method('state_cb'), MPD::STATE_CALLBACK)
     @mpd.register_callback(self.method('time_cb'), MPD::TIME_CALLBACK)
 
     begin
@@ -126,12 +127,15 @@ class Njiiri
   # TOOLBAR
 
   def on_play_btn_clicked(widget)
-    if @mpd.playing?
-      @mpd.pause = true
-      widget.stock_id = Gtk::Stock::MEDIA_PLAY
-    else
+    if @mpd.stopped?
+      @mpd.play
+      widget.stock_id = Gtk::Stock::MEDIA_PAUSE
+    elsif @mpd.paused?
       @mpd.pause = false
       widget.stock_id = Gtk::Stock::MEDIA_PAUSE
+    else
+      @mpd.pause = true
+      widget.stock_id = Gtk::Stock::MEDIA_PLAY
     end
   end
 
@@ -219,6 +223,18 @@ class Njiiri
 
   def song_cb(current)
     update_info(current)
+  end
+
+  def state_cb(newstate)
+    case newstate
+      when "play"
+        @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE
+      when "pause"
+        @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
+      when "stop"
+        @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
+        update_pos(0, 0)
+    end
   end
 
   def time_cb(elapsed, total)
