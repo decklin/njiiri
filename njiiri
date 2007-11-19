@@ -6,58 +6,6 @@ require 'thread'
 require 'libglade2'
 require 'cgi'
 
-class NjConfig
-
-  DEFAULTS =
-    { :server => { :host => 'localhost', :port => 6600, :pass => nil },
-      :geometry =>
-        { :player =>
-            { :x => 0, :y => 0, :w => 620, :h => 440, :cover => 100 },
-          :browser =>
-            { :x => 0, :y => 0, :w => 620, :h => 440, :cover => 100 } } }
-
-  attr_accessor :serv, :geom
-
-  def initialize(path)
-    @path = path
-    @rc = DEFAULTS.merge begin
-      File.open(@path) { |f| YAML::load(f) }
-    rescue
-      {}
-    end
-    @serv = @rc[:server]
-    @geom = @rc[:geometry]
-  end
-
-  def save
-    begin
-      File.open(@path, 'w') { |f| YAML::dump(@rc, f) }
-    rescue
-    end
-  end
-
-end
-
-def fmt_pos(*times)
-  times.collect { |t| "%d:%02d" % [t/60, t%60] }.join(" / ")
-end
-
-def fmt_wintitle(*parts)
-  parts.grep(/./).join(" - ")
-end
-
-def fmt_title(title)
-  "<big><big><b>#{title || ' '}</b></big></big>"
-end
-
-def fmt_artist(artist)
-  "<big>#{artist || ' '}</big>"
-end
-
-def fmt_album(album)
-  "<small>#{album || ' '}</small>"
-end
-
 class Njiiri
 
   TITLE = "Njiiri MPD Client"
@@ -68,7 +16,7 @@ class Njiiri
   # CLASS
 
   def initialize(rc_path)
-    @conf = NjConfig.new(rc_path)
+    @conf = Conf.new(rc_path)
     @glade = GladeXML.new(GLADE_PATH) { |handler| method(handler) }
     @glade['host_entry'].text = @conf.serv[:host]
     @glade['port_entry'].text = @conf.serv[:port].to_s
@@ -251,13 +199,13 @@ class Njiiri
     pos_bar = @glade['pos_bar']
     if total > 0:
       pos_bar.fraction = elapsed.to_f / total
-      pos_bar.text = fmt_pos(elapsed, total)
+      pos_bar.text = Format.pos(elapsed, total)
     elsif elapsed > 0:
       pos_bar.pulse
-      pos_bar.text = fmt_pos(elapsed)
+      pos_bar.text = Format.pos(elapsed)
     else
       pos_bar.fraction = 0.0
-      pos_bar.text = fmt_pos(0)
+      pos_bar.text = Format.pos(0)
     end
   end
 
@@ -268,10 +216,10 @@ class Njiiri
     else
       self.update_pos(0, 0)
     end
-    @glade['player_win'].title = fmt_wintitle(current.artist, current.title)
-    @glade['title_label'].label = fmt_title(current.title)
-    @glade['artist_label'].label = fmt_artist(current.artist)
-    @glade['album_label'].label = fmt_album(current.album)
+    @glade['player_win'].title = Format.window(current.artist, current.title)
+    @glade['title_label'].label = Format.title(current.title)
+    @glade['artist_label'].label = Format.artist(current.artist)
+    @glade['album_label'].label = Format.album(current.album)
   end
 
   def update_status
@@ -288,7 +236,61 @@ class Njiiri
 
 end
 
-Gtk.init
-njiiri = Njiiri.new(File.expand_path("~/.njiirirc"))
-njiiri.connect
-Gtk.main
+class Format
+  class << self
+    def pos(*times)
+      times.collect { |t| "%d:%02d" % [t/60, t%60] }.join(" / ")
+    end
+    def window(*parts)
+      parts.grep(/./).join(" - ")
+    end
+    def title(title)
+      "<big><big><b>#{title || ' '}</b></big></big>"
+    end
+    def artist(artist)
+      "<big>#{artist || ' '}</big>"
+    end
+    def album(album)
+      "<small>#{album || ' '}</small>"
+    end
+  end
+end
+
+class Conf
+
+  DEFAULTS =
+    { :server => { :host => 'localhost', :port => 6600, :pass => nil },
+      :geometry =>
+        { :player =>
+            { :x => 0, :y => 0, :w => 620, :h => 440, :cover => 100 },
+          :browser =>
+            { :x => 0, :y => 0, :w => 620, :h => 440, :cover => 100 } } }
+
+  attr_accessor :serv, :geom
+
+  def initialize(path)
+    @path = path
+    @rc = DEFAULTS.merge begin
+      File.open(@path) { |f| YAML::load(f) }
+    rescue
+      {}
+    end
+    @serv = @rc[:server]
+    @geom = @rc[:geometry]
+  end
+
+  def save
+    begin
+      File.open(@path, 'w') { |f| YAML::dump(@rc, f) }
+    rescue
+    end
+  end
+
+end
+
+if __FILE__ == $0
+  Gtk.init
+  njiiri = Njiiri.new(File.expand_path("~/.njiirirc"))
+  njiiri.connect
+  Gtk.main
+end
