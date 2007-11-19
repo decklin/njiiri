@@ -124,7 +124,7 @@ class Njiiri
       self.enable_toolbuttons(false)
       widget.stock_id = Gtk::Stock::CONNECT
       @mpd.disconnect
-      self.update_info(nil)
+      self.update_info(MPD::Song.new)
       self.update_pos(0, 0)
       self.update_status
     else
