@@ -7,21 +7,39 @@ require 'libglade2'
 require 'cgi'
 
 class NjConfig
-  attr_accessor :host, :port, :pass
+
+  DEFAULTS =
+    { :server => { :host => 'localhost', :port => 6600, :pass => nil },
+      :geometry =>
+        { :player =>
+            { :x => 0, :y => 0, :w => 620, :h => 440, :cover => 100 },
+          :browser =>
+            { :x => 0, :y => 0, :w => 620, :h => 440, :cover => 100 } } }
+
+  attr_accessor :serv, :geom
+
   def initialize(path)
-    defaults = { 'host' => 'localhost', 'port' => 6600, 'password' => nil }
-    rc = begin
-      File.open(path) do |yf|
-        YAML::load(yf)
+    @path = path
+    begin
+      @rc = DEFAULTS.merge File.open(@path) do |f|
+        YAML::load(f)
       end
     rescue
-      {}
+      @rc = DEFAULTS
     end
-    rc = defaults.merge(rc)
-    @host = rc['host']
-    @port = rc['port']
-    @pass = rc['password']
+    @serv = @rc[:server]
+    @geom = @rc[:geometry]
   end
+
+  def save
+    begin
+      File.open(@path, 'w') do |f|
+        YAML::dump(@rc, f)
+      end
+    rescue
+    end
+  end
+
 end
 
 def fmt_pos(*times)
@@ -49,19 +67,19 @@ class Njiiri
   def initialize(rc_path)
     @conf = NjConfig.new(rc_path)
     @glade = GladeXML.new(GLADE_PATH) { |handler| method(handler) }
-    @glade['host_entry'].text = @conf.host
-    @glade['port_entry'].text = @conf.port.to_s
-    @glade['pass_entry'].text = @conf.pass
+    @glade['host_entry'].text = @conf.serv[:host]
+    @glade['port_entry'].text = @conf.serv[:port].to_s
+    @glade['pass_entry'].text = @conf.serv[:pass].to_s
   end
 
   def connect
-    @mpd = MPD.new @conf.host, @conf.port
+    @mpd = MPD.new @conf.serv[:host], @conf.serv[:port]
     @mpd.register_callback(self.method('song_cb'), MPD::CURRENT_SONG_CALLBACK)
     @mpd.register_callback(self.method('time_cb'), MPD::TIME_CALLBACK)
 
     begin
       @mpd.connect true
-      @mpd.password @conf.pass if @conf.pass
+      @mpd.password @conf.serv[:pass] if @conf.serv[:pass]
       @glade['connect_btn'].stock_id = Gtk::Stock::DISCONNECT
       self.enable_toolbuttons(true)
       self.connected
@@ -96,6 +114,7 @@ class Njiiri
 
   def on_quit(widget, event)
     @mpd.disconnect
+    @conf.save
     Gtk.main_quit
   end
 
@@ -193,9 +212,10 @@ class Njiiri
 
   def on_do_connect_btn_clicked
     @glade['connect_dlg'].hide
-    @conf.host = @glade['host_entry'].text
-    @conf.port = @glade['port_entry'].text.to_i
-    @conf.pass = @glade['pass_entry'].text
+    @conf.serv[:host] = @glade['host_entry'].text
+    @conf.serv[:port] = @glade['port_entry'].text.to_i
+    @conf.serv[:pass] = @glade['pass_entry'].text
+    @conf.serv[:pass] = nil if @conf.serv[:pass].empty?
     self.connect
   end
 
