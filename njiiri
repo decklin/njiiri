@@ -15,45 +15,59 @@ class WidgetBucket
   end
 end
 
+class NjConfig
+  attr_accessor :host, :port, :pass
+  def initialize(path)
+    defaults = { :host => 'localhost', :port => 6600, :password => nil }
+    rc = begin
+      File.open(path) do |yf|
+        YAML::load(yf)
+      end
+    rescue
+      {}
+    end
+    rc = defaults.merge(rc)
+    @host = rc['host']
+    @port = rc['port']
+    @pass = rc['password']
+  end
+end
+
 class Njiiri
 
   TITLE = "Njiiri MPD Client"
   NAME = "Njiiri"
   VERSION = "0.1"
+  GLADE_PATH = "njiiri.glade"
 
   TITLE_FORMAT = "<big><big><b>%s</b></big></big>"
   ARTIST_FORMAT = "<big>%s</big>"
   ALBUM_FORMAT = "<small>%s</small>"
   POSITION_FORMAT = "%d:%02d / %d:%02d"
   WINDOW_FORMAT = "%s - %s"
-
-  # This is here to fill in GTK labels so that they don't shrink from a lack
-  # of text, which is visually annoying.
-
   BLANK = ' '
 
   # CLASS
 
-  def initialize(path, root = nil, domain = nil, localedir = nil,
-                 flag = GladeXML::FILE)
-    @glade = GladeXML.new(path) { |handler| method(handler) }
+  def initialize(rc_path)
+    @config = NjConfig.new(rc_path)
+    @glade = GladeXML.new(GLADE_PATH) { |handler| method(handler) }
     @widgets = WidgetBucket.new(@glade)
+    @widgets.host_entry.text = @config.host
+    @widgets.port_entry.text = @config.port.to_s
+    @widgets.pass_entry.text = @config.pass
   end
 
-  def connect(host, port, pass)
-    @widgets.host_entry.text = host
-    @widgets.port_entry.text = port.to_s
-    @widgets.pass_entry.text = pass
-
-    @mpd = MPD.new host, port
+  def connect
+    @mpd = MPD.new @config.host, @config.port
     @mpd.register_callback(self.method('song_cb'), MPD::CURRENT_SONG_CALLBACK)
     @mpd.register_callback(self.method('time_cb'), MPD::TIME_CALLBACK)
 
     begin
       @mpd.connect true
-      @mpd.password pass if pass
-      self.enable_toolbuttons(true)
+      @mpd.password @config.pass if @config.pass
       @widgets.connect_btn.stock_id = Gtk::Stock::DISCONNECT
+      self.enable_toolbuttons(true)
       self.connected
     rescue
       self.enable_toolbuttons(false)
@@ -183,10 +197,10 @@ class Njiiri
 
   def on_do_connect_btn_clicked
     @widgets.connect_dlg.hide
-    host = @widgets.host_entry.text
-    port = @widgets.port_entry.text.to_i
-    pass = @widgets.pass_entry.text
-    self.connect(host, port, pass)
+    @config.host = @widgets.host_entry.text
+    @config.port = @widgets.port_entry.text.to_i
+    @config.pass = @widgets.pass_entry.text
+    self.connect
   end
 
   # CALLBACKS
@@ -247,22 +261,7 @@ class Njiiri
 
 end
 
-def get_config(path)
-  begin
-    File.open(path) do |yf|
-      YAML::load(yf)
-    end
-  rescue
-    { 'host' => 'localhost',
-      'password' => nil,
-      'port' => 6600 }
-  end
-end
-
 Gtk.init
-
-njiiri = Njiiri.new("njiiri.glade", nil, Njiiri::NAME)
-config = get_config(File.expand_path("~/.njiirirc"))
-njiiri.connect config['host'], config['port'], config['password']
-
+njiiri = Njiiri.new(File.expand_path("~/.njiirirc"))
+njiiri.connect
 Gtk.main
