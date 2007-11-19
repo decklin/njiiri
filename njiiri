@@ -20,12 +20,10 @@ class NjConfig
 
   def initialize(path)
     @path = path
-    begin
-      @rc = DEFAULTS.merge File.open(@path) do |f|
-        YAML::load(f)
-      end
+    @rc = DEFAULTS.merge begin
+      File.open(@path) { |f| YAML::load(f) }
     rescue
-      @rc = DEFAULTS
+      {}
     end
     @serv = @rc[:server]
     @geom = @rc[:geometry]
