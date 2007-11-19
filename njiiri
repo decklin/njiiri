@@ -31,11 +31,11 @@ class Njiiri
   VERSION = "0.1"
   GLADE_PATH = "njiiri.glade"
 
-  TITLE_FORMAT = "<big><big><b>%s</b></big></big>"
-  ARTIST_FORMAT = "<big>%s</big>"
-  ALBUM_FORMAT = "<small>%s</small>"
-  POSITION_FORMAT = "%d:%02d / %d:%02d"
-  WINDOW_FORMAT = "%s - %s"
+  TITLE_FMT = "<big><big><b>%s</b></big></big>"
+  ARTIST_FMT = "<big>%s</big>"
+  ALBUM_FMT = "<small>%s</small>"
+  POSITION_FMT = "%d:%02d / %d:%02d"
+  WINDOW_FMT = "%s - %s"
   BLANK = ' '
 
   # CLASS
@@ -65,8 +65,8 @@ class Njiiri
   end
 
   def enable_toolbuttons(sensitive)
-    %w{play_btn prev_btn next_btn open_btn saveas_btn clear_btn repeat_btn shuffle_btn}.each do |b|
-      @glade.get_widget(b).sensitive = sensitive
+    %w{play prev next open saveas clear repeat shuffle}.each do |b|
+      @glade[b+'_btn'].sensitive = sensitive
     end
   end
 
@@ -209,7 +209,7 @@ class Njiiri
     pos_bar = @glade['pos_bar']
     if total > 0:
       pos_bar.fraction = elapsed.to_f / total
-      pos_bar.text = POSITION_FORMAT % \
+      pos_bar.text = POSITION_FMT % \
         [elapsed / 60, elapsed % 60, total / 60, total % 60]
     else
       pos_bar.fraction = 0.0
@@ -219,10 +219,10 @@ class Njiiri
 
   def update_info(current)
     if @mpd.connected? and current
-      @glade['player_win'].title = WINDOW_FORMAT % [current.artist, current.title]
-      @glade['title_label'].label = TITLE_FORMAT % CGI::escapeHTML(current.title)
-      @glade['artist_label'].label = ARTIST_FORMAT % CGI::escapeHTML(current.artist)
-      @glade['album_label'].label = ALBUM_FORMAT % CGI::escapeHTML(current.album)
+      @glade['player_win'].title = WINDOW_FMT % [current.artist, current.title]
+      @glade['title_label'].label = TITLE_FMT % CGI::escapeHTML(current.title)
+      @glade['artist_label'].label = ARTIST_FMT % CGI::escapeHTML(current.artist)
+      @glade['album_label'].label = ALBUM_FMT % CGI::escapeHTML(current.album)
       if @mpd.playing?
         elapsed, total = @mpd.status["time"].split(":").collect {|t| t.to_i }
         self.update_pos(elapsed, total)
@@ -231,9 +231,9 @@ class Njiiri
       end
     else
       @glade['player_win'].title = NAME
-      @glade['title_label'].label = TITLE_FORMAT % BLANK
-      @glade['artist_label'].label = ARTIST_FORMAT % BLANK
-      @glade['album_label'].label = ALBUM_FORMAT % BLANK
+      @glade['title_label'].label = TITLE_FMT % BLANK
+      @glade['artist_label'].label = ARTIST_FMT % BLANK
+      @glade['album_label'].label = ALBUM_FMT % BLANK
     end
   end
 
