@@ -43,7 +43,19 @@ def fmt_pos(*times)
 end
 
 def fmt_wintitle(*parts)
-  parts.join(" - ")
+  parts.grep(/./).join(" - ")
+end
+
+def fmt_title(title)
+  "<big><big><b>#{title || ' '}</b></big></big>"
+end
+
+def fmt_artist(artist)
+  "<big>#{artist || ' '}</big>"
+end
+
+def fmt_album(album)
+  "<small>#{album || ' '}</small>"
 end
 
 class Njiiri
@@ -52,11 +64,6 @@ class Njiiri
   NAME = "Njiiri"
   VERSION = "0.1"
   GLADE_PATH = "njiiri.glade"
-
-  TITLE_FMT = "<big><big><b>%s</b></big></big>"
-  ARTIST_FMT = "<big>%s</big>"
-  ALBUM_FMT = "<small>%s</small>"
-  BLANK = " "
 
   # CLASS
 
@@ -246,32 +253,25 @@ class Njiiri
       pos_bar.fraction = elapsed.to_f / total
       pos_bar.text = fmt_pos(elapsed, total)
     elsif elapsed > 0:
-      pos_bar.fraction = 1.0
+      pos_bar.pulse
       pos_bar.text = fmt_pos(elapsed)
     else
       pos_bar.fraction = 0.0
-      pos_bar.text = BLANK
+      pos_bar.text = fmt_pos(0)
     end
   end
 
   def update_info(current)
-    if @mpd.connected? and current
-      @glade['player_win'].title = fmt_wintitle(current.artist, current.title)
-      @glade['title_label'].label = TITLE_FMT % CGI::escapeHTML(current.title)
-      @glade['artist_label'].label = ARTIST_FMT % CGI::escapeHTML(current.artist)
-      @glade['album_label'].label = ALBUM_FMT % CGI::escapeHTML(current.album)
-      if @mpd.playing?
-        elapsed, total = @mpd.status["time"].split(":").collect {|t| t.to_i }
-        self.update_pos(elapsed, total)
-      else
-        self.update_pos(0, 0)
-      end
+    if @mpd.connected? and @mpd.playing?
+      elapsed, total = @mpd.status["time"].split(":").collect {|t| t.to_i }
+      self.update_pos(elapsed, total)
     else
-      @glade['player_win'].title = NAME
-      @glade['title_label'].label = TITLE_FMT % BLANK
-      @glade['artist_label'].label = ARTIST_FMT % BLANK
-      @glade['album_label'].label = ALBUM_FMT % BLANK
+      self.update_pos(0, 0)
     end
+    @glade['player_win'].title = fmt_wintitle(current.artist, current.title)
+    @glade['title_label'].label = fmt_title(current.title)
+    @glade['artist_label'].label = fmt_artist(current.artist)
+    @glade['album_label'].label = fmt_album(current.album)
   end
 
   def update_status
