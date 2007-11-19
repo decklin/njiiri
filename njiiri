@@ -92,18 +92,15 @@ class Njiiri
   end
 
   def connected
-    if @mpd.playing?
-      @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE
-    end
-
+    @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
     @glade['repeat_btn'].active = @mpd.repeat?
     @glade['shuffle_btn'].active = @mpd.random?
 
     @old_volume = @mpd.volume
     @glade['volume_scale'].value = @mpd.volume.to_f
 
-    @status_msg = nil
     @status_ctx = @glade['player_status'].get_context_id(TITLE)
+    @status_msg = nil
     self.update_status
   end
 
