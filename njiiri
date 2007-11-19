@@ -31,9 +31,7 @@ class NjConfig
 
   def save
     begin
-      File.open(@path, 'w') do |f|
-        YAML::dump(@rc, f)
-      end
+      File.open(@path, 'w') { |f| YAML::dump(@rc, f) }
     rescue
     end
   end
