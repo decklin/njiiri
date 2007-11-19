@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/ruby
 
 require 'rubygems'
 require 'librmpd'
@@ -247,21 +247,22 @@ class Njiiri
 
 end
 
-config = {
-  'host' => 'localhost',
-  'password' => nil,
-  'port' => 6600
-  }
-
-File.open(File.expand_path("~/.njiirirc")) do |y|
-  YAML.load_documents(y) do |doc|
-    config = doc
+def get_config(path)
+  begin
+    File.open(path) do |yf|
+      YAML::load(yf)
+    end
+  rescue
+    { 'host' => 'localhost',
+      'password' => nil,
+      'port' => 6600 }
   end
 end
 
 Gtk.init
 
-njiiri = Njiiri.new(File.dirname($0)+"/njiiri.glade", nil, Njiiri::NAME)
+njiiri = Njiiri.new("njiiri.glade", nil, Njiiri::NAME)
+config = get_config(File.expand_path("~/.njiirirc"))
 njiiri.connect config['host'], config['port'], config['password']
 
 Gtk.main
