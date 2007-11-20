@@ -29,7 +29,7 @@ class Njiiri
   end
 
   def connect
-    @mpd = MPD.new @conf.serv[:host], @conf.serv[:port]
+    @mpd = MPD.new(@conf.serv[:host], @conf.serv[:port])
     @mpd.register_callback(self.method('song_cb'), MPD::CURRENT_SONG_CALLBACK)
     @mpd.register_callback(self.method('state_cb'), MPD::STATE_CALLBACK)
     @mpd.register_callback(self.method('time_cb'), MPD::TIME_CALLBACK)
@@ -37,8 +37,8 @@ class Njiiri
     begin
       @mpd.connect true
       @mpd.password @conf.serv[:pass] if @conf.serv[:pass]
-      self.enable_toolbuttons(true)
       @glade['connect_btn'].stock_id = Gtk::Stock::DISCONNECT
+      self.enable_toolbuttons(true)
       self.connected
     rescue
       self.enable_toolbuttons(false)
@@ -61,6 +61,8 @@ class Njiiri
 
     @status_ctx = @glade['player_status'].get_context_id(TITLE)
     @status_msg = nil
+
+    self.update_info(@mpd.current_song)
     self.update_status
   end
 
@@ -139,8 +141,8 @@ class Njiiri
       self.enable_toolbuttons(false)
       widget.stock_id = Gtk::Stock::CONNECT
       @mpd.disconnect
-      self.update_info(MPD::Song.new)
-      self.update_pos(0, 0)
+      self.update_info(nil)
+      self.update_pos(0)
       self.update_status
     else
       @glade['connect_dlg'].show
@@ -204,7 +206,7 @@ class Njiiri
         @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
       when "stop"
         @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
-        update_pos(0, 0)
+        update_pos(0)
     end
   end
 
@@ -214,12 +216,20 @@ class Njiiri
 
   # MISC
 
-  def update_pos(elapsed, total)
+  def update_info(current)
+    current ||= MPD::Song.new
+    @glade['player_win'].title = Format.window(current.artist, current.title)
+    @glade['title_label'].label = Format.title(current.title)
+    @glade['artist_label'].label = Format.artist(current.artist)
+    @glade['album_label'].label = Format.album(current.album)
+  end
+
+  def update_pos(elapsed, total = 0)
     pos_bar = @glade['pos_bar']
-    if total > 0:
+    if total > 0
       pos_bar.fraction = elapsed.to_f / total
       pos_bar.text = Format.pos(elapsed, total)
-    elsif elapsed > 0:
+    elsif elapsed > 0
       pos_bar.pulse
       pos_bar.text = Format.pos(elapsed)
     else
@@ -228,25 +238,10 @@ class Njiiri
     end
   end
 
-  def update_info(current)
-    if @mpd.connected? and @mpd.playing?
-      elapsed, total = @mpd.status["time"].split(":").collect {|t| t.to_i }
-      self.update_pos(elapsed, total)
-    else
-      self.update_pos(0, 0)
-    end
-    @glade['player_win'].title = Format.window(current.artist, current.title)
-    @glade['title_label'].label = Format.title(current.title)
-    @glade['artist_label'].label = Format.artist(current.artist)
-    @glade['album_label'].label = Format.album(current.album)
-  end
-
   def update_status
     if @mpd.connected?
-        if @status_msg
-          @glade['player_status'].remove(@status_ctx, @status_msg)
-        end
         text = "Volume: #{@mpd.volume}%"
+        @glade['player_status'].remove(@status_ctx, @status_msg) if @status_msg
         @status_msg = @glade['player_status'].push(@status_ctx, text)
     else
       @status_msg = @glade['player_status'].push(@status_ctx, "Disconnected")
