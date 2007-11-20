@@ -156,6 +156,7 @@ class Njiiri
       @mpd.disconnect
       self.update_info(nil)
       self.update_pos(-1)
+      self.update_playlist
       self.update_status
     else
       @glade['connect_dlg'].show
@@ -208,13 +209,7 @@ class Njiiri
   # CALLBACKS
 
   def playlist_cb(playlist)
-    @tree_store.clear
-    @mpd.playlist.each do |song|
-      @tree_iter = @tree_store.append(nil)
-      @tree_iter[0] = song.artist
-      @tree_iter[1] = song.title
-      @tree_iter[2] = song.album
-    end
+    update_playlist
   end
 
   def song_cb(current)
@@ -238,6 +233,18 @@ class Njiiri
   end
 
   # MISC
+
+  def update_playlist
+    @tree_store.clear
+    if @mpd.connected?
+      @mpd.playlist.each do |song|
+        @tree_iter = @tree_store.append(nil)
+        @tree_iter[0] = song.artist
+        @tree_iter[1] = song.title
+        @tree_iter[2] = song.album
+      end
+    end
+  end
 
   def update_info(current)
     current ||= MPD::Song.new
