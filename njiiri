@@ -64,7 +64,7 @@ class Njiiri
     @glade['shuffle_btn'].active = @mpd.random?
 
     @volume = @mpd.volume
-    @glade['volume_scale'].value = @mpd.volume.to_f
+    @glade['volume_scale'].value = @volume.to_f
 
     self.update_info(@mpd.current_song)
   end
@@ -252,7 +252,7 @@ class Njiiri
 
   def update_status
     if @mpd.connected?
-      text = "Volume: #{@mpd.volume}%"
+      text = "Volume: #{@volume}%"
       @glade['player_status'].remove(@status_ctx, @status_msg) if @status_msg
       @status_msg = @glade['player_status'].push(@status_ctx, text)
     else
