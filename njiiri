@@ -21,6 +21,11 @@ class Njiiri
     @glade['host_entry'].text = @conf.serv[:host]
     @glade['port_entry'].text = @conf.serv[:port].to_s
     @glade['pass_entry'].text = @conf.serv[:pass].to_s
+    @glade['player_win'].set_default_size(@conf.geom[:player][:w],
+                                          @conf.geom[:player][:h])
+    @glade['browser_win'].set_default_size(@conf.geom[:browser][:w],
+                                           @conf.geom[:browser][:h])
+    @glade['player_win'].show
   end
 
   def connect
@@ -61,7 +66,7 @@ class Njiiri
 
   # MAIN WINDOW
 
-  def on_quit(widget, event)
+  def on_player_win_delete(widget, e)
     @mpd.disconnect
     @conf.save
     Gtk.main_quit
@@ -74,6 +79,16 @@ class Njiiri
       @glade['cover_img'].width_request = a.height
       @glade['cover_img'].height_request = a.height
     end
+  end
+
+  def on_player_win_size_allocate(widget, a)
+    @conf.geom[:player][:w] = a.width
+    @conf.geom[:player][:h] = a.height
+  end
+
+  def on_browser_win_size_allocate(widget, a)
+    @conf.geom[:browser][:w] = a.width
+    @conf.geom[:browser][:h] = a.height
   end
 
   # TOOLBAR
@@ -140,6 +155,10 @@ class Njiiri
   end
 
   # BROWSER WINDOW
+
+  def on_browser_win_delete(widget, e)
+    widget.hide
+  end
 
   def on_close_btn_clicked(widget)
     @glade['browser_win'].hide
