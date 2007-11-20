@@ -18,9 +18,14 @@ class Njiiri
   def initialize(rc_path)
     @conf = Conf.new(rc_path)
     @glade = GladeXML.new(GLADE_PATH) { |handler| method(handler) }
+
+    @status_ctx = @glade['player_status'].get_context_id(NAME)
+    @status_msg = nil
+
     @glade['host_entry'].text = @conf.serv[:host]
     @glade['port_entry'].text = @conf.serv[:port].to_s
     @glade['pass_entry'].text = @conf.serv[:pass].to_s
+
     @glade['player_win'].set_default_size(@conf.geom[:player][:w],
                                           @conf.geom[:player][:h])
     @glade['browser_win'].set_default_size(@conf.geom[:browser][:w],
@@ -43,6 +48,8 @@ class Njiiri
     rescue
       self.enable_toolbuttons(false)
     end
+
+    self.update_status
   end
 
   def enable_toolbuttons(sensitive)
@@ -56,14 +63,10 @@ class Njiiri
     @glade['repeat_btn'].active = @mpd.repeat?
     @glade['shuffle_btn'].active = @mpd.random?
 
-    @old_volume = @mpd.volume
+    @volume = @mpd.volume
     @glade['volume_scale'].value = @mpd.volume.to_f
 
-    @status_ctx = @glade['player_status'].get_context_id(NAME)
-    @status_msg = nil
-
     self.update_info(@mpd.current_song)
-    self.update_status
   end
 
   # MAIN WINDOW
@@ -150,8 +153,8 @@ class Njiiri
   end
 
   def on_volume_scale_value_changed(widget)
-    if widget.value.to_i != @old_volume
-      @old_volume = @mpd.volume = widget.value.to_i
+    if widget.value.to_i != @volume
+      @volume = @mpd.volume = widget.value.to_i
       self.update_status
     end
   end
