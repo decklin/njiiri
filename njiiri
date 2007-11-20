@@ -240,9 +240,9 @@ class Njiiri
 
   def update_status
     if @mpd.connected?
-        text = "Volume: #{@mpd.volume}%"
-        @glade['player_status'].remove(@status_ctx, @status_msg) if @status_msg
-        @status_msg = @glade['player_status'].push(@status_ctx, text)
+      text = "Volume: #{@mpd.volume}%"
+      @glade['player_status'].remove(@status_ctx, @status_msg) if @status_msg
+      @status_msg = @glade['player_status'].push(@status_ctx, text)
     else
       @status_msg = @glade['player_status'].push(@status_ctx, "Disconnected")
     end
