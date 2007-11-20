@@ -224,7 +224,7 @@ class Njiiri
       pos_bar.text = Format.pos(elapsed)
     else
       pos_bar.fraction = 0.0
-      pos_bar.text = Format.pos(0)
+      pos_bar.text = " "
     end
   end
 
@@ -257,6 +257,9 @@ end
 
 class Format
   class << self
+    def h(s)
+      CGI::escapeHTML(s || " ")
+    end
     def pos(*times)
       times.collect { |t| "%d:%02d" % [t/60, t%60] }.join(" / ")
     end
@@ -264,16 +267,13 @@ class Format
       parts.grep(/./).join(" - ")
     end
     def title(title)
-      title = CGI::escapeHTML(title) || ' '
-      "<big><big><b>#{title}</b></big></big>"
+      "<big><big><b>#{h(title)}</b></big></big>"
     end
     def artist(artist)
-      artist = CGI::escapeHTML(artist) || ' '
-      "<big>#{artist}</big>"
+      "<big>#{h(artist)}</big>"
     end
     def album(album)
-      album = CGI::escapeHTML(album) || ' '
-      "<small>#{album}</small>"
+      "<small>#{h(album)}</small>"
     end
   end
 end
