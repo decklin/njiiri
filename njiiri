@@ -245,13 +245,16 @@ class Format
       parts.grep(/./).join(" - ")
     end
     def title(title)
-      "<big><big><b>#{title || ' '}</b></big></big>"
+      title = CGI::escapeHTML(title) || ' '
+      "<big><big><b>#{title}</b></big></big>"
     end
     def artist(artist)
-      "<big>#{artist || ' '}</big>"
+      artist = CGI::escapeHTML(artist) || ' '
+      "<big>#{artist}</big>"
     end
     def album(album)
-      "<small>#{album || ' '}</small>"
+      album = CGI::escapeHTML(album) || ' '
+      "<small>#{album}</small>"
     end
   end
 end
