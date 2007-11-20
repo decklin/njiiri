@@ -28,6 +28,7 @@ class Njiiri
     @renderer = Gtk::CellRendererText.new
     %w{Artist Title Album}.each_with_index do |t, i|
       col = Gtk::TreeViewColumn.new(t, @renderer, :text => i)
+      col.resizable = true
       @glade['playlist_tree'].append_column(col)
     end
 
