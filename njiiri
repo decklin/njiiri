@@ -22,6 +22,15 @@ class Njiiri
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
 
+    @tree_store = Gtk::TreeStore.new(String, String, String)
+    @glade['playlist_tree'].model = @tree_store
+
+    @renderer = Gtk::CellRendererText.new
+    %w{Artist Title Album}.each_with_index do |t, i|
+      col = Gtk::TreeViewColumn.new(t, @renderer, :text => i)
+      @glade['playlist_tree'].append_column(col)
+    end
+
     @glade['host_entry'].text = @conf.serv[:host]
     @glade['port_entry'].text = @conf.serv[:port].to_s
     @glade['pass_entry'].text = @conf.serv[:pass].to_s
@@ -35,9 +44,10 @@ class Njiiri
 
   def connect
     @mpd = MPD.new(@conf.serv[:host], @conf.serv[:port])
-    @mpd.register_callback(self.method('song_cb'), MPD::CURRENT_SONG_CALLBACK)
-    @mpd.register_callback(self.method('state_cb'), MPD::STATE_CALLBACK)
-    @mpd.register_callback(self.method('time_cb'), MPD::TIME_CALLBACK)
+    @mpd.register_callback(self.method(:playlist_cb), MPD::PLAYLIST_CALLBACK)
+    @mpd.register_callback(self.method(:song_cb), MPD::CURRENT_SONG_CALLBACK)
+    @mpd.register_callback(self.method(:state_cb), MPD::STATE_CALLBACK)
+    @mpd.register_callback(self.method(:time_cb), MPD::TIME_CALLBACK)
 
     begin
       @mpd.connect true
@@ -196,6 +206,16 @@ class Njiiri
   end
 
   # CALLBACKS
+
+  def playlist_cb(playlist)
+    @tree_store.clear
+    @mpd.playlist.each do |song|
+      @tree_iter = @tree_store.append(nil)
+      @tree_iter[0] = song.artist
+      @tree_iter[1] = song.title
+      @tree_iter[2] = song.album
+    end
+  end
 
   def song_cb(current)
     update_info(current)
