@@ -142,7 +142,7 @@ class Njiiri
       widget.stock_id = Gtk::Stock::CONNECT
       @mpd.disconnect
       self.update_info(nil)
-      self.update_pos(0)
+      self.update_pos(-1)
       self.update_status
     else
       @glade['connect_dlg'].show
@@ -206,7 +206,7 @@ class Njiiri
         @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
       when "stop"
         @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
-        update_pos(0)
+        update_pos(-1)
     end
   end
 
@@ -225,16 +225,25 @@ class Njiiri
   end
 
   def update_pos(elapsed, total = 0)
-    pos_bar = @glade['pos_bar']
+    if @mpd.connected? and @mpd.current_song and total == 0
+      total = @mpd.current_song.time.to_i
+    end
     if total > 0
-      pos_bar.fraction = elapsed.to_f / total
-      pos_bar.text = Format.pos(elapsed, total)
-    elsif elapsed > 0
-      pos_bar.pulse
-      pos_bar.text = Format.pos(elapsed)
+      if elapsed >= 0
+        @glade['pos_bar'].text = Format.pos(elapsed, total)
+        @glade['pos_bar'].fraction = elapsed.to_f / total
+      else
+        @glade['pos_bar'].text = Format.pos(total)
+        @glade['pos_bar'].fraction = 0.0
+      end
     else
-      pos_bar.fraction = 0.0
-      pos_bar.text = " "
+      if elapsed > 0
+        @glade['pos_bar'].text = Format.pos(elapsed)
+        @glade['pos_bar'].pulse
+      else
+        @glade['pos_bar'].text = Format.pos
+        @glade['pos_bar'].fraction = 0.0
+      end
     end
   end
 
@@ -252,14 +261,13 @@ end
 
 class Format
   class << self
-    def h(s)
-      CGI::escapeHTML(s || " ")
-    end
+    def pad(s, p); s && s != "" ? s : p; end
+    def h(s); CGI::escapeHTML(pad(s, " ")); end
     def pos(*times)
-      times.collect {|t| "%d:%02d" % [t/60, t%60] }.join(" / ")
+      pad(times.collect {|t| "%d:%02d" % [t/60, t%60] }.join(" / "), " ")
     end
     def window(*parts)
-      parts.compact.empty? ? Njiiri::NAME : parts.compact.join(" - ")
+      pad(parts.compact.join(" - "), Njiiri::NAME)
     end
     def title(title)
       "<big><big><b>#{h(title)}</b></big></big>"
