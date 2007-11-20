@@ -59,7 +59,7 @@ class Njiiri
     @old_volume = @mpd.volume
     @glade['volume_scale'].value = @mpd.volume.to_f
 
-    @status_ctx = @glade['player_status'].get_context_id(TITLE)
+    @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
 
     self.update_info(@mpd.current_song)
@@ -256,10 +256,10 @@ class Format
       CGI::escapeHTML(s || " ")
     end
     def pos(*times)
-      times.collect { |t| "%d:%02d" % [t/60, t%60] }.join(" / ")
+      times.collect {|t| "%d:%02d" % [t/60, t%60] }.join(" / ")
     end
     def window(*parts)
-      parts.grep(/./).join(" - ")
+      parts.compact.empty? ? Njiiri::NAME : parts.compact.join(" - ")
     end
     def title(title)
       "<big><big><b>#{h(title)}</b></big></big>"
