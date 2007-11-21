@@ -114,6 +114,10 @@ class Njiiri
     end
   end
 
+  def on_playlist_tree_row_activated(widget, path, col)
+    iter = @tree_store.get_iter(path)
+  end
+
   # TOOLBAR
 
   def on_play_btn_clicked(widget)
@@ -246,10 +250,10 @@ class Njiiri
     @tree_store.clear
     if @mpd.connected?
       @mpd.playlist.each do |song|
-        @tree_iter = @tree_store.append(nil)
-        @tree_iter[0] = song.artist
-        @tree_iter[1] = song.title
-        @tree_iter[2] = song.album
+        iter = @tree_store.append(nil)
+        iter[0] = song.artist
+        iter[1] = song.title
+        iter[2] = song.album
       end
     end
   end
