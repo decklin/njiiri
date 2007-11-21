@@ -107,6 +107,13 @@ class Njiiri
     @conf.geom[:browser][:h] = a.height
   end
 
+  def on_pos_bar_button_press_event(widget, e)
+    if @mpd.connected? and @mpd.playing?
+      seek = (e.x / widget.allocation.width) * @mpd.current_song.time.to_i
+      @mpd.seek(@mpd.current_song.pos, seek.to_i)
+    end
+  end
+
   # TOOLBAR
 
   def on_play_btn_clicked(widget)

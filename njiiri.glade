@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.2.2 on Tue Nov 20 18:52:31 2007 by dfoster@bechet-->
+<!--Generated with glade3 3.2.2 on Wed Nov 21 00:40:06 2007 by decklin@dolphy-->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -227,6 +227,7 @@
                             <property name="pulse_step">0.01</property>
                             <property name="text" translatable="yes" context="yes"> </property>
                             <property name="discrete_blocks">2</property>
+                            <signal name="button_press_event" handler="on_pos_bar_button_press_event"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
