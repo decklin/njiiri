@@ -22,11 +22,11 @@ class Njiiri
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
 
-    @tree_store = Gtk::TreeStore.new(String, String, String)
+    @tree_store = Gtk::TreeStore.new(String, String, String, String)
     @glade['playlist_tree'].model = @tree_store
 
     @renderer = Gtk::CellRendererText.new
-    %w{Artist Title Album}.each_with_index do |t, i|
+    %w{Title Artist Album Time}.each_with_index do |t, i|
       col = Gtk::TreeViewColumn.new(t, @renderer, :text => i)
       col.resizable = true
       @glade['playlist_tree'].append_column(col)
@@ -251,9 +251,10 @@ class Njiiri
     if @mpd.connected?
       @mpd.playlist.each do |song|
         iter = @tree_store.append(nil)
-        iter[0] = song.artist
-        iter[1] = song.title
-        iter[2] = song.album
+        iter[0] = Format.pad(song.title, "-")
+        iter[1] = Format.pad(song.artist, "-")
+        iter[2] = Format.pad(song.album, "-")
+        iter[3] = Format.pos(song.time.to_i)
       end
     end
   end
