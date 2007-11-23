@@ -277,7 +277,7 @@ class Njiiri
     if total > 0
       if elapsed >= 0
         @glade['pos_bar'].text = Format.pos(elapsed, total)
-        @glade['pos_bar'].fraction = elapsed.to_f / total
+        @glade['pos_bar'].fraction = [elapsed.to_f / total, 1].min
       else
         @glade['pos_bar'].text = Format.pos(total)
         @glade['pos_bar'].fraction = 0.0
