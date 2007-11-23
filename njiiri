@@ -187,6 +187,25 @@ class Njiiri
 
   # BROWSER WINDOW
 
+  def on_browser_win_key_press_event(widget, e)
+    if !@glade['search_entry'].has_focus? and e.keyval == "/"[0]
+      @glade['search_label'].label = "_Location:"
+      @glade['search_entry'].text = "http://"
+      @glade['search_entry'].has_focus = true
+      @glade['search_entry'].position = -1
+      true
+    else
+      false
+    end
+  end
+
+  def on_add_btn_clicked(widget)
+    if @glade['search_entry'].has_focus?
+      @mpd.add(@glade['search_entry'].text)
+      @glade['search_entry'].text = ""
+    end
+  end
+
   def on_browser_win_delete(widget, e)
     widget.hide
   end
