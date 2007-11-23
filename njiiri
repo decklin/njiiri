@@ -348,7 +348,7 @@ class Njiiri
         iter[2] = Format.pad(song.title, "<unknown>")
         iter[3] = Format.pad(song.artist || song.name, "<unknown>")
         iter[4] = Format.pad(song.album || song.file, "<unknown>")
-        iter[5] = Format.pos(song.time.to_i)
+        iter[5] = song.time ? Format.pos(song.time.to_i) : "∞"
       end
     end
   end
