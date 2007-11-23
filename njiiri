@@ -317,20 +317,26 @@ class Njiiri
         iter[0] = song['id'].to_i
         iter[1] = song['id'] == @mpd.status['songid'] ? Pango::WEIGHT_BOLD :
                                                         Pango::WEIGHT_NORMAL
-        iter[2] = Format.pad(song.title, "-")
-        iter[3] = Format.pad(song.artist || song.name, "-")
-        iter[4] = Format.pad(song.album || song.file, "-")
+        iter[2] = Format.pad(song.title, "<unknown>")
+        iter[3] = Format.pad(song.artist || song.name, "<unknown>")
+        iter[4] = Format.pad(song.album || song.file, "<unknown>")
         iter[5] = Format.pos(song.time.to_i)
       end
     end
   end
 
   def update_info(current)
-    current ||= MPD::Song.new
-    @glade['player_win'].title = Format.window(current.artist, current.title)
-    @glade['title_label'].label = Format.title(current.title || "-")
-    @glade['artist_label'].label = Format.artist(current.artist || current.name)
-    @glade['album_label'].label = Format.album(current.album || current.file)
+    if current
+      title = Format.pad(current.title, "<unknown>")
+      artist = Format.pad(current.artist || current.name, "<unknown>")
+      album = Format.pad(current.album || current.file, "<unknown>")
+    else
+      title = artist = album = nil
+    end
+    @glade['title_label'].label = Format.title(title)
+    @glade['artist_label'].label = Format.artist(artist)
+    @glade['album_label'].label = Format.album(album)
+    @glade['player_win'].title = Format.window(artist, title)
   end
 
   def update_pos(elapsed, total = 0)
