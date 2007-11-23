@@ -13,12 +13,17 @@ class Njiiri
   VERSION = "0.1"
   GLADE_PATH = "njiiri.glade"
 
-  COLUMNS = [ [ nil, Integer ], # song id
-              [ nil, Integer ], # bold if playing
-              [ "Title", String ],
-              [ "Artist", String ],
-              [ "Album", String ],
-              [ "Time", String ] ]
+  PLAYER_COLS = [ [ nil, Integer ], # song id
+                  [ nil, Integer ], # bold if playing
+                  [ "Title", String ],
+                  [ "Artist", String ],
+                  [ "Album", String ],
+                  [ "Time", String ] ]
+  BOOKMK_COLS = [ [ "Places", String ] ]
+  BROWSE_COLS = [ [ "Title", String ],
+                  [ "Artist", String ],
+                  [ "Album", String ],
+                  [ "Time", String ] ]
 
   # CLASS
 
@@ -29,16 +34,39 @@ class Njiiri
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
 
-    @tree_store = Gtk::TreeStore.new(*COLUMNS.collect {|x| x[1] })
-    @glade['playlist_tree'].model = @tree_store
-
     @renderer = Gtk::CellRendererText.new
-    COLUMNS.each_with_index do |t, i|
+
+    @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect {|x| x[1] })
+    @glade['playlist_tree'].model = @player_tree_store
+
+    PLAYER_COLS.each_with_index do |t, i|
       if t[0]
         col = Gtk::TreeViewColumn.new(t[0], @renderer, :text => i,
                                                        :weight => 1)
         col.resizable = true
         @glade['playlist_tree'].append_column(col)
+      end
+    end
+
+    @bookmarks_tree_store = Gtk::TreeStore.new(*BOOKMK_COLS.collect {|x| x[1] })
+    @glade['bookmarks_tree'].model = @bookmarks_tree_store
+
+    BOOKMK_COLS.each_with_index do |t, i|
+      if t[0]
+        col = Gtk::TreeViewColumn.new(t[0], @renderer, :text => i)
+        col.resizable = true
+        @glade['bookmarks_tree'].append_column(col)
+      end
+    end
+
+    @files_tree_store = Gtk::TreeStore.new(*BROWSE_COLS.collect {|x| x[1] })
+    @glade['files_tree'].model = @files_tree_store
+
+    BROWSE_COLS.each_with_index do |t, i|
+      if t[0]
+        col = Gtk::TreeViewColumn.new(t[0], @renderer, :text => i)
+        col.resizable = true
+        @glade['files_tree'].append_column(col)
       end
     end
 
@@ -144,7 +172,7 @@ class Njiiri
   end
 
   def on_playlist_tree_row_activated(widget, path, col)
-    iter = @tree_store.get_iter(path)
+    iter = @player_tree_store.get_iter(path)
     @mpd.seekid(iter[0], 0)
   end
 
@@ -310,10 +338,10 @@ class Njiiri
   # MISC
 
   def update_playlist
-    @tree_store.clear
+    @player_tree_store.clear
     if @mpd.connected?
       @mpd.playlist.each do |song|
-        iter = @tree_store.append(nil)
+        iter = @player_tree_store.append(nil)
         iter[0] = song['id'].to_i
         iter[1] = song['id'] == @mpd.status['songid'] ? Pango::WEIGHT_BOLD :
                                                         Pango::WEIGHT_NORMAL
