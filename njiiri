@@ -24,7 +24,7 @@ class Njiiri
 
   def initialize(rc_path)
     @conf = Conf.new(rc_path)
-    @glade = GladeXML.new(GLADE_PATH) { |handler| method(handler) }
+    @glade = GladeXML.new(GLADE_PATH) {|handler| method(handler) }
 
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
@@ -410,7 +410,7 @@ class Conf
   def initialize(path)
     @path = path
     @rc = DEFAULTS.merge begin
-      File.open(@path) { |f| YAML::load(f) }
+      File.open(@path) {|f| YAML::load(f) }
     rescue
       {}
     end
@@ -420,7 +420,7 @@ class Conf
 
   def save
     begin
-      File.open(@path, 'w') { |f| YAML::dump(@rc, f) }
+      File.open(@path, 'w') {|f| YAML::dump(@rc, f) }
     rescue
     end
   end
