@@ -22,13 +22,13 @@ class Njiiri
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
 
-    @tree_store = Gtk::TreeStore.new(String, String, String, String)
+    @tree_store = Gtk::TreeStore.new(Integer, String, String, String, String)
     @glade['playlist_tree'].model = @tree_store
 
     @renderer = Gtk::CellRendererText.new
     cols = ['Title / File', 'Artist / Name', 'Album / Location', 'Time']
     cols.each_with_index do |t, i|
-      col = Gtk::TreeViewColumn.new(t, @renderer, :text => i)
+      col = Gtk::TreeViewColumn.new(t, @renderer, :text => i+1)
       col.resizable = true
       @glade['playlist_tree'].append_column(col)
     end
@@ -136,6 +136,7 @@ class Njiiri
 
   def on_playlist_tree_row_activated(widget, path, col)
     iter = @tree_store.get_iter(path)
+    @mpd.seekid(iter[0], 0)
   end
 
   # TOOLBAR
@@ -303,10 +304,11 @@ class Njiiri
     if @mpd.connected?
       @mpd.playlist.each do |song|
         iter = @tree_store.append(nil)
-        iter[0] = Format.pad(song.title, "-")
-        iter[1] = Format.pad(song.artist || song.name, "-")
-        iter[2] = Format.pad(song.album || song.file, "-")
-        iter[3] = Format.pos(song.time.to_i)
+        iter[0] = song['id'].to_i
+        iter[1] = Format.pad(song.title, "-")
+        iter[2] = Format.pad(song.artist || song.name, "-")
+        iter[3] = Format.pad(song.album || song.file, "-")
+        iter[4] = Format.pos(song.time.to_i)
       end
     end
   end
