@@ -218,8 +218,11 @@ class Njiiri
 
   def on_add_btn_clicked(widget)
     if @glade['search_entry'].has_focus?
-      @mpd.add(@glade['search_entry'].text)
-      @glade['search_entry'].text = ""
+      begin
+        @mpd.add(@glade['search_entry'].text)
+        @glade['search_entry'].text = ""
+      rescue RuntimeError
+      end
     end
   end
 
