@@ -26,7 +26,8 @@ class Njiiri
     @glade['playlist_tree'].model = @tree_store
 
     @renderer = Gtk::CellRendererText.new
-    %w{Title Artist Album Time}.each_with_index do |t, i|
+    cols = ['Title / File', 'Artist / Name', 'Album / Location', 'Time']
+    cols.each_with_index do |t, i|
       col = Gtk::TreeViewColumn.new(t, @renderer, :text => i)
       col.resizable = true
       @glade['playlist_tree'].append_column(col)
@@ -53,8 +54,8 @@ class Njiiri
     @mpd.register_callback(self.method(:time_cb), MPD::TIME_CALLBACK)
 
     begin
-      @mpd.connect true
-      @mpd.password @conf.serv[:pass] if @conf.serv[:pass]
+      @mpd.connect(true)
+      @mpd.password(@conf.serv[:pass]) if @conf.serv[:pass]
       @glade['connect_btn'].stock_id = Gtk::Stock::DISCONNECT
       self.enable_toolbuttons(true)
       self.connected
@@ -254,8 +255,8 @@ class Njiiri
       @mpd.playlist.each do |song|
         iter = @tree_store.append(nil)
         iter[0] = Format.pad(song.title, "-")
-        iter[1] = Format.pad(song.artist, "-")
-        iter[2] = Format.pad(song.album, "-")
+        iter[1] = Format.pad(song.artist || song.name, "-")
+        iter[2] = Format.pad(song.album || song.file, "-")
         iter[3] = Format.pos(song.time.to_i)
       end
     end
@@ -264,9 +265,9 @@ class Njiiri
   def update_info(current)
     current ||= MPD::Song.new
     @glade['player_win'].title = Format.window(current.artist, current.title)
-    @glade['title_label'].label = Format.title(current.title)
-    @glade['artist_label'].label = Format.artist(current.artist)
-    @glade['album_label'].label = Format.album(current.album)
+    @glade['title_label'].label = Format.title(current.title || "-")
+    @glade['artist_label'].label = Format.artist(current.artist || current.name)
+    @glade['album_label'].label = Format.album(current.album || current.file)
   end
 
   def update_pos(elapsed, total = 0)
@@ -320,8 +321,13 @@ class Format
     def artist(artist)
       "<big>#{h(artist)}</big>"
     end
-    def album(album)
-      "<small>#{h(album)}</small>"
+    def album(album, track = nil, stream = false)
+      if not stream
+        track = track ? "track #{track}, " : ""
+        "<small>#{track}<i>#{h(album)}</i></small>"
+      else
+        "<small>#{h(album)}</small>"
+      end
     end
   end
 end
