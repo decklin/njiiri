@@ -37,11 +37,14 @@ class Njiiri
     @glade['port_entry'].text = @conf.serv[:port].to_s
     @glade['pass_entry'].text = @conf.serv[:pass].to_s
 
-    @glade['player_win'].set_default_size(@conf.geom[:player][:w],
-                                          @conf.geom[:player][:h])
-    @glade['browser_win'].set_default_size(@conf.geom[:browser][:w],
-                                           @conf.geom[:browser][:h])
+    x, y, h, w = [:x, :y, :h, :w].collect {|d| @conf.geom[:player][d] }
+    @glade['player_win'].set_default_size(w, h)
+    @glade['player_win'].move(x, y)
     @glade['main_pane'].set_position(@conf.geom[:player][:cover])
+
+    x, y, h, w = [:x, :y, :h, :w].collect {|d| @conf.geom[:browser][d] }
+    @glade['browser_win'].set_default_size(w, h)
+    @glade['browser_win'].move(x, y)
 
     @glade['player_win'].show
   end
@@ -103,11 +106,25 @@ class Njiiri
   def on_player_win_size_allocate(widget, a)
     @conf.geom[:player][:w] = a.width
     @conf.geom[:player][:h] = a.height
+    false
+  end
+
+  def on_player_win_configure_event(widget, e)
+    @conf.geom[:player][:x] = e.x
+    @conf.geom[:player][:y] = e.y
+    false
   end
 
   def on_browser_win_size_allocate(widget, a)
     @conf.geom[:browser][:w] = a.width
     @conf.geom[:browser][:h] = a.height
+    false
+  end
+
+  def on_browser_win_configure_event(widget, e)
+    @conf.geom[:browser][:x] = e.x
+    @conf.geom[:browser][:y] = e.y
+    false
   end
 
   def on_pos_bar_button_press_event(widget, e)
