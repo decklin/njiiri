@@ -191,8 +191,8 @@ class Njiiri
     if !@glade['search_entry'].has_focus? and e.keyval == "/"[0]
       @glade['loc_btn'].active = true
       @glade['search_entry'].text = "http://"
-      @glade['search_entry'].position = -1
       @glade['search_entry'].grab_focus
+      @glade['search_entry'].position = -1
       true
     else
       false
