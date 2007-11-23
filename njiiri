@@ -13,6 +13,13 @@ class Njiiri
   VERSION = "0.1"
   GLADE_PATH = "njiiri.glade"
 
+  COLUMNS = [ [ nil, Integer ], # song id
+              [ nil, Integer ], # bold if playing
+              [ "Title", String ],
+              [ "Artist", String ],
+              [ "Album", String ],
+              [ "Time", String ] ]
+
   # CLASS
 
   def initialize(rc_path)
@@ -22,15 +29,17 @@ class Njiiri
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
 
-    @tree_store = Gtk::TreeStore.new(Integer, String, String, String, String)
+    @tree_store = Gtk::TreeStore.new(*COLUMNS.collect {|x| x[1] })
     @glade['playlist_tree'].model = @tree_store
 
     @renderer = Gtk::CellRendererText.new
-    cols = ['Title / File', 'Artist / Name', 'Album / Location', 'Time']
-    cols.each_with_index do |t, i|
-      col = Gtk::TreeViewColumn.new(t, @renderer, :text => i+1)
-      col.resizable = true
-      @glade['playlist_tree'].append_column(col)
+    COLUMNS.each_with_index do |t, i|
+      if t[0]
+        col = Gtk::TreeViewColumn.new(t[0], @renderer, :text => i,
+                                                       :weight => 1)
+        col.resizable = true
+        @glade['playlist_tree'].append_column(col)
+      end
     end
 
     @glade['host_entry'].text = @conf.serv[:host]
@@ -279,6 +288,7 @@ class Njiiri
 
   def song_cb(current)
     update_info(current)
+    update_playlist
   end
 
   def state_cb(newstate)
@@ -305,10 +315,12 @@ class Njiiri
       @mpd.playlist.each do |song|
         iter = @tree_store.append(nil)
         iter[0] = song['id'].to_i
-        iter[1] = Format.pad(song.title, "-")
-        iter[2] = Format.pad(song.artist || song.name, "-")
-        iter[3] = Format.pad(song.album || song.file, "-")
-        iter[4] = Format.pos(song.time.to_i)
+        iter[1] = song['id'] == @mpd.status['songid'] ? Pango::WEIGHT_BOLD :
+                                                        Pango::WEIGHT_NORMAL
+        iter[2] = Format.pad(song.title, "-")
+        iter[3] = Format.pad(song.artist || song.name, "-")
+        iter[4] = Format.pad(song.album || song.file, "-")
+        iter[5] = Format.pos(song.time.to_i)
       end
     end
   end
@@ -358,7 +370,7 @@ end
 
 class Format
   class << self
-    def pad(s, p); s && s != "" ? s : p; end
+    def pad(s, p); s && !s.empty? ? s : p; end
     def h(s); CGI::escapeHTML(pad(s, " ")); end
     def pos(*times)
       pad(times.collect {|t| "%d:%02d" % [t/60, t%60] }.join(" / "), " ")
