@@ -6,6 +6,13 @@ require 'thread'
 require 'libglade2'
 require 'cgi'
 
+class MPD
+  def lsinfo(path = "/")
+    response = send_command "lsinfo \"#{path}\""
+    filter_response response, /\A(file|directory): /i
+  end
+end
+
 class Njiiri
 
   TITLE = "Njiiri MPD Client"
