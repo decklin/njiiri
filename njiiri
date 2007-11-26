@@ -98,35 +98,44 @@ class Njiiri
     @mpd.register_callback(self.method(:song_cb), MPD::CURRENT_SONG_CALLBACK)
     @mpd.register_callback(self.method(:state_cb), MPD::STATE_CALLBACK)
     @mpd.register_callback(self.method(:time_cb), MPD::TIME_CALLBACK)
+    @mpd.register_callback(self.method(:conn_cb), MPD::CONNECTION_CALLBACK)
 
     begin
       @mpd.connect(true)
       @mpd.password(@conf.serv[:pass]) if @conf.serv[:pass]
       @glade['connect_btn'].stock_id = Gtk::Stock::DISCONNECT
-      self.enable_toolbuttons(true)
-      self.connected
     rescue
-      self.enable_toolbuttons(false)
-    end
-
-    self.update_status
-  end
-
-  def enable_toolbuttons(sensitive)
-    %w{play prev next open saveas clear repeat shuffle}.each do |b|
-      @glade[b+'_btn'].sensitive = sensitive
+      self.disconnected
     end
   end
 
   def connected
+    self.enable_toolbuttons(true)
+    @glade['connect_btn'].stock_id = Gtk::Stock::DISCONNECT
     @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
     @glade['repeat_btn'].active = @mpd.repeat?
     @glade['shuffle_btn'].active = @mpd.random?
-
-    @volume = @mpd.volume
-    @glade['volume_scale'].value = @volume.to_f
+    @glade['volume_scale'].value = @volume = @mpd.volume.to_i
 
     self.update_info(@mpd.current_song)
+    self.update_status
+  end
+
+  def disconnected
+    self.enable_toolbuttons(false)
+    @glade['connect_btn'].stock_id = Gtk::Stock::CONNECT
+
+    self.update_info(nil)
+    self.update_pos(-1)
+    self.update_status
+
+    @player_tree_store.clear
+  end
+
+  def enable_toolbuttons(sensitive)
+    %w{play prev next open saveas clear repeat shuffle}.each do |b|
+      @glade["#{b}_btn"].sensitive = sensitive
+    end
   end
 
   # MAIN WINDOW
@@ -227,13 +236,8 @@ class Njiiri
 
   def on_connect_btn_clicked(widget)
     if @mpd.connected?
-      self.enable_toolbuttons(false)
-      widget.stock_id = Gtk::Stock::CONNECT
       @mpd.disconnect
-      self.update_info(nil)
-      self.update_pos(-1)
-      @player_tree_store.clear
-      self.update_status
+      self.disconnected
     else
       @glade['connect_dlg'].show
     end
@@ -341,6 +345,10 @@ class Njiiri
 
   def time_cb(elapsed, total)
     update_pos(elapsed, total)
+  end
+
+  def conn_cb(up)
+    up ? self.connected : self.disconnected
   end
 
   # MISC
