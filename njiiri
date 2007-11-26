@@ -319,6 +319,7 @@ class Njiiri
   def playlist_cb(version)
     rebuild_playlist(version)
     update_playlist
+    update_status
   end
 
   def song_cb(current)
@@ -404,12 +405,14 @@ class Njiiri
 
   def update_status
     if @mpd.connected?
-      text = "Volume: #{@volume}%"
-      @glade['player_status'].remove(@status_ctx, @status_msg) if @status_msg
-      @status_msg = @glade['player_status'].push(@status_ctx, text)
+      cur_time = Format.pos(@mpd.playlist.inject(0) {|m, s| m + s.time.to_i })
+      cur_len = @mpd.status['playlistlength']
+      items = [ "Volume: #{@volume}%", "#{cur_time} in #{cur_len} songs" ]
     else
-      @status_msg = @glade['player_status'].push(@status_ctx, "Disconnected")
+      items = [ "Disconnected" ]
     end
+    @glade['player_status'].remove(@status_ctx, @status_msg) if @status_msg
+    @status_msg = @glade['player_status'].push(@status_ctx, items.join(", "))
   end
 
 end
