@@ -20,12 +20,12 @@ class Njiiri
   VERSION = "0.1"
   GLADE_PATH = "njiiri.glade"
 
-  PLAYER_COLS = [ [ nil, Integer ], # song id
-                  [ nil, Integer ], # bold if playing
-                  [ "Title", String ],
+  PLAYER_COLS = [ [ "Title", String ],
                   [ "Artist", String ],
                   [ "Album", String ],
-                  [ "Time", String ] ]
+                  [ "Time", String ],
+                  [ nil, Integer ], # song id
+                  [ nil, Integer ] ] # bold if playing
   BOOKMK_COLS = [ [ "Places", String ] ]
   BROWSE_COLS = [ [ "Title", String ],
                   [ "Artist", String ],
@@ -41,15 +41,14 @@ class Njiiri
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
 
-    @renderer = Gtk::CellRendererText.new
+    @rend = Gtk::CellRendererText.new
 
     @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect {|x| x[1] })
     @glade['playlist_tree'].model = @player_tree_store
 
     PLAYER_COLS.each_with_index do |t, i|
       if t[0]
-        col = Gtk::TreeViewColumn.new(t[0], @renderer, :text => i,
-                                                       :weight => 1)
+        col = Gtk::TreeViewColumn.new(t[0], @rend, :text => i, :weight => 5)
         col.resizable = true
         @glade['playlist_tree'].append_column(col)
       end
@@ -60,7 +59,7 @@ class Njiiri
 
     BOOKMK_COLS.each_with_index do |t, i|
       if t[0]
-        col = Gtk::TreeViewColumn.new(t[0], @renderer, :text => i)
+        col = Gtk::TreeViewColumn.new(t[0], @rend, :text => i)
         col.resizable = true
         @glade['bookmarks_tree'].append_column(col)
       end
@@ -71,7 +70,7 @@ class Njiiri
 
     BROWSE_COLS.each_with_index do |t, i|
       if t[0]
-        col = Gtk::TreeViewColumn.new(t[0], @renderer, :text => i)
+        col = Gtk::TreeViewColumn.new(t[0], @rend, :text => i)
         col.resizable = true
         @glade['files_tree'].append_column(col)
       end
@@ -180,7 +179,7 @@ class Njiiri
 
   def on_playlist_tree_row_activated(widget, path, col)
     iter = @player_tree_store.get_iter(path)
-    @mpd.seekid(iter[0], 0)
+    @mpd.seekid(iter[4], 0)
   end
 
   # TOOLBAR
@@ -233,7 +232,7 @@ class Njiiri
       @mpd.disconnect
       self.update_info(nil)
       self.update_pos(-1)
-      self.update_playlist
+      @player_tree_store.clear
       self.update_status
     else
       @glade['connect_dlg'].show
@@ -317,7 +316,8 @@ class Njiiri
 
   # CALLBACKS
 
-  def playlist_cb(playlist)
+  def playlist_cb(version)
+    rebuild_playlist(version)
     update_playlist
   end
 
@@ -345,17 +345,22 @@ class Njiiri
   # MISC
 
   def update_playlist
+    cur_id = @mpd.status['songid'].to_i
+    @player_tree_store.each do |model, path, iter|
+      iter[5] = iter[4] == cur_id ? Pango::WEIGHT_BOLD : Pango::WEIGHT_NORMAL
+    end
+  end
+
+  def rebuild_playlist(version)
     @player_tree_store.clear
     if @mpd.connected?
       @mpd.playlist.each do |song|
         iter = @player_tree_store.append(nil)
-        iter[0] = song['id'].to_i
-        iter[1] = song['id'] == @mpd.status['songid'] ? Pango::WEIGHT_BOLD :
-                                                        Pango::WEIGHT_NORMAL
-        iter[2] = Format.pad(song.title, "<unknown>")
-        iter[3] = Format.pad(song.artist || song.name, "<unknown>")
-        iter[4] = Format.pad(song.album || song.file, "<unknown>")
-        iter[5] = song.time ? Format.pos(song.time.to_i) : "∞"
+        iter[0] = Format.pad(song.title, "<unknown>")
+        iter[1] = Format.pad(song.artist || song.name, "<unknown>")
+        iter[2] = Format.pad(song.album || song.file, "<unknown>")
+        iter[3] = song.time ? Format.pos(song.time.to_i) : "∞"
+        iter[4] = song['id'].to_i
       end
     end
   end
