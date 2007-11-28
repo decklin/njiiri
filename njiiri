@@ -365,9 +365,9 @@ class Njiiri
     if @mpd.connected?
       @mpd.playlist.each do |song|
         iter = @player_tree_store.append(nil)
-        iter[0] = Format.pad(song.title, "<unknown>")
-        iter[1] = Format.pad(song.artist || song.name, "<unknown>")
-        iter[2] = Format.pad(song.album || song.file, "<unknown>")
+        iter[0] = Format.pad(song.title, "-")
+        iter[1] = Format.pad(song.artist || song.name, "-")
+        iter[2] = Format.pad(song.album || song.file, "-")
         iter[3] = song.time ? Format.pos(song.time.to_i) : "∞"
         iter[4] = song['id'].to_i
       end
@@ -376,9 +376,9 @@ class Njiiri
 
   def update_info(current)
     if current
-      title = Format.pad(current.title, "<unknown>")
-      artist = Format.pad(current.artist || current.name, "<unknown>")
-      album = Format.pad(current.album || current.file, "<unknown>")
+      title = Format.pad(current.title, "(unknown title)")
+      artist = Format.pad(current.artist || current.name, "(unknown artist)")
+      album = Format.pad(current.album || current.file, "(unknown album)")
     else
       title = artist = album = nil
     end
