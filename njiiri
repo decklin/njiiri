@@ -30,17 +30,19 @@ class Njiiri
   VERSION = "0.1"
   GLADE_PATH = "njiiri.glade"
 
-  PLAYER_COLS = [ [ "Title", String ],
-                  [ "Artist", String ],
-                  [ "Album", String ],
-                  [ "Time", String ],
-                  [ nil, Integer ], # song id
-                  [ nil, Integer ] ] # bold if playing
-  BOOKMK_COLS = [ [ "Places", String ] ]
-  BROWSE_COLS = [ [ "Title", String ],
-                  [ "Artist", String ],
-                  [ "Album", String ],
-                  [ "Time", String ] ]
+  PLAYER_COLS = [ [ 0, true, "Title", String ],
+                  [ 1, true, "Artist", String ],
+                  [ 2, true, "Album", String ],
+                  [ 3, true, "Time", String ],
+                  [ 4, false, :songid, Integer ],
+                  [ 5, false, :is_cur, Integer ] ]
+  BOOKMK_COLS = [ [ 0, true, "Places", String ],
+                  [ 1, false, :callback, Proc ] ]
+  BROWSE_COLS = [ [ 0, true, "Title", String ],
+                  [ 1, true, "Artist", String ],
+                  [ 2, true, "Album", String ],
+                  [ 3, true, "Time", String ],
+                  [ 4, false, :callback, Proc ] ]
 
   # CLASS
 
@@ -53,34 +55,37 @@ class Njiiri
 
     @rend = Gtk::CellRendererText.new
 
-    @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect {|x| x[1] })
+    player_model = PLAYER_COLS.collect {|n, visible, name, klass| klass }
+    @player_tree_store = Gtk::TreeStore.new(*player_model)
     @glade['playlist_tree'].model = @player_tree_store
 
-    PLAYER_COLS.each_with_index do |t, i|
-      if t[0]
-        col = Gtk::TreeViewColumn.new(t[0], @rend, :text => i, :weight => 5)
+    PLAYER_COLS.each do |n, visible, name, klass|
+      if visible
+        col = Gtk::TreeViewColumn.new(name, @rend, :text => n, :weight => 5)
         col.resizable = true
         @glade['playlist_tree'].append_column(col)
       end
     end
 
-    @bookmarks_tree_store = Gtk::TreeStore.new(*BOOKMK_COLS.collect {|x| x[1] })
+    bookmarks_model = BOOKMK_COLS.collect {|n, visible, name, klass| klass }
+    @bookmarks_tree_store = Gtk::TreeStore.new(*bookmarks_model)
     @glade['bookmarks_tree'].model = @bookmarks_tree_store
 
-    BOOKMK_COLS.each_with_index do |t, i|
-      if t[0]
-        col = Gtk::TreeViewColumn.new(t[0], @rend, :text => i)
+    BOOKMK_COLS.each do |n, visible, name, klass|
+      if visible
+        col = Gtk::TreeViewColumn.new(name, @rend, :text => n)
         col.resizable = true
         @glade['bookmarks_tree'].append_column(col)
       end
     end
 
-    @files_tree_store = Gtk::TreeStore.new(*BROWSE_COLS.collect {|x| x[1] })
+    files_model = BROWSE_COLS.collect {|n, visible, name, klass| klass }
+    @files_tree_store = Gtk::TreeStore.new(*files_model)
     @glade['files_tree'].model = @files_tree_store
 
-    BROWSE_COLS.each_with_index do |t, i|
-      if t[0]
-        col = Gtk::TreeViewColumn.new(t[0], @rend, :text => i)
+    BROWSE_COLS.each do |n, visible, name, klass|
+      if visible
+        col = Gtk::TreeViewColumn.new(name, @rend, :text => n)
         col.resizable = true
         @glade['files_tree'].append_column(col)
       end
