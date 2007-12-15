@@ -7,9 +7,19 @@ require 'libglade2'
 require 'cgi'
 
 class MPD
-  def lsinfo(path = "/")
+  def lsinfo(path = "/", type = :files)
     response = send_command "lsinfo \"#{path}\""
-    filter_response response, /\A(file|directory): /i
+    case type
+      when :files
+        filter_response response, /\Afile: /i
+      when :directories
+        filter_response response, /\Adirectory: /i
+      when :playlists
+        filter_response response, /\Aplaylist: /i
+    end
+  end
+  def listallinfo(path=nil)
+    songs(path)
   end
 end
 
