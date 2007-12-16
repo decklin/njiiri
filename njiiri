@@ -124,6 +124,7 @@ class Njiiri
     @mpd.register_callback(self.method(:song_cb), MPD::CURRENT_SONG_CALLBACK)
     @mpd.register_callback(self.method(:state_cb), MPD::STATE_CALLBACK)
     @mpd.register_callback(self.method(:time_cb), MPD::TIME_CALLBACK)
+    @mpd.register_callback(self.method(:volume_cb), MPD::VOLUME_CALLBACK)
     @mpd.register_callback(self.method(:conn_cb), MPD::CONNECTION_CALLBACK)
 
     begin
@@ -141,7 +142,7 @@ class Njiiri
     @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
     @glade['repeat_btn'].active = @mpd.repeat?
     @glade['shuffle_btn'].active = @mpd.random?
-    @glade['volume_scale'].value = @volume = @mpd.volume.to_i
+    @glade['volume_scale'].value = @mpd.volume.to_i
 
     self.update_info(@mpd.current_song)
     self.update_status
@@ -270,10 +271,7 @@ class Njiiri
   end
 
   def on_volume_scale_value_changed(widget)
-    if widget.value.to_i != @volume
-      @volume = @mpd.volume = widget.value.to_i
-      self.update_status
-    end
+    @mpd.volume = widget.value.to_i
   end
 
   # BROWSER WINDOW
@@ -410,6 +408,11 @@ class Njiiri
     end
   end
 
+  def volume_cb(vol)
+    @glade['volume_scale'].value = vol.to_i
+    self.update_status
+  end
+
   def time_cb(elapsed, total)
     update_pos(elapsed, total)
   end
@@ -471,9 +474,13 @@ class Njiiri
 
   def update_status
     if @mpd.connected?
-      len = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
-      n = @mpd.status['playlistlength']
-      items = [ "Volume: #{@volume}%", "#{Format.pos(len)} in #{n} songs" ]
+      ptime = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
+      plen = @mpd.status['playlistlength'].to_i
+      dbtime = @mpd.stats['db_playtime'].to_i
+      dblen = @mpd.stats['songs'].to_i
+      items = [ "Volume: #{@glade['volume_scale'].value.to_i}%",
+                "Playlist: #{Format.pos(ptime)} in #{plen} songs",
+                "Library: #{Format.pos(dbtime)} in #{dblen} songs" ]
     else
       items = [ "Disconnected" ]
     end
