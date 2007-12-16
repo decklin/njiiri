@@ -292,15 +292,15 @@ class Njiiri
     @files_tree_store.clear
     pwd = @pwd.join("/")
     @mpd.lsinfo(pwd, :directories).each do |path|
-      iter = @files_tree_store.append(nil)
       dir = File.basename(path)
-      iter[0] = dir
+      iter = @files_tree_store.append(nil)
+      iter[0], iter[1], iter[2], iter[3] = dir, "-", "-", "-"
       iter[4] = proc { @pwd << dir; load_pwd }
     end
     @mpd.lsinfo(pwd, :files).each do |path|
       song = @mpd.listallinfo(path)[0]
       iter = @files_tree_store.append(nil)
-      iter[0], iter[1], iter[2], iter[3] = Format.all(song)
+      iter[0], iter[1], iter[2], iter[3] = Format.all(song, "-")
       iter[4] = proc { @mpd.add path }
     end
   end
@@ -432,14 +432,14 @@ class Njiiri
     if @mpd.connected?
       @mpd.playlist.each do |song|
         iter = @player_tree_store.append(nil)
-        iter[0], iter[1], iter[2], iter[3] = Format.all(song)
+        iter[0], iter[1], iter[2], iter[3] = Format.all(song, "-")
         iter[4] = song.id
       end
     end
   end
 
   def update_info(current)
-    title, artist, album = current ? Format.all(current) : nil
+    title, artist, album = Format.all(current)
     @glade['title_label'].label = Format.title(title)
     @glade['artist_label'].label = Format.artist(artist)
     @glade['album_label'].label = Format.album(album)
@@ -485,11 +485,14 @@ end
 
 class Format
   class << self
-    def all(song)
-      [ a(song.title, File.basename(song.file), "-"),
-        a(song.artist, song.name, "-"),
-        a(song.album, File.dirname(song.file), "-"),
-        song.time ? pos(song.time.to_i) : "∞" ]
+    def all(song, default=nil)
+      if song
+        dir, base = song.file =~ /^http:/ ? song.file : File.split(song.file)
+        [ a(song.title, base, default),
+          a(song.artist, song.name, default),
+          a(song.album, dir, default),
+          song.time ? pos(song.time.to_i) : "∞" ]
+      end
     end
     def h(s)
       CGI::escapeHTML(a(s, " "))
