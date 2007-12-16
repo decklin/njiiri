@@ -6,6 +6,10 @@ require 'thread'
 require 'libglade2'
 require 'cgi'
 
+def a(*l)
+  l.find {|x| not (x.nil? or x.empty?) }
+end
+
 class MPD
   def lsinfo(path = "/", type = :files)
     response = send_command "lsinfo \"#{path}\""
@@ -290,10 +294,7 @@ class Njiiri
     @mpd.lsinfo(pwd, :files).each do |path|
       song = @mpd.listallinfo(path)[0]
       iter = @files_tree_store.append(nil)
-      iter[0] = Format.pad(song.title, "-")
-      iter[1] = Format.pad(song.artist || song.name, "-")
-      iter[2] = Format.pad(song.album || song.file, "-")
-      iter[3] = song.time ? Format.pos(song.time.to_i) : "∞"
+      iter[0], iter[1], iter[2], iter[3] = Format.all(song)
       iter[4] = proc { @mpd.add path }
     end
   end
@@ -425,23 +426,14 @@ class Njiiri
     if @mpd.connected?
       @mpd.playlist.each do |song|
         iter = @player_tree_store.append(nil)
-        iter[0] = Format.pad(song.title, "-")
-        iter[1] = Format.pad(song.artist || song.name, "-")
-        iter[2] = Format.pad(song.album || song.file, "-")
-        iter[3] = song.time ? Format.pos(song.time.to_i) : "∞"
+        iter[0], iter[1], iter[2], iter[3] = Format.all(song)
         iter[4] = song['id'].to_i
       end
     end
   end
 
   def update_info(current)
-    if current
-      title = Format.pad(current.title, "(unknown title)")
-      artist = Format.pad(current.artist || current.name, "(unknown artist)")
-      album = Format.pad(current.album || current.file, "(unknown album)")
-    else
-      title = artist = album = nil
-    end
+    title, artist, album = current ? Format.all(current) : nil
     @glade['title_label'].label = Format.title(title)
     @glade['artist_label'].label = Format.artist(artist)
     @glade['album_label'].label = Format.album(album)
@@ -465,7 +457,7 @@ class Njiiri
         @glade['pos_bar'].text = Format.pos(elapsed)
         @glade['pos_bar'].pulse
       else
-        @glade['pos_bar'].text = Format.pos
+        @glade['pos_bar'].text = Format.pos()
         @glade['pos_bar'].fraction = 0.0
       end
     end
@@ -473,9 +465,9 @@ class Njiiri
 
   def update_status
     if @mpd.connected?
-      cur_time = Format.pos(@mpd.playlist.inject(0) {|m, s| m + s.time.to_i })
-      cur_len = @mpd.status['playlistlength']
-      items = [ "Volume: #{@volume}%", "#{cur_time} in #{cur_len} songs" ]
+      len = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
+      n = @mpd.status['playlistlength']
+      items = [ "Volume: #{@volume}%", "#{Format.pos(len)} in #{n} songs" ]
     else
       items = [ "Disconnected" ]
     end
@@ -487,13 +479,20 @@ end
 
 class Format
   class << self
-    def pad(s, p); s && !s.empty? ? s : p; end
-    def h(s); CGI::escapeHTML(pad(s, " ")); end
+    def all(song)
+      [ a(song.title, File.basename(song.file), "-"),
+        a(song.artist, song.name, "-"),
+        a(song.album, File.dirname(song.file), "-"),
+        song.time ? pos(song.time.to_i) : "∞" ]
+    end
+    def h(s)
+      CGI::escapeHTML(a(s, " "))
+    end
     def pos(*times)
-      pad(times.collect {|t| "%d:%02d" % [t/60, t%60] }.join(" / "), " ")
+      a(times.collect {|t| "%d:%02d" % [t/60, t%60] }.join(" / "), " ")
     end
     def window(*parts)
-      pad(parts.compact.join(" - "), Njiiri::NAME)
+      a(parts.compact.join(" - "), Njiiri::NAME)
     end
     def title(title)
       "<big><big><b>#{h(title)}</b></big></big>"
@@ -501,13 +500,9 @@ class Format
     def artist(artist)
       "<big>#{h(artist)}</big>"
     end
-    def album(album, track = nil, stream = false)
-      if not stream
-        track = track ? "track #{track}, " : ""
-        "<small>#{track}<i>#{h(album)}</i></small>"
-      else
-        "<small>#{h(album)}</small>"
-      end
+    def album(album, track = nil)
+      track = "track #{track}, " if track
+      "<small>#{track}<i>#{h(album)}</i></small>"
     end
   end
 end
