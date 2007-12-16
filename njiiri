@@ -442,10 +442,10 @@ class Njiiri
   end
 
   def update_info(current)
-    title, artist, album = Format.all(current)
+    title, artist, album, time, track = Format.all(current)
     @glade['title_label'].label = Format.title(title)
     @glade['artist_label'].label = Format.artist(artist)
-    @glade['album_label'].label = Format.album(album)
+    @glade['album_label'].label = Format.album(album, track)
     @glade['player_win'].title = Format.window(artist, title)
   end
 
@@ -498,7 +498,8 @@ class Format
         [ a(song.title, base, default),
           a(song.artist, song.name, default),
           a(song.album, dir, default),
-          song.time ? pos(song.time.to_i) : "∞" ]
+          song.time ? pos(song.time.to_i) : "∞",
+          song.track ]
       end
     end
     def h(s)
