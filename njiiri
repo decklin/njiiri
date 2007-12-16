@@ -103,6 +103,7 @@ class Njiiri
     x, y, h, w = [:x, :y, :h, :w].collect {|d| @conf.geom[:browser][d] }
     @glade['browser_win'].set_default_size(w, h)
     @glade['browser_win'].move(x, y)
+    setup_browser_bookmarks
 
     @glade['player_win'].show
   end
@@ -267,6 +268,48 @@ class Njiiri
 
   # BROWSER WINDOW
 
+  def setup_browser_bookmarks
+    bookmarks = { "Library" => proc { @pwd = []; load_pwd },
+                  "Search" => proc { activate_search_entry("_Search:") } }
+    bookmarks.each do |n, p|
+      iter = @bookmarks_tree_store.append(nil)
+      iter[0] = n
+      iter[1] = p
+    end
+  end
+
+  def load_pwd
+    @files_tree_store.clear
+    pwd = @pwd.join("/")
+    @mpd.lsinfo(pwd, :directories).each do |dir|
+      iter = @files_tree_store.append(nil)
+      iter[0] = dir
+      iter[1] = ""
+      iter[2] = ""
+      iter[3] = ""
+      iter[4] = proc { @pwd << dir; load_pwd }
+    end
+    @mpd.lsinfo(pwd, :files).each do |file|
+      song = @mpd.listallinfo(file)[0]
+      iter = @files_tree_store.append(nil)
+      iter[0] = Format.pad(song.title, "-")
+      iter[1] = Format.pad(song.artist || song.name, "-")
+      iter[2] = Format.pad(song.album || song.file, "-")
+      iter[3] = song.time ? Format.pos(song.time.to_i) : "∞"
+      iter[4] = proc { @mpd.add file }
+    end
+  end
+
+  def on_bookmarks_tree_row_activated(widget, path, col)
+    iter = @bookmarks_tree_store.get_iter(path)
+    iter[1].call
+  end
+
+  def on_files_tree_row_activated(widget, path, col)
+    iter = @files_tree_store.get_iter(path)
+    iter[4].call
+  end
+
   def on_browser_win_key_press_event(widget, e)
     if !@glade['search_entry'].has_focus? and e.keyval == "/"[0]
       @glade['loc_btn'].active = true
@@ -291,9 +334,7 @@ class Njiiri
 
   def on_loc_btn_toggled(widget)
     if widget.active?
-      @glade['search_hbox'].show
-      @glade['search_label'].label = "_Location:"
-      @glade['search_entry'].grab_focus
+      activate_search_entry("_Location:")
     else
       @glade['search_hbox'].hide
     end
@@ -305,6 +346,12 @@ class Njiiri
 
   def on_close_btn_clicked(widget)
     @glade['browser_win'].hide
+  end
+
+  def activate_search_entry(label)
+    @glade['search_hbox'].show
+    @glade['search_label'].label = label
+    @glade['search_entry'].grab_focus
   end
 
   # SAVE AS DIALOG
