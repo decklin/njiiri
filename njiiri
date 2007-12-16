@@ -25,6 +25,9 @@ class MPD
   def listallinfo(path=nil)
     songs(path)
   end
+  class Song
+    def id; self['id']; end
+  end
 end
 
 class Njiiri
@@ -38,7 +41,7 @@ class Njiiri
                   [ 1, true, "Artist", String ],
                   [ 2, true, "Album", String ],
                   [ 3, true, "Time", String ],
-                  [ 4, false, :songid, Integer ],
+                  [ 4, false, :songid, String ],
                   [ 5, false, :is_cur, Integer ] ]
   BOOKMK_COLS = [ [ 0, true, "Places", String ],
                   [ 1, false, :callback, Proc ] ]
@@ -415,7 +418,7 @@ class Njiiri
   # MISC
 
   def update_playlist
-    cur_id = @mpd.status['songid'].to_i
+    cur_id = @mpd.status['songid']
     @player_tree_store.each do |model, path, iter|
       iter[5] = iter[4] == cur_id ? Pango::WEIGHT_BOLD : Pango::WEIGHT_NORMAL
     end
@@ -427,7 +430,7 @@ class Njiiri
       @mpd.playlist.each do |song|
         iter = @player_tree_store.append(nil)
         iter[0], iter[1], iter[2], iter[3] = Format.all(song)
-        iter[4] = song['id'].to_i
+        iter[4] = song.id
       end
     end
   end
