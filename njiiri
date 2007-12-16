@@ -281,22 +281,20 @@ class Njiiri
   def load_pwd
     @files_tree_store.clear
     pwd = @pwd.join("/")
-    @mpd.lsinfo(pwd, :directories).each do |dir|
+    @mpd.lsinfo(pwd, :directories).each do |path|
       iter = @files_tree_store.append(nil)
+      dir = File.basename(path)
       iter[0] = dir
-      iter[1] = ""
-      iter[2] = ""
-      iter[3] = ""
       iter[4] = proc { @pwd << dir; load_pwd }
     end
-    @mpd.lsinfo(pwd, :files).each do |file|
-      song = @mpd.listallinfo(file)[0]
+    @mpd.lsinfo(pwd, :files).each do |path|
+      song = @mpd.listallinfo(path)[0]
       iter = @files_tree_store.append(nil)
       iter[0] = Format.pad(song.title, "-")
       iter[1] = Format.pad(song.artist || song.name, "-")
       iter[2] = Format.pad(song.album || song.file, "-")
       iter[3] = song.time ? Format.pos(song.time.to_i) : "∞"
-      iter[4] = proc { @mpd.add file }
+      iter[4] = proc { @mpd.add path }
     end
   end
 
