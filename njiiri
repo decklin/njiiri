@@ -478,9 +478,11 @@ class Njiiri
       plen = @mpd.status['playlistlength'].to_i
       dbtime = @mpd.stats['db_playtime'].to_i
       dblen = @mpd.stats['songs'].to_i
+      updated = Time.at(@mpd.stats['db_update'].to_i)
       items = [ "Volume: #{@glade['volume_scale'].value.to_i}%",
-                "Playlist: #{Format.pos(ptime)} in #{plen} songs",
-                "Library: #{Format.pos(dbtime)} in #{dblen} songs" ]
+                "Playlist: #{Format.pos(ptime)} (#{plen} songs)",
+                "Library: #{Format.pos(dbtime)} (#{dblen} songs)",
+                "Updated: #{updated.strftime('%x %X')}" ]
     else
       items = [ "Disconnected" ]
     end
