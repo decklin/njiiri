@@ -505,8 +505,13 @@ class Format
     def h(s)
       CGI::escapeHTML(a(s, " "))
     end
+    def m(t)
+      m, s = t.divmod(60); return "%d:%02d" % [m, s] if m < 80
+      h, m = m.divmod(60); return "%d:%02d:%02d" % [h, m, s] if h < 24
+      d, h = h.divmod(24); return "%dd %dh %dm" % [d, h, m]
+    end
     def pos(*times)
-      a(times.collect {|t| "%d:%02d" % [t/60, t%60] }.join(" / "), " ")
+      a(times.collect {|t| m(t) }.join(" / "), " ")
     end
     def window(*parts)
       a(parts.compact.join(" - "), Njiiri::NAME)
