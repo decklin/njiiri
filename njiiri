@@ -59,6 +59,7 @@ class Njiiri
 
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
+    @volume = nil
 
     rend = Gtk::CellRendererText.new
     rend.ellipsize = Pango::ELLIPSIZE_END
@@ -142,7 +143,7 @@ class Njiiri
     @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
     @glade['repeat_btn'].active = @mpd.repeat?
     @glade['shuffle_btn'].active = @mpd.random?
-    @glade['volume_scale'].value = @mpd.volume.to_i
+    @glade['volume_scale'].value = @volume = @mpd.volume.to_i
 
     self.update_info(@mpd.current_song)
     self.update_status
@@ -271,7 +272,9 @@ class Njiiri
   end
 
   def on_volume_scale_value_changed(widget)
-    @mpd.volume = widget.value.to_i
+    if widget.value.to_i != @volume
+      @mpd.volume = @volume = widget.value.to_i
+    end
   end
 
   # BROWSER WINDOW
@@ -409,7 +412,7 @@ class Njiiri
   end
 
   def volume_cb(vol)
-    @glade['volume_scale'].value = vol.to_i
+    @glade['volume_scale'].value = @volume = vol.to_i
     self.update_status
   end
 
@@ -479,7 +482,7 @@ class Njiiri
       dbtime = @mpd.stats['db_playtime'].to_i
       dblen = @mpd.stats['songs'].to_i
       updated = Time.at(@mpd.stats['db_update'].to_i)
-      items = [ "Volume: #{@glade['volume_scale'].value.to_i}%",
+      items = [ "Volume: #{@volume}%",
                 "Playlist: #{Format.pos(ptime)} (#{plen} songs)",
                 "Library: #{Format.pos(dbtime)} (#{dblen} songs)",
                 "Updated: #{updated.strftime('%x %X')}" ]
