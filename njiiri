@@ -143,7 +143,7 @@ class Njiiri
     @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
     @glade['repeat_btn'].active = @mpd.repeat?
     @glade['shuffle_btn'].active = @mpd.random?
-    @glade['volume_scale'].value = @volume = @mpd.volume.to_i
+    @glade['volume_scale'].value = @volume = @mpd.volume
 
     self.update_info(@mpd.current_song)
     self.update_status
@@ -412,7 +412,7 @@ class Njiiri
   end
 
   def volume_cb(vol)
-    @glade['volume_scale'].value = @volume = vol.to_i
+    @glade['volume_scale'].value = @volume = vol
     self.update_status
   end
 
