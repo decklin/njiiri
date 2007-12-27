@@ -118,7 +118,7 @@ class Njiiri
 
     @glade['host_entry'].text = @conf.serv[:host]
     @glade['port_entry'].text = @conf.serv[:port].to_s
-    @glade['pass_entry'].text = @conf.serv[:pass].to_s
+    @glade['password_entry'].text = @conf.serv[:password].to_s
 
     x, y, h, w = [:x, :y, :h, :w].collect {|d| @conf.geom[:player][d] }
     @glade['player_win'].set_default_size(w, h)
@@ -145,7 +145,7 @@ class Njiiri
 
     begin
       @mpd.connect(true)
-      @mpd.password(@conf.serv[:pass]) if @conf.serv[:pass]
+      @mpd.password(@conf.serv[:password]) if @conf.serv[:password]
       @glade['connect_btn'].stock_id = Gtk::Stock::DISCONNECT
     rescue
       self.disconnected
@@ -396,8 +396,11 @@ class Njiiri
     @glade['connect_dlg'].hide
     @conf.serv[:host] = @glade['host_entry'].text
     @conf.serv[:port] = @glade['port_entry'].text.to_i
-    @conf.serv[:pass] = @glade['pass_entry'].text
-    @conf.serv[:pass] = nil if @conf.serv[:pass].empty?
+    if @glade['password_entry'].text.empty?
+      @conf.serv[:password] = nil
+    else
+      @conf.serv[:password] = @glade['password_entry'].text
+    end
     self.connect
   end
 
@@ -552,7 +555,7 @@ end
 class Conf
 
   DEFAULTS =
-    { :server => { :host => 'localhost', :port => 6600, :pass => nil },
+    { :server => { :host => 'localhost', :port => 6600, :password => nil },
       :geometry =>
         { :player =>
             { :x => 0, :y => 0, :w => 620, :h => 440, :pane => 80 },
