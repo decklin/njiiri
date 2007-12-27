@@ -5,6 +5,7 @@ require 'librmpd'
 require 'thread'
 require 'libglade2'
 require 'cgi'
+require 'yaml'
 
 def a(*l)
   l.find {|x| not (x.nil? or x.empty?) }
