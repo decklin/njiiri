@@ -11,6 +11,20 @@ def a(*l)
   l.find {|x| not (x.nil? or x.empty?) }
 end
 
+class Hash
+  def deep_merge(h)
+    t = dup
+    h.each do |k, v|
+      if t[k].kind_of? Hash and v.kind_of? Hash
+        t[k] = t[k].deep_merge(v)
+      else
+        t[k] = v
+      end
+    end
+    t
+  end
+end
+
 class MPD
   def lsinfo(path = "/", type = :files)
     response = send_command "lsinfo \"#{path}\""
@@ -549,7 +563,7 @@ class Conf
 
   def initialize(path)
     @path = path
-    @rc = DEFAULTS.merge begin
+    @rc = DEFAULTS.deep_merge begin
       File.open(@path) {|f| YAML::load(f) }
     rescue
       {}
