@@ -75,6 +75,7 @@ class Njiiri
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
     @volume = nil
+    @btab = {}
 
     rend = Gtk::CellRendererText.new
     rend.ellipsize = Pango::ELLIPSIZE_END
@@ -295,13 +296,32 @@ class Njiiri
   # BROWSER WINDOW
 
   def setup_browser_bookmarks
-    bookmarks = { "Library" => proc { @pwd = []; load_pwd },
+    bookmarks = { "Library" => proc { reset_pwd },
                   "Search" => proc { activate_search_entry("_Search:") } }
     bookmarks.each do |n, p|
       iter = @bookmarks_tree_store.append(nil)
       iter[0] = n
       iter[1] = p
     end
+  end
+
+  def add_pwd(dir)
+    @pwd << dir
+
+    @glade['breadcrumb_box'].children[1..-1].each_with_index do |child, i|
+      if child.label != @pwd[i] or i >= @pwd.length-1
+        @glade['breadcrumb_box'].remove(child)
+        @btab.delete(child)
+      end
+    end
+
+    btn = Gtk::Button.new(dir, false)
+    @btab[btn] = @pwd.join("/")
+    btn.signal_connect("clicked") {|w| up_pwd(@btab[w].split("/")) }
+    @glade['breadcrumb_box'].add(btn)
+    btn.show
+
+    load_pwd
   end
 
   def load_pwd
@@ -311,7 +331,7 @@ class Njiiri
       dir = File.basename(path)
       iter = @files_tree_store.append(nil)
       iter[0], iter[1], iter[2], iter[3] = dir, "-", "-", "-"
-      iter[4] = proc { @pwd << dir; load_pwd }
+      iter[4] = proc { add_pwd(dir) }
     end
     @mpd.lsinfo(pwd, :files).each do |path|
       song = @mpd.listallinfo(path)[0]
@@ -319,6 +339,16 @@ class Njiiri
       iter[0], iter[1], iter[2], iter[3] = Format.all(song, "-")
       iter[4] = proc { @mpd.add path }
     end
+  end
+
+  def reset_pwd
+    @pwd = [];
+    load_pwd
+  end
+
+  def up_pwd(wd)
+    @pwd = wd;
+    load_pwd
   end
 
   def on_bookmarks_tree_row_activated(widget, path, col)
@@ -359,6 +389,10 @@ class Njiiri
     else
       @glade['search_hbox'].hide
     end
+  end
+
+  def on_root_btn_clicked(widget)
+    reset_pwd
   end
 
   def on_browser_win_delete(widget, e)
