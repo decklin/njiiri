@@ -380,6 +380,10 @@ class Njiiri
         @glade['search_entry'].text = ""
       rescue RuntimeError
       end
+    else
+      @glade['files_tree'].selection.selected_each do |model, path, iter|
+        iter[4].call
+      end
     end
   end
 
