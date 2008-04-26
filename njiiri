@@ -653,6 +653,6 @@ end
 if __FILE__ == $0
   Gtk.init
   njiiri = Njiiri.new(File.expand_path("~/.njiirirc"))
-  njiiri.connect
+  njiiri.connect && njiiri.reset_pwd
   Gtk.main
 end
