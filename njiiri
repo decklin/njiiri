@@ -52,19 +52,36 @@ class Njiiri
   VERSION = "0.1"
   GLADE_PATH = "njiiri.glade"
 
-  PLAYER_COLS = [ [ String, 0, 200, "Title", ],
-                  [ String, 1, 160, "Artist", ],
-                  [ String, 2, 160, "Album", ],
-                  [ String, 3, 40, "Time", ],
-                  [ String, 4, nil, :id, ],
-                  [ Integer, 5, nil, :is_cur, ] ]
+  # This is ugly, but the GTK iter objs want us to hardcode our column numbers
+  # and I haven't figured out a clean way to subclass them yet
+
+  COL_ICON = 0
+  COL_TITLE = 1
+  COL_ARTIST = 2
+  COL_ALBUM = 3
+  COL_TIME = 4
+  COL_ID = 5
+  COL_WEIGHT = 6
+  COL_CB = 7
+
+  PLAYER_COLS = [ [ String, 0, 40, "", ],
+                  [ String, 1, 200, "Title", ],
+                  [ String, 2, 160, "Artist", ],
+                  [ String, 3, 160, "Album", ],
+                  [ String, 4, 40, "Time", ],
+                  [ String, 5, nil, :id, ],
+                  [ Integer, 6, nil, :playing, ],
+                  [ Proc, 7, nil, :cb, ] ]
   BOOKMK_COLS = [ [ String, 0, 0, "Places", ],
                   [ Proc, 1, nil, :cb, ] ]
-  BROWSE_COLS = [ [ String, 0, 160, "Title", ],
-                  [ String, 1, 120, "Artist", ],
-                  [ String, 2, 120, "Album", ],
-                  [ String, 3, 40, "Time", ],
-                  [ Proc, 4, nil, :cb, ] ]
+  BROWSE_COLS = [ [ String, 0, 40, "", ],
+                  [ String, 1, 160, "Title", ],
+                  [ String, 2, 120, "Artist", ],
+                  [ String, 3, 120, "Album", ],
+                  [ String, 4, 40, "Time", ],
+                  [ String, 5, nil, :id, ],
+                  [ Integer, 6, nil, :playing, ],
+                  [ Proc, 7, nil, :cb, ] ]
 
   # CLASS
 
@@ -85,7 +102,7 @@ class Njiiri
 
     PLAYER_COLS.each do |klass, n, width, name|
       if width
-        col = Gtk::TreeViewColumn.new(name, rend, :text => n, :weight => 5)
+        col = Gtk::TreeViewColumn.new(name, rend, :text => n, :weight => COL_WEIGHT)
         col.sizing = Gtk::TreeViewColumn::FIXED
         col.fixed_width = width
         col.resizable = true
@@ -232,7 +249,7 @@ class Njiiri
 
   def on_playlist_tree_row_activated(widget, path, col)
     iter = @player_tree_store.get_iter(path)
-    @mpd.seekid(iter[4], 0)
+    @mpd.seekid(iter[COL_ID], 0)
   end
 
   # TOOLBAR
@@ -330,14 +347,19 @@ class Njiiri
     @mpd.lsinfo(pwd, :directories).each do |path|
       dir = File.basename(path)
       iter = @files_tree_store.append(nil)
-      iter[0], iter[1], iter[2], iter[3] = dir, "-", "-", "-"
-      iter[4] = proc { add_pwd(dir) }
+      iter[COL_ICON] = "D"
+      iter[COL_TITLE] = dir
+      iter[COL_ARTIST] = ""
+      iter[COL_ALBUM] = ""
+      iter[COL_TIME] = ""
+      iter[COL_CB] = proc { add_pwd(dir) }
     end
     @mpd.lsinfo(pwd, :files).each do |path|
       song = @mpd.listallinfo(path)[0]
       iter = @files_tree_store.append(nil)
-      iter[0], iter[1], iter[2], iter[3] = Format.all(song, "-")
-      iter[4] = proc { @mpd.add path }
+      iter[COL_ICON] = "F"
+      iter[COL_TITLE], iter[COL_ARTIST], iter[COL_ALBUM], iter[COL_TIME] = Format.all(song, "-")
+      iter[COL_CB] = proc { @mpd.add path }
     end
   end
 
@@ -358,7 +380,7 @@ class Njiiri
 
   def on_files_tree_row_activated(widget, path, col)
     iter = @files_tree_store.get_iter(path)
-    iter[4].call
+    iter[COL_CB].call
   end
 
   def on_browser_win_key_press_event(widget, e)
@@ -382,7 +404,7 @@ class Njiiri
       end
     else
       @glade['files_tree'].selection.selected_each do |model, path, iter|
-        iter[4].call
+        iter[COL_CB].call
       end
     end
   end
@@ -489,7 +511,7 @@ class Njiiri
   def refresh_playlist
     cur_id = @mpd.status['songid']
     @player_tree_store.each do |model, path, iter|
-      iter[5] = iter[4] == cur_id ? Pango::WEIGHT_BOLD : Pango::WEIGHT_NORMAL
+      iter[COL_WEIGHT] = iter[COL_ID] == cur_id ? Pango::WEIGHT_BOLD : Pango::WEIGHT_NORMAL
     end
   end
 
@@ -498,8 +520,8 @@ class Njiiri
     if @mpd.connected?
       @mpd.playlist.each do |song|
         iter = @player_tree_store.append(nil)
-        iter[0], iter[1], iter[2], iter[3] = Format.all(song, "-")
-        iter[4] = song.id
+        iter[COL_TITLE], iter[COL_ARTIST], iter[COL_ALBUM], iter[COL_TIME] = Format.all(song, "-")
+        iter[COL_ID] = song.id
       end
     end
   end
