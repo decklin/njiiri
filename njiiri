@@ -161,17 +161,17 @@ class Njiiri
     @glade['shuffle_btn'].active = @mpd.random?
     @glade['volume_scale'].value = @volume = @mpd.volume
 
-    self.update_info(@mpd.current_song)
-    self.update_status
+    self.refresh_info(@mpd.current_song)
+    self.refresh_status
   end
 
   def disconnected
     self.enable_toolbuttons(false)
     @glade['connect_btn'].stock_id = Gtk::Stock::CONNECT
 
-    self.update_info(nil)
-    self.update_pos(-1)
-    self.update_status
+    self.refresh_info(nil)
+    self.refresh_pos(-1)
+    self.refresh_status
 
     @player_tree_store.clear
   end
@@ -446,13 +446,13 @@ class Njiiri
 
   def playlist_cb(version)
     rebuild_playlist(version)
-    update_playlist
-    update_status
+    refresh_playlist
+    refresh_status
   end
 
   def song_cb(current)
-    update_info(current)
-    update_playlist
+    refresh_info(current)
+    refresh_playlist
   end
 
   def state_cb(newstate)
@@ -463,17 +463,17 @@ class Njiiri
         @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
       when "stop"
         @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
-        update_pos(-1)
+        refresh_pos(-1)
     end
   end
 
   def volume_cb(vol)
     @glade['volume_scale'].value = @volume = vol
-    self.update_status
+    self.refresh_status
   end
 
   def time_cb(elapsed, total)
-    update_pos(elapsed, total)
+    refresh_pos(elapsed, total)
   end
 
   def conn_cb(up)
@@ -482,7 +482,7 @@ class Njiiri
 
   # MISC
 
-  def update_playlist
+  def refresh_playlist
     cur_id = @mpd.status['songid']
     @player_tree_store.each do |model, path, iter|
       iter[5] = iter[4] == cur_id ? Pango::WEIGHT_BOLD : Pango::WEIGHT_NORMAL
@@ -500,7 +500,7 @@ class Njiiri
     end
   end
 
-  def update_info(current)
+  def refresh_info(current)
     title, artist, album, time, track = Format.all(current)
     @glade['title_label'].label = Format.title(title)
     @glade['artist_label'].label = Format.artist(artist)
@@ -508,7 +508,7 @@ class Njiiri
     @glade['player_win'].title = Format.window(artist, title)
   end
 
-  def update_pos(elapsed, total = 0)
+  def refresh_pos(elapsed, total = 0)
     if @mpd.connected? and @mpd.current_song and total == 0
       total = @mpd.current_song.time.to_i
     end
@@ -531,7 +531,7 @@ class Njiiri
     end
   end
 
-  def update_status
+  def refresh_status
     if @mpd.connected?
       ptime = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
       plen = @mpd.status['playlistlength'].to_i
