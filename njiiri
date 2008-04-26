@@ -147,7 +147,6 @@ class Njiiri
     @glade['browser_win'].set_default_size(w, h)
     @glade['browser_win'].move(x, y)
     @glade['files_pane'].set_position(@conf.geom[:browser][:pane])
-    setup_browser_bookmarks
 
     @glade['player_win'].show
   end
@@ -177,6 +176,7 @@ class Njiiri
     @glade['repeat_btn'].active = @mpd.repeat?
     @glade['shuffle_btn'].active = @mpd.random?
     @glade['volume_scale'].value = @volume = @mpd.volume
+    setup_browser_bookmarks
 
     self.refresh_info(@mpd.current_song)
     self.refresh_status
@@ -313,8 +313,10 @@ class Njiiri
   # BROWSER WINDOW
 
   def setup_browser_bookmarks
-    bookmarks = { "Library" => proc { reset_pwd },
-                  "Search" => proc { activate_search_entry("_Search:") } }
+    bookmarks = [ [ "Library", proc { reset_pwd } ],
+                  [ "Search", proc { activate_search_entry("_Search:") } ],
+                  [ "-", proc { } ] ] +
+                @mpd.playlists.collect { |pl| [ pl, proc { @mpd.load(pl) } ] }
     bookmarks.each do |n, p|
       iter = @bookmarks_tree_store.append(nil)
       iter[0] = n
