@@ -103,13 +103,17 @@ class Njiiri
 
     PLAYER_COLS.each do |klass, n, width, name|
       if width
-        col = Gtk::TreeViewColumn.new(name, rend, :text => n, :weight => COL_WEIGHT)
+        col = Gtk::TreeViewColumn.new(name, rend, :text => n,
+                                                  :weight => COL_WEIGHT)
         col.sizing = Gtk::TreeViewColumn::FIXED
         col.fixed_width = width
         col.resizable = true
         @glade['playlist_tree'].append_column(col)
       end
     end
+
+    rend = Gtk::CellRendererText.new
+    rend.ellipsize = Pango::ELLIPSIZE_END
 
     @bookmarks_tree_store = Gtk::TreeStore.new(*BOOKMK_COLS.collect{|k,| k })
     @glade['bookmarks_tree'].model = @bookmarks_tree_store
@@ -121,6 +125,9 @@ class Njiiri
         @glade['bookmarks_tree'].append_column(col)
       end
     end
+
+    rend = Gtk::CellRendererText.new
+    rend.ellipsize = Pango::ELLIPSIZE_END
 
     @files_tree_store = Gtk::TreeStore.new(*BROWSE_COLS.collect{|k,| k })
     @glade['files_tree'].model = @files_tree_store
