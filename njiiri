@@ -91,7 +91,7 @@ class Njiiri
 
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
-    @volume = nil
+    @vol_ack = nil
     @btab = {}
 
     rend = Gtk::CellRendererText.new
@@ -177,7 +177,7 @@ class Njiiri
     @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
     @glade['repeat_btn'].active = @mpd.repeat?
     @glade['shuffle_btn'].active = @mpd.random?
-    @glade['volume_scale'].value = @volume = @mpd.volume
+    @glade['volume_scale'].value = @vol_ack = @mpd.volume
     setup_browser_bookmarks
 
     self.refresh_info(@mpd.current_song)
@@ -315,8 +315,9 @@ class Njiiri
   end
 
   def on_volume_scale_value_changed(widget)
-    if widget.value.to_i != @volume
-      @mpd.volume = @volume = widget.value.to_i
+    if @vol_ack and widget.value.to_i != @vol_ack
+      @mpd.volume = widget.value.to_i
+      @vol_ack = nil
     end
   end
 
@@ -517,8 +518,7 @@ class Njiiri
   end
 
   def volume_cb(vol)
-    @glade['volume_scale'].value = @volume = vol
-    self.refresh_status
+    @glade['volume_scale'].value = @vol_ack = vol
   end
 
   def time_cb(elapsed, total)
@@ -587,8 +587,7 @@ class Njiiri
       dbtime = @mpd.stats['db_playtime'].to_i
       dblen = @mpd.stats['songs'].to_i
       updated = Time.at(@mpd.stats['db_update'].to_i)
-      items = [ "Volume: #{@volume}%",
-                "Playlist: #{Format.pos(ptime)} (#{plen} songs)",
+      items = [ "Playlist: #{Format.pos(ptime)} (#{plen} songs)",
                 "Library: #{Format.pos(dbtime)} (#{dblen} songs)",
                 "Updated: #{updated.strftime('%x %X')}" ]
     else
