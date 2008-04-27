@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.3 on Sat Apr 26 18:47:15 2008 -->
+<!--Generated with glade3 3.4.4 on Sun Apr 27 15:37:26 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -283,6 +283,7 @@
                         <property name="fixed_height_mode">True</property>
                         <property name="rubber_banding">True</property>
                         <property name="enable_grid_lines">GTK_TREE_VIEW_GRID_LINES_VERTICAL</property>
+                        <signal name="key_press_event" handler="on_playlist_tree_key_press_event"/>
                         <signal name="row_activated" handler="on_playlist_tree_row_activated"/>
                       </widget>
                     </child>

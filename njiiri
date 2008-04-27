@@ -254,6 +254,14 @@ class Njiiri
     @mpd.seekid(iter[COL_ID], 0)
   end
 
+  def on_playlist_tree_key_press_event(widget, e)
+    if e.keyval == Gdk::Keyval::GDK_Delete
+      @glade['playlist_tree'].selection.selected_each do |model, path, iter|
+        @mpd.deleteid(iter[COL_ID])
+      end
+    end
+  end
+
   # TOOLBAR
 
   def on_play_btn_clicked(widget)
