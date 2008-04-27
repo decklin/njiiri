@@ -65,9 +65,9 @@ class Njiiri
   COL_CB = 7
 
   PLAYER_COLS = [ [ String, 0, 40, "", ],
-                  [ String, 1, 200, "Title", ],
+                  [ String, 1, 180, "Title", ],
                   [ String, 2, 160, "Artist", ],
-                  [ String, 3, 160, "Album", ],
+                  [ String, 3, 140, "Album", ],
                   [ String, 4, 40, "Time", ],
                   [ String, 5, nil, :id, ],
                   [ Integer, 6, nil, :playing, ],
@@ -75,9 +75,9 @@ class Njiiri
   BOOKMK_COLS = [ [ String, 0, 0, "Places", ],
                   [ Proc, 1, nil, :cb, ] ]
   BROWSE_COLS = [ [ String, 0, 40, "", ],
-                  [ String, 1, 160, "Title", ],
+                  [ String, 1, 140, "Title", ],
                   [ String, 2, 120, "Artist", ],
-                  [ String, 3, 120, "Album", ],
+                  [ String, 3, 100, "Album", ],
                   [ String, 4, 40, "Time", ],
                   [ String, 5, nil, :id, ],
                   [ Integer, 6, nil, :playing, ],
@@ -645,9 +645,9 @@ class Conf
     { :server => { :host => 'localhost', :port => 6600, :password => nil },
       :geometry =>
         { :player =>
-            { :x => 0, :y => 0, :w => 620, :h => 440, :pane => 80 },
+            { :x => 0, :y => 0, :w => 620, :h => 400, :pane => 80 },
           :browser =>
-            { :x => 0, :y => 0, :w => 620, :h => 440, :pane => 120 } } }
+            { :x => 0, :y => 0, :w => 600, :h => 400, :pane => 100 } } }
 
   attr_accessor :serv, :geom
 
