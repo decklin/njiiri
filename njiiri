@@ -553,9 +553,11 @@ class Njiiri
   # MISC
 
   def refresh_playlist
-    cur_id = @mpd.status['songid']
-    @player_tree_store.each do |model, path, iter|
-      iter[6] = iter[5] == cur_id ? Pango::WEIGHT_BOLD : Pango::WEIGHT_NORMAL
+    if @mpd.connected?
+      cur_id = @mpd.status['songid']
+      @player_tree_store.each do |model, path, iter|
+        iter[6] = iter[5] == cur_id ? Pango::WEIGHT_BOLD : Pango::WEIGHT_NORMAL
+      end
     end
   end
 
