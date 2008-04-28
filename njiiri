@@ -148,7 +148,7 @@ class Njiiri
     @glade['files_tree'].model = @files_tree_store
     @glade['files_tree'].selection.mode = Gtk::SELECTION_MULTIPLE
 
-    BROWSE_COLS.each do |spec, n|
+    BROWSE_COLS.each_with_index do |spec, n|
       name, width = spec
       if width
         col = Gtk::TreeViewColumn.new(name, rend, :text => n)
