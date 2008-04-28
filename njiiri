@@ -81,36 +81,22 @@ class Njiiri
   VERSION = "0.1"
   GLADE_PATH = "njiiri.glade"
 
-  # This is ugly, but the GTK iter objs want us to hardcode our column numbers
-  # and I haven't figured out a clean way to subclass them yet
-
-  COL_ICON = 0
-  COL_TITLE = 1
-  COL_ARTIST = 2
-  COL_ALBUM = 3
-  COL_TIME = 4
-  COL_ID = 5
-  COL_WEIGHT = 6
-  COL_CB = 7
-
-  PLAYER_COLS = [ [ String, 0, 40, "", ],
-                  [ String, 1, 180, "Title", ],
-                  [ String, 2, 160, "Artist", ],
-                  [ String, 3, 140, "Album", ],
-                  [ String, 4, 40, "Time", ],
-                  [ String, 5, nil, :id, ],
-                  [ Integer, 6, nil, :playing, ],
-                  [ Proc, 7, nil, :cb, ] ]
-  BOOKMK_COLS = [ [ String, 0, 0, "Places", ],
-                  [ Proc, 1, nil, :cb, ] ]
-  BROWSE_COLS = [ [ String, 0, 40, "", ],
-                  [ String, 1, 140, "Title", ],
-                  [ String, 2, 120, "Artist", ],
-                  [ String, 3, 100, "Album", ],
-                  [ String, 4, 40, "Time", ],
-                  [ String, 5, nil, :id, ],
-                  [ Integer, 6, nil, :playing, ],
-                  [ Proc, 7, nil, :cb, ] ]
+  PLAYER_COLS = [ [ "", 40, String, ],
+                  [ "Title", 180, String, ],
+                  [ "Artist", 160, String, ],
+                  [ "Album", 140, String, ],
+                  [ "Time", 40, String, ],
+                  [ :id, nil, String, ],
+                  [ :cur, nil, Integer, ] ]
+  BOOKMK_COLS = [ [ "Places", 0, String ],
+                  [ :cb, nil, Proc ] ]
+  BROWSE_COLS = [ [ "", 40, String ],
+                  [ "Title", 140, String ],
+                  [ "Artist", 120, String ],
+                  [ "Album", 100, String ],
+                  [ "Time", 40, String ],
+                  [ :path, nil, String ],
+                  [ :cb, nil, Proc ] ]
 
   # CLASS
 
@@ -125,14 +111,14 @@ class Njiiri
     rend = Gtk::CellRendererText.new
     rend.ellipsize = Pango::ELLIPSIZE_END
 
-    @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect{|k,| k })
+    @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect{|x| x[2] })
     @glade['playlist_tree'].model = @player_tree_store
     @glade['playlist_tree'].selection.mode = Gtk::SELECTION_MULTIPLE
 
-    PLAYER_COLS.each do |klass, n, width, name|
+    PLAYER_COLS.each_with_index do |spec, n|
+      name, width = spec
       if width
-        col = Gtk::TreeViewColumn.new(name, rend, :text => n,
-                                                  :weight => COL_WEIGHT)
+        col = Gtk::TreeViewColumn.new(name, rend, :text => n, :weight => 6)
         col.sizing = Gtk::TreeViewColumn::FIXED
         col.fixed_width = width
         col.resizable = true
@@ -143,10 +129,11 @@ class Njiiri
     rend = Gtk::CellRendererText.new
     rend.ellipsize = Pango::ELLIPSIZE_END
 
-    @bookmarks_tree_store = Gtk::TreeStore.new(*BOOKMK_COLS.collect{|k,| k })
+    @bookmarks_tree_store = Gtk::TreeStore.new(*BOOKMK_COLS.collect{|x| x[2] })
     @glade['bookmarks_tree'].model = @bookmarks_tree_store
 
-    BOOKMK_COLS.each do |klass, n, width, name|
+    BOOKMK_COLS.each_with_index do |spec, n|
+      name, width = spec
       if width
         col = Gtk::TreeViewColumn.new(name, rend, :text => n)
         col.resizable = false
@@ -157,11 +144,12 @@ class Njiiri
     rend = Gtk::CellRendererText.new
     rend.ellipsize = Pango::ELLIPSIZE_END
 
-    @files_tree_store = Gtk::TreeStore.new(*BROWSE_COLS.collect{|k,| k })
+    @files_tree_store = Gtk::TreeStore.new(*BROWSE_COLS.collect{|x| x[2] })
     @glade['files_tree'].model = @files_tree_store
     @glade['files_tree'].selection.mode = Gtk::SELECTION_MULTIPLE
 
-    BROWSE_COLS.each do |klass, n, width, name|
+    BROWSE_COLS.each do |spec, n|
+      name, width = spec
       if width
         col = Gtk::TreeViewColumn.new(name, rend, :text => n)
         col.sizing = Gtk::TreeViewColumn::FIXED
@@ -286,13 +274,13 @@ class Njiiri
 
   def on_playlist_tree_row_activated(widget, path, col)
     iter = @player_tree_store.get_iter(path)
-    @mpd.seekid(iter[COL_ID], 0)
+    @mpd.seekid(iter[5], 0)
   end
 
   def on_playlist_tree_key_press_event(widget, e)
     if e.keyval == Gdk::Keyval::GDK_Delete
       @glade['playlist_tree'].selection.selected_each do |model, path, iter|
-        @mpd.deleteid(iter[COL_ID])
+        @mpd.deleteid(iter[5])
       end
     end
   end
@@ -394,21 +382,18 @@ class Njiiri
     @mpd.lsinfo(pwd, :directories).each do |path|
       dir = File.basename(path)
       iter = @files_tree_store.append(nil)
-      iter[COL_ICON] = "D"
-      iter[COL_TITLE] = dir
-      iter[COL_ARTIST] = ""
-      iter[COL_ALBUM] = ""
-      iter[COL_TIME] = ""
-      iter[COL_ID] = path
-      iter[COL_CB] = proc { add_pwd(dir) }
+      iter[0] = "D"
+      iter[1], iter[2], iter[3], iter[4] = dir, "-", "-", "-"
+      iter[5] = path
+      iter[6] = proc { add_pwd(dir) }
     end
     @mpd.lsinfo(pwd, :files).each do |path|
       song = @mpd.listallinfo(path)[0]
       iter = @files_tree_store.append(nil)
-      iter[COL_ICON] = "F"
-      iter[COL_TITLE], iter[COL_ARTIST], iter[COL_ALBUM], iter[COL_TIME] = Format.all(song, "-")
-      iter[COL_ID] = path
-      iter[COL_CB] = proc { @mpd.add path }
+      iter[0] = "F"
+      iter[1], iter[2], iter[3], iter[4] = Format.all(song, "-")
+      iter[5] = path
+      iter[6] = proc { @mpd.add path }
     end
   end
 
@@ -429,7 +414,7 @@ class Njiiri
 
   def on_files_tree_row_activated(widget, path, col)
     iter = @files_tree_store.get_iter(path)
-    iter[COL_CB].call
+    iter[6].call
   end
 
   def on_browser_win_key_press_event(widget, e)
@@ -453,7 +438,7 @@ class Njiiri
       end
     else
       @glade['files_tree'].selection.selected_each do |model, path, iter|
-        @mpd.add(iter[COL_ID])
+        @mpd.add(iter[5])
       end
     end
   end
@@ -461,7 +446,7 @@ class Njiiri
   def on_insert_btn_clicked(widget)
       pos = @mpd.status['song'].to_i + 1
       @glade['files_tree'].selection.selected_each do |model, path, iter|
-        @mpd.add(iter[COL_ID])
+        @mpd.add(iter[5])
         @mpd.move(@mpd.playlist.length - 1, pos)
         pos += 1
       end
@@ -572,7 +557,7 @@ class Njiiri
   def refresh_playlist
     cur_id = @mpd.status['songid']
     @player_tree_store.each do |model, path, iter|
-      iter[COL_WEIGHT] = iter[COL_ID] == cur_id ? Pango::WEIGHT_BOLD : Pango::WEIGHT_NORMAL
+      iter[6] = iter[5] == cur_id ? Pango::WEIGHT_BOLD : Pango::WEIGHT_NORMAL
     end
   end
 
@@ -581,8 +566,8 @@ class Njiiri
     if @mpd.connected?
       @mpd.playlist.each do |song|
         iter = @player_tree_store.append(nil)
-        iter[COL_TITLE], iter[COL_ARTIST], iter[COL_ALBUM], iter[COL_TIME] = Format.all(song, "-")
-        iter[COL_ID] = song.id
+        iter[1], iter[2], iter[3], iter[4] = Format.all(song, "-")
+        iter[5] = song.id
       end
     end
   end
