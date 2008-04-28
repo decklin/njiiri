@@ -212,7 +212,7 @@ class Njiiri
     @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
     @glade['repeat_btn'].active = @mpd.repeat?
     @glade['shuffle_btn'].active = @mpd.random?
-    @glade['volume_scale'].value = @volume = @mpd.volume
+    @glade['volume_scale'].value = @mpd.volume
     setup_browser_bookmarks
 
     self.refresh_info(@mpd.current_song)
