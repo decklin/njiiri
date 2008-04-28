@@ -6,6 +6,7 @@ require 'thread'
 require 'libglade2'
 require 'cgi'
 require 'yaml'
+require 'monitor'
 
 def a(*l)
   l.find {|x| not (x.nil? or x.empty?) }
@@ -42,6 +43,34 @@ class MPD
   end
   class Song
     def id; self['id']; end
+  end
+end
+
+module Gtk
+  GTK_PENDING_BLOCKS = []
+  GTK_PENDING_BLOCKS_LOCK = Monitor.new
+
+  def Gtk.queue &block
+    if Thread.current == Thread.main
+      block.call
+    else
+      GTK_PENDING_BLOCKS_LOCK.synchronize do
+        GTK_PENDING_BLOCKS << block
+      end
+    end
+  end
+
+  def Gtk.main_with_queue timeout
+    Gtk.timeout_add timeout do
+      GTK_PENDING_BLOCKS_LOCK.synchronize do
+        for block in GTK_PENDING_BLOCKS
+          block.call
+        end
+        GTK_PENDING_BLOCKS.clear
+      end
+      true
+    end
+    Gtk.main
   end
 end
 
@@ -91,7 +120,6 @@ class Njiiri
 
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
-    @vol_ack = nil
     @btab = {}
 
     rend = Gtk::CellRendererText.new
@@ -184,7 +212,7 @@ class Njiiri
     @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
     @glade['repeat_btn'].active = @mpd.repeat?
     @glade['shuffle_btn'].active = @mpd.random?
-    @glade['volume_scale'].value = @vol_ack = @mpd.volume
+    @glade['volume_scale'].value = @volume = @mpd.volume
     setup_browser_bookmarks
 
     self.refresh_info(@mpd.current_song)
@@ -322,9 +350,8 @@ class Njiiri
   end
 
   def on_volume_scale_value_changed(widget)
-    if @vol_ack and widget.value.to_i != @vol_ack
+    if widget.value.to_i != @mpd.volume
       @mpd.volume = widget.value.to_i
-      @vol_ack = nil
     end
   end
 
@@ -525,7 +552,11 @@ class Njiiri
   end
 
   def volume_cb(vol)
-    @glade['volume_scale'].value = @vol_ack = vol
+    Gtk.queue do
+      if vol != @glade['volume_scale'].value
+        @glade['volume_scale'].value = vol
+      end
+    end
   end
 
   def time_cb(elapsed, total)
@@ -681,5 +712,5 @@ if __FILE__ == $0
   Gtk.init
   njiiri = Njiiri.new(File.expand_path("~/.njiirirc"))
   njiiri.connect && njiiri.reset_pwd
-  Gtk.main
+  Gtk.main_with_queue 100
 end
