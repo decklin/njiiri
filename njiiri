@@ -201,7 +201,6 @@ class Njiiri
     @glade['repeat_btn'].active = @mpd.repeat?
     @glade['shuffle_btn'].active = @mpd.random?
     @glade['volume_scale'].value = @mpd.volume
-    setup_browser_bookmarks
 
     self.refresh_info(@mpd.current_song)
     self.refresh_status
@@ -345,11 +344,12 @@ class Njiiri
 
   # BROWSER WINDOW
 
-  def setup_browser_bookmarks
+  def on_browser_win_show
     bookmarks = [ [ "Library", proc { reset_pwd } ],
                   [ "Search", proc { activate_search_entry("_Search:") } ],
                   [ "-", proc { } ] ] +
                 @mpd.playlists.collect { |pl| [ pl, proc { @mpd.load(pl) } ] }
+    @bookmarks_tree_store.clear
     bookmarks.each do |n, p|
       iter = @bookmarks_tree_store.append(nil)
       iter[0] = n

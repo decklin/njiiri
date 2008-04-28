@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.4 on Sun Apr 27 16:47:10 2008 -->
+<!--Generated with glade3 3.4.4 on Sun Apr 27 23:06:41 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -323,6 +323,7 @@
     <signal name="key_press_event" handler="on_browser_win_key_press_event"/>
     <signal name="size_allocate" handler="on_browser_win_size_allocate"/>
     <signal name="delete_event" handler="on_browser_win_delete"/>
+    <signal name="show" handler="on_browser_win_show"/>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="browser_box">
         <property name="visible">True</property>
