@@ -191,6 +191,7 @@ class Njiiri
       @glade['connect_btn'].stock_id = Gtk::Stock::DISCONNECT
     rescue
       self.disconnected
+      throw
     end
   end
 
@@ -201,7 +202,6 @@ class Njiiri
     @glade['repeat_btn'].active = @mpd.repeat?
     @glade['shuffle_btn'].active = @mpd.random?
     @glade['volume_scale'].value = @mpd.volume
-
     self.refresh_info(@mpd.current_song)
     self.refresh_status
   end
@@ -209,12 +209,10 @@ class Njiiri
   def disconnected
     self.enable_toolbuttons(false)
     @glade['connect_btn'].stock_id = Gtk::Stock::CONNECT
-
+    @player_tree_store.clear
     self.refresh_info(nil)
     self.refresh_pos(-1)
     self.refresh_status
-
-    @player_tree_store.clear
   end
 
   def enable_toolbuttons(sensitive)
@@ -508,7 +506,10 @@ class Njiiri
     else
       @conf.serv[:password] = @glade['password_entry'].text
     end
-    self.connect
+    begin
+      self.connect
+    rescue
+    end
   end
 
   # CALLBACKS
@@ -698,6 +699,10 @@ end
 if __FILE__ == $0
   Gtk.init
   njiiri = Njiiri.new(File.expand_path("~/.njiirirc"))
-  njiiri.connect && njiiri.reset_pwd
+  begin
+    njiiri.connect
+    njiiri.reset_pwd
+  rescue
+  end
   Gtk.main_with_queue 100
 end
