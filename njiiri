@@ -106,6 +106,7 @@ class Njiiri
 
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
+    @last_version = 0
     @btab = {}
 
     rend = Gtk::CellRendererText.new
@@ -565,13 +566,22 @@ class Njiiri
   end
 
   def rebuild_playlist(version)
-    @player_tree_store.clear
     if @mpd.connected?
-      @mpd.playlist.each do |song|
-        iter = @player_tree_store.append(nil)
+      changes = @mpd.playlist_changes(@last_version)
+      changes.each do |song|
+        iter = @player_tree_store.get_iter(song["pos"]) \
+            || @player_tree_store.append(nil)
         iter[1], iter[2], iter[3], iter[4] = Format.all(song, "-")
         iter[5] = song.id
       end
+
+      len = @mpd.status["playlistlength"].to_i
+      n = 0
+      @player_tree_store.each do |model, path, iter|
+        n += 1
+        @player_tree_store.remove(iter) if n > len
+      end
+      @last_version = version
     end
   end
 
