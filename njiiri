@@ -278,6 +278,7 @@ class Njiiri
   def on_playlist_tree_key_press_event(widget, e)
     if e.keyval == Gdk::Keyval::GDK_Delete
       @glade['playlist_tree'].selection.selected_each do |model, path, iter|
+        @glade['playlist_tree'].selection.unselect_iter(iter)
         @mpd.deleteid(iter[5])
       end
     end
