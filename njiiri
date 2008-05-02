@@ -525,19 +525,23 @@ class Njiiri
   end
 
   def song_cb(current)
-    refresh_info(current)
-    refresh_playlist
+    Gtk.queue do
+      refresh_info(current)
+      refresh_playlist
+    end
   end
 
   def state_cb(newstate)
-    case newstate
-      when "play"
-        @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE
-      when "pause"
-        @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
-      when "stop"
-        @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
-        refresh_pos(-1)
+    Gtk.queue do
+      case newstate
+        when "play"
+          @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE
+        when "pause"
+          @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
+        when "stop"
+          @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
+          refresh_pos(-1)
+      end
     end
   end
 
@@ -550,11 +554,15 @@ class Njiiri
   end
 
   def time_cb(elapsed, total)
-    refresh_pos(elapsed, total)
+    Gtk.queue do
+      refresh_pos(elapsed, total)
+    end
   end
 
   def conn_cb(up)
-    up ? self.connected : self.disconnected
+    Gtk.queue do
+      up ? self.connected : self.disconnected
+    end
   end
 
   # MISC
