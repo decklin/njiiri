@@ -580,7 +580,9 @@ class Njiiri
       n = 0
       @player_tree_store.each do |model, path, iter|
         n += 1
-        @player_tree_store.remove(iter) if n > len
+        if n > len
+          1 while @player_tree_store.remove(iter)
+        end
       end
       @last_version = version
     end
