@@ -46,34 +46,6 @@ class MPD
   end
 end
 
-module Gtk
-  GTK_PENDING_BLOCKS = []
-  GTK_PENDING_BLOCKS_LOCK = Monitor.new
-
-  def Gtk.queue &block
-    if Thread.current == Thread.main
-      block.call
-    else
-      GTK_PENDING_BLOCKS_LOCK.synchronize do
-        GTK_PENDING_BLOCKS << block
-      end
-    end
-  end
-
-  def Gtk.main_with_queue timeout
-    Gtk.timeout_add timeout do
-      GTK_PENDING_BLOCKS_LOCK.synchronize do
-        for block in GTK_PENDING_BLOCKS
-          block.call
-        end
-        GTK_PENDING_BLOCKS.clear
-      end
-      true
-    end
-    Gtk.main
-  end
-end
-
 class Njiiri
 
   TITLE = "Njiiri MPD Client"
@@ -100,6 +72,8 @@ class Njiiri
 
   # CLASS
 
+  @@callbacks = {}
+
   def initialize(rc_path)
     @conf = Conf.new(rc_path)
     @glade = GladeXML.new(GLADE_PATH) {|handler| method(handler) }
@@ -108,6 +82,9 @@ class Njiiri
     @status_msg = nil
     @last_version = 0
     @btab = {}
+    @dirty = {}
+
+    make_callbacks
 
     rend = Gtk::CellRendererText.new
     rend.ellipsize = Pango::ELLIPSIZE_END
@@ -179,13 +156,7 @@ class Njiiri
 
   def connect
     @mpd = MPD.new(@conf.serv[:host], @conf.serv[:port])
-    @mpd.register_callback(self.method(:playlist_cb), MPD::PLAYLIST_CALLBACK)
-    @mpd.register_callback(self.method(:song_cb), MPD::CURRENT_SONG_CALLBACK)
-    @mpd.register_callback(self.method(:state_cb), MPD::STATE_CALLBACK)
-    @mpd.register_callback(self.method(:time_cb), MPD::TIME_CALLBACK)
-    @mpd.register_callback(self.method(:volume_cb), MPD::VOLUME_CALLBACK)
-    @mpd.register_callback(self.method(:conn_cb), MPD::CONNECTION_CALLBACK)
-
+    @@callbacks.each {|type, method| @mpd.register_callback(method, type) }
     begin
       @mpd.connect(true)
       @mpd.password(@conf.serv[:password]) if @conf.serv[:password]
@@ -516,24 +487,40 @@ class Njiiri
 
   # CALLBACKS
 
-  def playlist_cb(version)
-    Gtk.queue do
+  def cleanup
+    @dirty.each do |flag, args|
+      if args
+        self.send("clean_#{flag}", *args)
+        @dirty[flag] = nil
+      end
+    end
+  end
+
+  def create_method(name, &block)
+    self.class.send(:define_method, name, &block)
+  end
+
+  def callback(name, &block)
+    @@callbacks[name] = create_method "cb_#{name}" do |*args|
+      @dirty[name] = args
+    end
+    create_method("clean_#{name}", &block)
+  end
+
+  def make_callbacks
+    callback MPD::PLAYLIST_CALLBACK do |version|
       rebuild_playlist(version)
       refresh_playlist
       refresh_status
     end
-  end
 
-  def song_cb(current)
-    Gtk.queue do
+    callback MPD::CURRENT_SONG_CALLBACK do |current|
       refresh_info(current)
       refresh_playlist
     end
-  end
 
-  def state_cb(newstate)
-    Gtk.queue do
-      case newstate
+    callback MPD::STATE_CALLBACK do |state|
+      case state
         when "play"
           @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE
         when "pause"
@@ -543,25 +530,23 @@ class Njiiri
           refresh_pos(-1)
       end
     end
-  end
 
-  def volume_cb(vol)
-    Gtk.queue do
+    callback MPD::VOLUME_CALLBACK do |vol|
       if vol != @glade['volume_scale'].value
         @glade['volume_scale'].value = vol
       end
     end
-  end
 
-  def time_cb(elapsed, total)
-    Gtk.queue do
+    callback MPD::TIME_CALLBACK do |elapsed, total|
       refresh_pos(elapsed, total)
     end
-  end
 
-  def conn_cb(up)
-    Gtk.queue do
-      up ? self.connected : self.disconnected
+    callback MPD::CONNECTION_CALLBACK do |up|
+      if up
+        self.connected
+      else
+        self.disconnected
+      end
     end
   end
 
@@ -725,5 +710,6 @@ if __FILE__ == $0
     njiiri.reset_pwd
   rescue
   end
-  Gtk.main_with_queue 100
+  Gtk.timeout_add(100) { njiiri.cleanup }
+  Gtk.main
 end
