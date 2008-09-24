@@ -395,6 +395,14 @@ class Njiiri
     end
   end
 
+  def add_songs_from(tree, &block)
+    if tree.selection.selected_rows.empty?
+      tree.model.each &block
+    else
+      tree.selection.selected_each &block
+    end
+  end
+
   def on_add_btn_clicked(widget)
     if @glade['search_entry'].has_focus?
       begin
@@ -403,21 +411,15 @@ class Njiiri
       rescue RuntimeError
       end
     else
-      if @glade['files_tree'].selection.selected_rows.empty?
-        @glade['files_tree'].model.each do |model, path, iter|
-          @mpd.add(iter[5])
-        end
-      else
-        @glade['files_tree'].selection.selected_each do |model, path, iter|
-          @mpd.add(iter[5])
-        end
+      add_songs_from @glade['files_tree'] do |model, path, iter|
+        @mpd.add(iter[5])
       end
     end
   end
 
   def on_insert_btn_clicked(widget)
     pos = @mpd.status['song'].to_i + 1
-    @glade['files_tree'].selection.selected_each do |model, path, iter|
+    add_songs_from @glade['files_tree'] do |model, path, iter|
       @mpd.add(iter[5])
       @mpd.move(@mpd.playlist.length - 1, pos)
       pos += 1
