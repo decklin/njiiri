@@ -8,10 +8,6 @@ require 'cgi'
 require 'yaml'
 require 'monitor'
 
-def a(*l)
-  l.find {|x| not (x.nil? or x.empty?) }
-end
-
 class Hash
   def deep_merge(h)
     t = dup
@@ -644,6 +640,9 @@ class Format
           song.time ? pos(song.time.to_i) : "∞",
           song.track ]
       end
+    end
+    def a(*l)
+      l.find {|x| not (x.nil? or x.empty?) }
     end
     def h(s)
       CGI::escapeHTML(a(s, " "))
