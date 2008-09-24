@@ -525,9 +525,7 @@ class Njiiri
   end
 
   def_cb :got_volume, MPD::VOLUME_CALLBACK do |vol|
-    if vol != @glade['volume_scale'].value
-      @glade['volume_scale'].value = vol
-    end
+    @glade['volume_scale'].value = vol
   end
 
   def_cb :got_time, MPD::TIME_CALLBACK do |elapsed, total|
