@@ -6,7 +6,6 @@ require 'thread'
 require 'libglade2'
 require 'cgi'
 require 'yaml'
-require 'monitor'
 
 class Hash
   def deep_merge(h)
@@ -68,7 +67,7 @@ class Njiiri
 
   # CLASS
 
-  @@callbacks = {}
+  @@callbacks = []
 
   def initialize(rc_path)
     @conf = Conf.new(rc_path)
@@ -79,8 +78,6 @@ class Njiiri
     @last_version = 0
     @btab = {}
     @dirty = {}
-
-    make_callbacks
 
     rend = Gtk::CellRendererText.new
     rend.ellipsize = Pango::ELLIPSIZE_END
@@ -152,7 +149,7 @@ class Njiiri
 
   def connect
     @mpd = MPD.new(@conf.serv[:host], @conf.serv[:port])
-    @@callbacks.each {|type, method| @mpd.register_callback(method, type) }
+    @@callbacks.each {|n| @mpd.register_callback(method("_dirty_#{n}"), n) }
     begin
       @mpd.connect(true)
       @mpd.password(@conf.serv[:password]) if @conf.serv[:password]
@@ -484,65 +481,58 @@ class Njiiri
   # CALLBACKS
 
   def cleanup
-    @dirty.each do |flag, args|
-      if args
-        self.send("clean_#{flag}", *args)
-        @dirty[flag] = nil
+    @dirty.each {|flag, args| self.send("_clean_#{flag}", *args) }
+    @dirty.clear
+  end
+
+  def self.def_cb(n, &block)
+    @@callbacks << n
+    class_eval do
+      define_method "_clean_#{n}", &block
+      define_method "_dirty_#{n}" do |*args|
+        @dirty[n] = args
       end
     end
   end
 
-  def create_method(name, &block)
-    self.class.send(:define_method, name, &block)
+  def_cb MPD::PLAYLIST_CALLBACK do |version|
+    rebuild_playlist(version)
+    refresh_playlist
+    refresh_status
   end
 
-  def callback(name, &block)
-    @@callbacks[name] = create_method "cb_#{name}" do |*args|
-      @dirty[name] = args
-    end
-    create_method("clean_#{name}", &block)
+  def_cb MPD::CURRENT_SONG_CALLBACK do |current|
+    refresh_info(current)
+    refresh_playlist
   end
 
-  def make_callbacks
-    callback MPD::PLAYLIST_CALLBACK do |version|
-      rebuild_playlist(version)
-      refresh_playlist
-      refresh_status
+  def_cb MPD::STATE_CALLBACK do |state|
+    case state
+      when "play"
+        @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE
+      when "pause"
+        @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
+      when "stop"
+        @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
+        refresh_pos(-1)
     end
+  end
 
-    callback MPD::CURRENT_SONG_CALLBACK do |current|
-      refresh_info(current)
-      refresh_playlist
+  def_cb MPD::VOLUME_CALLBACK do |vol|
+    if vol != @glade['volume_scale'].value
+      @glade['volume_scale'].value = vol
     end
+  end
 
-    callback MPD::STATE_CALLBACK do |state|
-      case state
-        when "play"
-          @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE
-        when "pause"
-          @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
-        when "stop"
-          @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
-          refresh_pos(-1)
-      end
-    end
+  def_cb MPD::TIME_CALLBACK do |elapsed, total|
+    refresh_pos(elapsed, total)
+  end
 
-    callback MPD::VOLUME_CALLBACK do |vol|
-      if vol != @glade['volume_scale'].value
-        @glade['volume_scale'].value = vol
-      end
-    end
-
-    callback MPD::TIME_CALLBACK do |elapsed, total|
-      refresh_pos(elapsed, total)
-    end
-
-    callback MPD::CONNECTION_CALLBACK do |up|
-      if up
-        self.connected
-      else
-        self.disconnected
-      end
+  def_cb MPD::CONNECTION_CALLBACK do |up|
+    if up
+      self.connected
+    else
+      self.disconnected
     end
   end
 
