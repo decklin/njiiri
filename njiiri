@@ -48,22 +48,22 @@ class Njiiri
   VERSION = "0.1"
   GLADE_PATH = "njiiri.glade"
 
-  PLAYER_COLS = [ [ "", 40, String, ],
-                  [ "Title", 180, String, ],
-                  [ "Artist", 160, String, ],
-                  [ "Album", 140, String, ],
-                  [ "Time", 40, String, ],
-                  [ :id, nil, String, ],
-                  [ :cur, nil, Integer, ] ]
-  BOOKMK_COLS = [ [ "Places", 0, String ],
-                  [ :cb, nil, Proc ] ]
-  BROWSE_COLS = [ [ "", 40, String ],
-                  [ "Title", 140, String ],
-                  [ "Artist", 120, String ],
-                  [ "Album", 100, String ],
-                  [ "Time", 40, String ],
-                  [ :path, nil, String ],
-                  [ :cb, nil, Proc ] ]
+  PLAYER_COLS = [ [ 0, "", 40, Symbol ],
+                  [ 1, "Title", 180, String ],
+                  [ 2, "Artist", 160, String ],
+                  [ 3, "Album", 140, String ],
+                  [ 4, "Time", 40, String ],
+                  [ 5, :id, nil, String ],
+                  [ 6, :weight, nil, Integer ] ]
+  BROWSE_COLS = [ [ 0, "", 40, Symbol ],
+                  [ 1, "Title", 140, String ],
+                  [ 2, "Artist", 120, String ],
+                  [ 3, "Album", 100, String ],
+                  [ 4, "Time", 40, String ],
+                  [ 5, :path, nil, String ],
+                  [ 6, :cb, nil, Proc ] ]
+  BOOKMK_COLS = [ [ 0, "Places", 0, String ],
+                  [ 1, :cb, nil, Proc ] ]
 
   # CLASS
 
@@ -79,17 +79,16 @@ class Njiiri
     @btab = {}
     @queued = {}
 
-    rend = Gtk::CellRendererText.new
-    rend.ellipsize = Pango::ELLIPSIZE_END
+    @rend = Gtk::CellRendererText.new
+    @rend.ellipsize = Pango::ELLIPSIZE_END
+    @rend_icon = Gtk::CellRendererPixbuf.new
 
-    @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect{|x| x[2] })
+    @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect{|x| x[3] })
     @glade['playlist_tree'].model = @player_tree_store
     @glade['playlist_tree'].selection.mode = Gtk::SELECTION_MULTIPLE
 
-    PLAYER_COLS.each_with_index do |spec, n|
-      name, width = spec
-      if width
-        col = Gtk::TreeViewColumn.new(name, rend, :text => n, :weight => 6)
+    PLAYER_COLS.each do |i, name, width, type|
+      make_column(name, width, type, i, :weight => 6) do |col|
         col.sizing = Gtk::TreeViewColumn::FIXED
         col.fixed_width = width
         col.resizable = true
@@ -97,36 +96,30 @@ class Njiiri
       end
     end
 
-    rend = Gtk::CellRendererText.new
-    rend.ellipsize = Pango::ELLIPSIZE_END
+    # replace with a new, non-weighted one (this is a dirty hack)
+    @rend = Gtk::CellRendererText.new
+    @rend.ellipsize = Pango::ELLIPSIZE_END
 
-    @bookmarks_tree_store = Gtk::TreeStore.new(*BOOKMK_COLS.collect{|x| x[2] })
-    @glade['bookmarks_tree'].model = @bookmarks_tree_store
-
-    BOOKMK_COLS.each_with_index do |spec, n|
-      name, width = spec
-      if width
-        col = Gtk::TreeViewColumn.new(name, rend, :text => n)
-        col.resizable = false
-        @glade['bookmarks_tree'].append_column(col)
-      end
-    end
-
-    rend = Gtk::CellRendererText.new
-    rend.ellipsize = Pango::ELLIPSIZE_END
-
-    @files_tree_store = Gtk::TreeStore.new(*BROWSE_COLS.collect{|x| x[2] })
+    @files_tree_store = Gtk::TreeStore.new(*BROWSE_COLS.collect{|x| x[3] })
     @glade['files_tree'].model = @files_tree_store
     @glade['files_tree'].selection.mode = Gtk::SELECTION_MULTIPLE
 
-    BROWSE_COLS.each_with_index do |spec, n|
-      name, width = spec
-      if width
-        col = Gtk::TreeViewColumn.new(name, rend, :text => n)
+    BROWSE_COLS.each do |i, name, width, type|
+      make_column(name, width, type, i) do |col|
         col.sizing = Gtk::TreeViewColumn::FIXED
         col.fixed_width = width
         col.resizable = true
         @glade['files_tree'].append_column(col)
+      end
+    end
+
+    @bookmarks_tree_store = Gtk::TreeStore.new(*BOOKMK_COLS.collect{|x| x[3] })
+    @glade['bookmarks_tree'].model = @bookmarks_tree_store
+
+    BOOKMK_COLS.each do |i, name, width, type|
+      make_column(name, width, type, i) do |col|
+        col.resizable = false
+        @glade['bookmarks_tree'].append_column(col)
       end
     end
 
@@ -145,6 +138,16 @@ class Njiiri
     @glade['files_pane'].set_position(@conf.geom[:browser][:pane])
 
     @glade['player_win'].show
+  end
+
+  def make_column(name, width, type, i, params={})
+    if width
+      if type == String
+        yield Gtk::TreeViewColumn.new(name, @rend, params.merge(:text => i))
+      elsif type == Symbol
+        yield Gtk::TreeViewColumn.new(name, @rend_icon, :stock_id => i)
+      end
+    end
   end
 
   def connect
@@ -348,7 +351,7 @@ class Njiiri
     @mpd.lsinfo(pwd, :directories).each do |path|
       dir = File.basename(path)
       iter = @files_tree_store.append(nil)
-      iter[0] = "D"
+      iter[0] = Gtk::Stock::DIRECTORY
       iter[1], iter[2], iter[3], iter[4] = dir, "-", "-", "-"
       iter[5] = path
       iter[6] = proc { add_pwd(dir) }
@@ -356,7 +359,7 @@ class Njiiri
     @mpd.lsinfo(pwd, :files).each do |path|
       song = @mpd.listallinfo(path)[0]
       iter = @files_tree_store.append(nil)
-      iter[0] = "F"
+      iter[0] = Gtk::Stock::FILE
       iter[1], iter[2], iter[3], iter[4] = Format.all(song, "-")
       iter[5] = path
       iter[6] = proc { @mpd.add path }
@@ -552,9 +555,15 @@ class Njiiri
 
   def refresh_playlist
     if @mpd.connected?
-      cur = @mpd.status['songid']
+      cur_songid = @mpd.status['songid']
       @player_tree_store.each do |model, path, iter|
-        iter[6] = (iter[5] == cur) ? Pango::WEIGHT_BOLD : Pango::WEIGHT_NORMAL
+        if iter[5] == cur_songid
+          iter[0] = Gtk::Stock::MEDIA_PLAY
+          iter[6] = Pango::WEIGHT_BOLD
+        else
+          iter[0] = nil
+          iter[6] = Pango::WEIGHT_NORMAL
+        end
       end
     end
   end
@@ -565,6 +574,7 @@ class Njiiri
       changes.each do |song|
         iter = @player_tree_store.get_iter(song["pos"]) \
             || @player_tree_store.append(nil)
+        iter[0] = Gtk::Stock::FILE
         iter[1], iter[2], iter[3], iter[4] = Format.all(song, "-")
         iter[5] = song.id
       end
