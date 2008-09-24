@@ -403,8 +403,14 @@ class Njiiri
       rescue RuntimeError
       end
     else
-      @glade['files_tree'].selection.selected_each do |model, path, iter|
-        @mpd.add(iter[5])
+      if @glade['files_tree'].selection.selected_rows.empty?
+        @glade['files_tree'].model.each do |model, path, iter|
+          @mpd.add(iter[5])
+        end
+      else
+        @glade['files_tree'].selection.selected_each do |model, path, iter|
+          @mpd.add(iter[5])
+        end
       end
     end
   end
