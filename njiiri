@@ -75,7 +75,7 @@ class Njiiri
 
     @status_ctx = @glade['player_status'].get_context_id(NAME)
     @status_msg = nil
-    @last_version = 0
+    @prev_version = 0
     @btab = {}
     @queued = {}
 
@@ -561,7 +561,7 @@ class Njiiri
 
   def rebuild_playlist(version)
     if @mpd.connected?
-      changes = @mpd.playlist_changes(@last_version)
+      changes = @mpd.playlist_changes(@prev_version)
       changes.each do |song|
         iter = @player_tree_store.get_iter(song["pos"]) \
             || @player_tree_store.append(nil)
@@ -569,15 +569,10 @@ class Njiiri
         iter[5] = song.id
       end
 
-      len = @mpd.status["playlistlength"].to_i
-      n = 0
-      @player_tree_store.each do |model, path, iter|
-        n += 1
-        if n > len
-          1 while @player_tree_store.remove(iter)
-        end
+      if last = @player_tree_store.get_iter(@mpd.status["playlistlength"])
+        1 while @player_tree_store.remove(last)
       end
-      @last_version = version
+      @prev_version = version
     end
   end
 
