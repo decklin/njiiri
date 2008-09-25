@@ -186,6 +186,8 @@ class Njiiri
     @widgets.shuffle_btn.active = @mpd.random?
     @widgets.volume_scale.value = @mpd.volume
     self.refresh_info(@mpd.current_song)
+    self.rebuild_playlist(@mpd.playlist_version, 0)
+    self.refresh_playlist
     self.refresh_status
   end
 
@@ -592,17 +594,14 @@ class Njiiri
     end
   end
 
-  def rebuild_playlist(version)
+  def rebuild_playlist(version, prev=@prev_version)
     if @mpd.connected?
-      changes = @mpd.playlist_changes(@prev_version)
-      changes.each do |song|
+      @mpd.playlist_changes(prev).each do |song|
         iter = @player_tree_store.get_iter(song["pos"]) \
             || @player_tree_store.append(nil)
-        iter[0] = Gtk::Stock::FILE
         iter[1], iter[2], iter[3], iter[4] = Format.all(song, "-")
         iter[5] = song.id
       end
-
       if last = @player_tree_store.get_iter(@mpd.status["playlistlength"])
         1 while @player_tree_store.remove(last)
       end
