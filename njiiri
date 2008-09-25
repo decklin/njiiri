@@ -41,12 +41,27 @@ class MPD
   end
 end
 
-class Njiiri
+class GladeWrapper < GladeXML
+  DIRS = %w[. /usr/local/share/njiiri /usr/share/njiiri]
+  FILE = 'njiiri.glade'
 
-  TITLE = "Njiiri MPD Client"
+  def initialize(obj)
+    DIRS.each do |dir|
+      path = "#{dir}/#{FILE}"
+      if File.exist?(path)
+        return super(path) {|handler| obj.method(handler) }
+      end
+    end
+  end
+
+  def method_missing(name)
+    self[name.to_s]
+  end
+end
+
+
+class Njiiri
   NAME = "Njiiri"
-  VERSION = "0.1"
-  GLADE_PATH = "njiiri.glade"
 
   PLAYER_COLS = [ [ 0, "", 40, Symbol ],
                   [ 1, "Title", 180, String ],
@@ -71,9 +86,9 @@ class Njiiri
 
   def initialize(rc_path)
     @conf = Conf.new(rc_path)
-    @glade = GladeXML.new(GLADE_PATH) {|handler| method(handler) }
+    @widgets = GladeWrapper.new(self)
 
-    @status_ctx = @glade['player_status'].get_context_id(NAME)
+    @status_ctx = @widgets.player_status.get_context_id(NAME)
     @status_msg = nil
     @prev_version = 0
     @btab = {}
@@ -84,15 +99,15 @@ class Njiiri
     @rend_icon = Gtk::CellRendererPixbuf.new
 
     @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect{|x| x[3] })
-    @glade['playlist_tree'].model = @player_tree_store
-    @glade['playlist_tree'].selection.mode = Gtk::SELECTION_MULTIPLE
+    @widgets.playlist_tree.model = @player_tree_store
+    @widgets.playlist_tree.selection.mode = Gtk::SELECTION_MULTIPLE
 
     PLAYER_COLS.each do |i, name, width, type|
       make_column(name, width, type, i, :weight => 6) do |col|
         col.sizing = Gtk::TreeViewColumn::FIXED
         col.fixed_width = width
         col.resizable = true
-        @glade['playlist_tree'].append_column(col)
+        @widgets.playlist_tree.append_column(col)
       end
     end
 
@@ -101,43 +116,43 @@ class Njiiri
     @rend.ellipsize = Pango::ELLIPSIZE_END
 
     @files_tree_store = Gtk::TreeStore.new(*BROWSE_COLS.collect{|x| x[3] })
-    @glade['files_tree'].model = @files_tree_store
-    @glade['files_tree'].selection.mode = Gtk::SELECTION_MULTIPLE
+    @widgets.files_tree.model = @files_tree_store
+    @widgets.files_tree.selection.mode = Gtk::SELECTION_MULTIPLE
 
     BROWSE_COLS.each do |i, name, width, type|
       make_column(name, width, type, i) do |col|
         col.sizing = Gtk::TreeViewColumn::FIXED
         col.fixed_width = width
         col.resizable = true
-        @glade['files_tree'].append_column(col)
+        @widgets.files_tree.append_column(col)
       end
     end
 
     @bookmarks_tree_store = Gtk::TreeStore.new(*BOOKMK_COLS.collect{|x| x[3] })
-    @glade['bookmarks_tree'].model = @bookmarks_tree_store
+    @widgets.bookmarks_tree.model = @bookmarks_tree_store
 
     BOOKMK_COLS.each do |i, name, width, type|
       make_column(name, width, type, i) do |col|
         col.resizable = false
-        @glade['bookmarks_tree'].append_column(col)
+        @widgets.bookmarks_tree.append_column(col)
       end
     end
 
-    @glade['host_entry'].text = @conf.serv[:host]
-    @glade['port_entry'].text = @conf.serv[:port].to_s
-    @glade['password_entry'].text = @conf.serv[:password].to_s
+    @widgets.host_entry.text = @conf.serv[:host]
+    @widgets.port_entry.text = @conf.serv[:port].to_s
+    @widgets.password_entry.text = @conf.serv[:password].to_s
 
     x, y, h, w = [:x, :y, :h, :w].collect {|d| @conf.geom[:player][d] }
-    @glade['player_win'].set_default_size(w, h)
-    @glade['player_win'].move(x, y)
-    @glade['main_pane'].set_position(@conf.geom[:player][:pane])
+    @widgets.player_win.set_default_size(w, h)
+    @widgets.player_win.move(x, y)
+    @widgets.main_pane.set_position(@conf.geom[:player][:pane])
 
     x, y, h, w = [:x, :y, :h, :w].collect {|d| @conf.geom[:browser][d] }
-    @glade['browser_win'].set_default_size(w, h)
-    @glade['browser_win'].move(x, y)
-    @glade['files_pane'].set_position(@conf.geom[:browser][:pane])
+    @widgets.browser_win.set_default_size(w, h)
+    @widgets.browser_win.move(x, y)
+    @widgets.files_pane.set_position(@conf.geom[:browser][:pane])
 
-    @glade['player_win'].show
+    @widgets.player_win.show
   end
 
   def make_column(name, width, type, i, params={})
@@ -156,7 +171,7 @@ class Njiiri
     begin
       @mpd.connect(true)
       @mpd.password(@conf.serv[:password]) if @conf.serv[:password]
-      @glade['connect_btn'].stock_id = Gtk::Stock::DISCONNECT
+      @widgets.connect_btn.stock_id = Gtk::Stock::DISCONNECT
     rescue
       self.disconnected
       throw
@@ -165,18 +180,18 @@ class Njiiri
 
   def connected
     self.enable_toolbuttons(true)
-    @glade['connect_btn'].stock_id = Gtk::Stock::DISCONNECT
-    @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
-    @glade['repeat_btn'].active = @mpd.repeat?
-    @glade['shuffle_btn'].active = @mpd.random?
-    @glade['volume_scale'].value = @mpd.volume
+    @widgets.connect_btn.stock_id = Gtk::Stock::DISCONNECT
+    @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
+    @widgets.repeat_btn.active = @mpd.repeat?
+    @widgets.shuffle_btn.active = @mpd.random?
+    @widgets.volume_scale.value = @mpd.volume
     self.refresh_info(@mpd.current_song)
     self.refresh_status
   end
 
   def disconnected
     self.enable_toolbuttons(false)
-    @glade['connect_btn'].stock_id = Gtk::Stock::CONNECT
+    @widgets.connect_btn.stock_id = Gtk::Stock::CONNECT
     @player_tree_store.clear
     self.refresh_info(nil)
     self.refresh_pos(-1)
@@ -184,8 +199,8 @@ class Njiiri
   end
 
   def enable_toolbuttons(sensitive)
-    %w{play prev next open saveas clear repeat shuffle}.each do |b|
-      @glade["#{b}_btn"].sensitive = sensitive
+    %w[play prev next open saveas clear repeat shuffle].each do |b|
+      @widgets["#{b}_btn"].sensitive = sensitive
     end
   end
 
@@ -198,11 +213,11 @@ class Njiiri
   end
 
   def on_info_box_size_allocate(widget, a)
-    if @glade['cover_img'].width_request == a.height
-      @glade['cover_img'].height_request = 1
+    if @widgets.cover_img.width_request == a.height
+      @widgets.cover_img.height_request = 1
     else
-      @glade['cover_img'].width_request = a.height
-      @glade['cover_img'].height_request = a.height
+      @widgets.cover_img.width_request = a.height
+      @widgets.cover_img.height_request = a.height
     end
   end
 
@@ -244,8 +259,8 @@ class Njiiri
 
   def on_playlist_tree_key_press_event(widget, e)
     if e.keyval == Gdk::Keyval::GDK_Delete
-      @glade['playlist_tree'].selection.selected_each do |model, path, iter|
-        @glade['playlist_tree'].selection.unselect_iter(iter)
+      @widgets.playlist_tree.selection.selected_each do |model, path, iter|
+        @widgets.playlist_tree.selection.unselect_iter(iter)
         @mpd.deleteid(iter[5])
       end
     end
@@ -275,11 +290,11 @@ class Njiiri
   end
 
   def on_open_btn_clicked
-    @glade['browser_win'].show
+    @widgets.browser_win.show
   end
 
   def on_saveas_btn_clicked
-    @glade['saveas_dlg'].show
+    @widgets.saveas_dlg.show
   end
 
   def on_clear_btn_clicked
@@ -299,7 +314,7 @@ class Njiiri
       @mpd.disconnect
       self.disconnected
     else
-      @glade['connect_dlg'].show
+      @widgets.connect_dlg.show
     end
   end
 
@@ -329,9 +344,9 @@ class Njiiri
   def add_pwd(dir)
     @pwd << dir
 
-    @glade['breadcrumb_box'].children[1..-1].each_with_index do |child, i|
+    @widgets.breadcrumb_box.children[1..-1].each_with_index do |child, i|
       if child.label != @pwd[i] or i >= @pwd.length-1
-        @glade['breadcrumb_box'].remove(child)
+        @widgets.breadcrumb_box.remove(child)
         @btab.delete(child)
       end
     end
@@ -339,7 +354,7 @@ class Njiiri
     btn = Gtk::Button.new(dir, false)
     @btab[btn] = @pwd.join("/")
     btn.signal_connect("clicked") {|w| up_pwd(@btab[w].split("/")) }
-    @glade['breadcrumb_box'].add(btn)
+    @widgets.breadcrumb_box.add(btn)
     btn.show
 
     load_pwd
@@ -387,11 +402,11 @@ class Njiiri
   end
 
   def on_browser_win_key_press_event(widget, e)
-    if !@glade['search_entry'].has_focus? and e.keyval == "/"[0]
-      @glade['loc_btn'].active = true
-      @glade['search_entry'].text = "http://"
-      @glade['search_entry'].grab_focus
-      @glade['search_entry'].position = -1
+    if !@widgets.search_entry.has_focus? and e.keyval == "/"[0]
+      @widgets.loc_btn.active = true
+      @widgets.search_entry.text = "http://"
+      @widgets.search_entry.grab_focus
+      @widgets.search_entry.position = -1
       true
     else
       false
@@ -407,14 +422,14 @@ class Njiiri
   end
 
   def on_add_btn_clicked(widget)
-    if @glade['search_entry'].has_focus?
+    if @widgets.search_entry.has_focus?
       begin
-        @mpd.add(@glade['search_entry'].text)
-        @glade['search_entry'].text = ""
+        @mpd.add(@widgets.search_entry.text)
+        @widgets.search_entry.text = ""
       rescue RuntimeError
       end
     else
-      add_songs_from @glade['files_tree'] do |model, path, iter|
+      add_songs_from @widgets.files_tree do |model, path, iter|
         @mpd.add(iter[5])
       end
     end
@@ -430,11 +445,11 @@ class Njiiri
   end
 
   def on_insert_btn_clicked(widget)
-    insert_songs_from(@glade['files_tree'])
+    insert_songs_from(@widgets.files_tree)
   end
 
   def on_jump_btn_clicked(widget)
-    insert_songs_from(@glade['files_tree'])
+    insert_songs_from(@widgets.files_tree)
     @mpd.next
   end
 
@@ -442,7 +457,7 @@ class Njiiri
     if widget.active?
       activate_search_entry("_Location:")
     else
-      @glade['search_hbox'].hide
+      @widgets.search_hbox.hide
     end
   end
 
@@ -459,40 +474,40 @@ class Njiiri
   end
 
   def on_close_btn_clicked(widget)
-    @glade['browser_win'].hide
+    @widgets.browser_win.hide
   end
 
   def activate_search_entry(label)
-    @glade['search_hbox'].show
-    @glade['search_label'].label = label
-    @glade['search_entry'].grab_focus
+    @widgets.search_hbox.show
+    @widgets.search_label.label = label
+    @widgets.search_entry.grab_focus
   end
 
   # SAVE AS DIALOG
 
   def on_cancel_btn_clicked
-    @glade['saveas_dlg'].hide
+    @widgets.saveas_dlg.hide
   end
 
   def on_save_btn_clicked
-    @mpd.save(@glade['name_entry'].text)
-    @glade['saveas_dlg'].hide
+    @mpd.save(@widgets.name_entry.text)
+    @widgets.saveas_dlg.hide
   end
 
   # CONNECT DIALOG
 
   def on_conn_cancel_btn_clicked
-    @glade['connect_dlg'].hide
+    @widgets.connect_dlg.hide
   end
 
   def on_do_connect_btn_clicked
-    @glade['connect_dlg'].hide
-    @conf.serv[:host] = @glade['host_entry'].text
-    @conf.serv[:port] = @glade['port_entry'].text.to_i
-    if @glade['password_entry'].text.empty?
+    @widgets.connect_dlg.hide
+    @conf.serv[:host] = @widgets.host_entry.text
+    @conf.serv[:port] = @widgets.port_entry.text.to_i
+    if @widgets.password_entry.text.empty?
       @conf.serv[:password] = nil
     else
-      @conf.serv[:password] = @glade['password_entry'].text
+      @conf.serv[:password] = @widgets.password_entry.text
     end
     begin
       self.connect
@@ -535,17 +550,17 @@ class Njiiri
   def_cb :got_state, MPD::STATE_CALLBACK do |state|
     case state
       when "play"
-        @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PAUSE
+        @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PAUSE
       when "pause"
-        @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
+        @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PLAY
       when "stop"
-        @glade['play_btn'].stock_id = Gtk::Stock::MEDIA_PLAY
+        @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PLAY
         refresh_pos(-1)
     end
   end
 
   def_cb :got_volume, MPD::VOLUME_CALLBACK do |vol|
-    @glade['volume_scale'].value = vol
+    @widgets.volume_scale.value = vol
   end
 
   def_cb :got_time, MPD::TIME_CALLBACK do |elapsed, total|
@@ -597,10 +612,10 @@ class Njiiri
 
   def refresh_info(current)
     title, artist, album, time, track = Format.all(current)
-    @glade['title_label'].label = Format.title(title)
-    @glade['artist_label'].label = Format.artist(artist)
-    @glade['album_label'].label = Format.album(album, track)
-    @glade['player_win'].title = Format.window(artist, title)
+    @widgets.title_label.label = Format.title(title)
+    @widgets.artist_label.label = Format.artist(artist)
+    @widgets.album_label.label = Format.album(album, track)
+    @widgets.player_win.title = Format.window(artist, title)
   end
 
   def refresh_pos(elapsed, total = 0)
@@ -609,19 +624,19 @@ class Njiiri
     end
     if total > 0
       if elapsed >= 0
-        @glade['pos_bar'].text = Format.pos(elapsed, total)
-        @glade['pos_bar'].fraction = [elapsed.to_f / total, 1].min
+        @widgets.pos_bar.text = Format.pos(elapsed, total)
+        @widgets.pos_bar.fraction = [elapsed.to_f / total, 1].min
       else
-        @glade['pos_bar'].text = Format.pos(total)
-        @glade['pos_bar'].fraction = 0.0
+        @widgets.pos_bar.text = Format.pos(total)
+        @widgets.pos_bar.fraction = 0.0
       end
     else
       if elapsed > 0
-        @glade['pos_bar'].text = Format.pos(elapsed)
-        @glade['pos_bar'].pulse
+        @widgets.pos_bar.text = Format.pos(elapsed)
+        @widgets.pos_bar.pulse
       else
-        @glade['pos_bar'].text = Format.pos()
-        @glade['pos_bar'].fraction = 0.0
+        @widgets.pos_bar.text = Format.pos()
+        @widgets.pos_bar.fraction = 0.0
       end
     end
   end
@@ -639,10 +654,9 @@ class Njiiri
     else
       items = [ "Disconnected" ]
     end
-    @glade['player_status'].remove(@status_ctx, @status_msg) if @status_msg
-    @status_msg = @glade['player_status'].push(@status_ctx, items.join(", "))
+    @widgets.player_status.remove(@status_ctx, @status_msg) if @status_msg
+    @status_msg = @widgets.player_status.push(@status_ctx, items.join(", "))
   end
-
 end
 
 class Format
@@ -688,7 +702,6 @@ class Format
 end
 
 class Conf
-
   DEFAULTS =
     { :server => { :host => 'localhost', :port => 6600, :password => nil },
       :geometry =>
@@ -716,7 +729,6 @@ class Conf
     rescue
     end
   end
-
 end
 
 if __FILE__ == $0
