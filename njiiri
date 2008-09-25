@@ -22,7 +22,7 @@ class Hash
 end
 
 class MPD
-  def lsinfo(path = "/", type = :files)
+  def lsinfo(path = '/', type = :files)
     response = send_command "lsinfo \"#{path}\""
     case type
       when :files
@@ -37,10 +37,10 @@ class MPD
     songs(path)
   end
   def playlist_len
-    self.status['playlistlength'].to_i  
+    status['playlistlength'].to_i  
   end
   def pos
-    self.status['song'].to_i  
+    status['song'].to_i  
   end
   class Song
     def id; self['id']; end
@@ -67,23 +67,23 @@ end
 
 
 class Njiiri
-  NAME = "Njiiri"
+  NAME = 'Njiiri'
 
-  PLAYER_COLS = [ [ 0, "", 40, Symbol ],
-                  [ 1, "Title", 180, String ],
-                  [ 2, "Artist", 160, String ],
-                  [ 3, "Album", 140, String ],
-                  [ 4, "Time", 40, String ],
+  PLAYER_COLS = [ [ 0, '', 40, Symbol ],
+                  [ 1, 'Title', 180, String ],
+                  [ 2, 'Artist', 160, String ],
+                  [ 3, 'Album', 140, String ],
+                  [ 4, 'Time', 40, String ],
                   [ 5, :id, nil, String ],
                   [ 6, :weight, nil, Integer ] ]
-  BROWSE_COLS = [ [ 0, "", 40, Symbol ],
-                  [ 1, "Title", 140, String ],
-                  [ 2, "Artist", 120, String ],
-                  [ 3, "Album", 100, String ],
-                  [ 4, "Time", 40, String ],
+  BROWSE_COLS = [ [ 0, '', 40, Symbol ],
+                  [ 1, 'Title', 140, String ],
+                  [ 2, 'Artist', 120, String ],
+                  [ 3, 'Album', 100, String ],
+                  [ 4, 'Time', 40, String ],
                   [ 5, :path, nil, String ],
                   [ 6, :cb, nil, Proc ] ]
-  BOOKMK_COLS = [ [ 0, "Places", 0, String ],
+  BOOKMK_COLS = [ [ 0, 'Places', 0, String ],
                   [ 1, :cb, nil, Proc ] ]
 
   # CLASS
@@ -179,31 +179,31 @@ class Njiiri
       @mpd.password(@conf.serv[:password]) if @conf.serv[:password]
       @widgets.connect_btn.stock_id = Gtk::Stock::DISCONNECT
     rescue
-      self.disconnected
+      disconnected
       throw
     end
   end
 
   def connected
-    self.enable_toolbuttons(true)
+    enable_toolbuttons(true)
     @widgets.connect_btn.stock_id = Gtk::Stock::DISCONNECT
     @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
     @widgets.repeat_btn.active = @mpd.repeat?
     @widgets.shuffle_btn.active = @mpd.random?
     @widgets.volume_scale.value = @mpd.volume
-    self.refresh_info(@mpd.current_song)
-    self.rebuild_playlist(@mpd.playlist_version, 0)
-    self.refresh_playlist
-    self.refresh_status
+    refresh_info(@mpd.current_song)
+    rebuild_playlist(@mpd.playlist_version, 0)
+    refresh_playlist
+    refresh_status
   end
 
   def disconnected
-    self.enable_toolbuttons(false)
+    enable_toolbuttons(false)
     @widgets.connect_btn.stock_id = Gtk::Stock::CONNECT
     @player_tree_store.clear
-    self.refresh_info(nil)
-    self.refresh_pos(-1)
-    self.refresh_status
+    refresh_info(nil)
+    refresh_pos(-1)
+    refresh_status
   end
 
   def enable_toolbuttons(sensitive)
@@ -320,7 +320,7 @@ class Njiiri
   def on_connect_btn_clicked(widget)
     if @mpd.connected?
       @mpd.disconnect
-      self.disconnected
+      disconnected
     else
       @widgets.connect_dlg.show
     end
@@ -337,9 +337,9 @@ class Njiiri
   # BROWSER WINDOW
 
   def on_browser_win_show
-    bookmarks = [ [ "Library", proc { reset_pwd } ],
-                  [ "Search", proc { activate_search_entry("_Search:") } ],
-                  [ "-", proc { } ] ] +
+    bookmarks = [ [ 'Library', proc { reset_pwd } ],
+                  [ 'Search', proc { activate_search_entry('_Search:') } ],
+                  [ '-', proc { } ] ] +
                 @mpd.playlists.collect { |pl| [ pl, proc { @mpd.load(pl) } ] }
     @bookmarks_tree_store.clear
     bookmarks.each do |n, p|
@@ -360,8 +360,8 @@ class Njiiri
     end
 
     btn = Gtk::Button.new(dir, false)
-    @btab[btn] = @pwd.join("/")
-    btn.signal_connect("clicked") {|w| up_pwd(@btab[w].split("/")) }
+    @btab[btn] = @pwd.join('/')
+    btn.signal_connect('clicked') {|w| up_pwd(@btab[w].split('/')) }
     @widgets.breadcrumb_box.add(btn)
     btn.show
 
@@ -370,12 +370,12 @@ class Njiiri
 
   def load_pwd
     @files_tree_store.clear
-    pwd = @pwd.join("/")
+    pwd = @pwd.join('/')
     @mpd.lsinfo(pwd, :directories).each do |path|
       dir = File.basename(path)
       iter = @files_tree_store.append(nil)
       iter[0] = Gtk::Stock::DIRECTORY
-      iter[1], iter[2], iter[3], iter[4] = dir, "-", "-", "-"
+      iter[1], iter[2], iter[3], iter[4] = dir, '-', '-', '-'
       iter[5] = path
       iter[6] = proc { add_pwd(dir) }
     end
@@ -383,7 +383,7 @@ class Njiiri
       song = @mpd.listallinfo(path)[0]
       iter = @files_tree_store.append(nil)
       iter[0] = Gtk::Stock::FILE
-      iter[1], iter[2], iter[3], iter[4] = Format.all(song, "-")
+      iter[1], iter[2], iter[3], iter[4] = Format.all(song, '-')
       iter[5] = path
       iter[6] = proc { @mpd.add path }
     end
@@ -410,9 +410,9 @@ class Njiiri
   end
 
   def on_browser_win_key_press_event(widget, e)
-    if !@widgets.search_entry.has_focus? and e.keyval == "/"[0]
+    if !@widgets.search_entry.has_focus? and e.keyval == '/'[0]
       @widgets.loc_btn.active = true
-      @widgets.search_entry.text = "http://"
+      @widgets.search_entry.text = 'http://'
       @widgets.search_entry.grab_focus
       @widgets.search_entry.position = -1
       true
@@ -436,7 +436,7 @@ class Njiiri
     if @widgets.search_entry.has_focus?
       begin
         @mpd.add(@widgets.search_entry.text)
-        @widgets.search_entry.text = ""
+        @widgets.search_entry.text = ''
       rescue RuntimeError
       end
     else
@@ -471,7 +471,7 @@ class Njiiri
 
   def on_loc_btn_toggled(widget)
     if widget.active?
-      activate_search_entry("_Location:")
+      activate_search_entry('_Location:')
     else
       @widgets.search_hbox.hide
     end
@@ -526,7 +526,7 @@ class Njiiri
       @conf.serv[:password] = @widgets.password_entry.text
     end
     begin
-      self.connect
+      connect
     rescue
     end
   end
@@ -538,7 +538,7 @@ class Njiiri
   end
 
   def refresh
-    @queued.each {|meth, args| self.send(meth, *args) }
+    @queued.each {|meth, args| send(meth, *args) }
     @queued.clear
   end
 
@@ -565,11 +565,11 @@ class Njiiri
 
   def_cb :got_state, MPD::STATE_CALLBACK do |state|
     case state
-      when "play"
+      when 'play'
         @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PAUSE
-      when "pause"
+      when 'pause'
         @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PLAY
-      when "stop"
+      when 'stop'
         @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PLAY
         refresh_pos(-1)
     end
@@ -585,9 +585,9 @@ class Njiiri
 
   def_cb :got_connection, MPD::CONNECTION_CALLBACK do |up|
     if up
-      self.connected
+      connected
     else
-      self.disconnected
+      disconnected
     end
   end
 
@@ -611,9 +611,9 @@ class Njiiri
   def rebuild_playlist(version, prev=@prev_version)
     if @mpd.connected?
       @mpd.playlist_changes(prev).each do |song|
-        iter = @player_tree_store.get_iter(song["pos"]) \
+        iter = @player_tree_store.get_iter(song['pos']) \
             || @player_tree_store.append(nil)
-        iter[1], iter[2], iter[3], iter[4] = Format.all(song, "-")
+        iter[1], iter[2], iter[3], iter[4] = Format.all(song, '-')
         iter[5] = song.id
       end
       if last = @player_tree_store.get_iter(@mpd.playlist_len.to_s)
@@ -665,10 +665,10 @@ class Njiiri
                 "Library: #{Format.pos(dbtime)} (#{dblen} songs)",
                 "Updated: #{updated.strftime('%x %X')}" ]
     else
-      items = [ "Disconnected" ]
+      items = [ 'Disconnected' ]
     end
     @widgets.player_status.remove(@status_ctx, @status_msg) if @status_msg
-    @status_msg = @widgets.player_status.push(@status_ctx, items.join(", "))
+    @status_msg = @widgets.player_status.push(@status_ctx, items.join(', '))
   end
 end
 
@@ -680,7 +680,7 @@ class Format
         [ a(song.title, base, default),
           a(song.artist, song.name, default),
           a(song.album, dir, default),
-          song.time ? pos(song.time.to_i) : "∞",
+          song.time ? pos(song.time.to_i) : '∞',
           song.track ]
       end
     end
@@ -688,18 +688,18 @@ class Format
       l.find {|x| not (x.nil? or x.empty?) }
     end
     def h(s)
-      CGI::escapeHTML(a(s, " "))
+      CGI::escapeHTML(a(s, ' '))
     end
     def m(t)
-      m, s = t.divmod(60); return "%d:%02d" % [m, s] if m < 80
-      h, m = m.divmod(60); return "%d:%02d:%02d" % [h, m, s] if h < 24
-      d, h = h.divmod(24); return "%dd %dh %dm" % [d, h, m]
+      m, s = t.divmod(60); return '%d:%02d' % [m, s] if m < 80
+      h, m = m.divmod(60); return '%d:%02d:%02d' % [h, m, s] if h < 24
+      d, h = h.divmod(24); return '%dd %dh %dm' % [d, h, m]
     end
     def pos(*times)
-      a(times.collect {|t| m(t) }.join(" / "), " ")
+      a(times.collect {|t| m(t) }.join(' / '), ' ')
     end
     def window(*parts)
-      a(parts.compact.join(" - "), Njiiri::NAME)
+      a(parts.compact.join(' - '), Njiiri::NAME)
     end
     def title(title)
       "<big><big><b>#{h(title)}</b></big></big>"
@@ -746,7 +746,7 @@ end
 
 if __FILE__ == $0
   Gtk.init
-  njiiri = Njiiri.new(File.expand_path("~/.njiirirc"))
+  njiiri = Njiiri.new(File.expand_path('~/.njiirirc'))
   begin
     njiiri.connect
     njiiri.reset_pwd
