@@ -447,18 +447,16 @@ class Njiiri
   end
 
   def insert_songs_from(tree)
-    pos = @mpd.pos + 1
-    src = @mpd.playlist_len
+    orig_pos = @mpd.status['state'] == 'stop' ? -1 : @mpd.pos
+    orig_len = @mpd.playlist_len
     add_songs_from(tree)
-    if src > 0
+    if orig_len != 0
+      pos = orig_pos
+      src = orig_len - 1
       len = @mpd.playlist_len
-      while src < len
-        @mpd.move(src, pos)
-        pos += 1
-        src += 1
-      end
+      @mpd.move(src += 1, pos += 1) while src < len - 1
     end
-    pos
+    orig_pos + 1
   end
 
   def on_insert_btn_clicked(widget)
@@ -466,8 +464,7 @@ class Njiiri
   end
 
   def on_jump_btn_clicked(widget)
-    pos = @mpd.playlist_len > 0 ? @mpd.pos + 1 : 0
-    insert_songs_from(@widgets.files_tree)
+    pos = insert_songs_from(@widgets.files_tree)
     @mpd.play(pos)
   end
 
