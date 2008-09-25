@@ -255,8 +255,10 @@ class Njiiri
 
   def on_pos_bar_button_press_event(widget, e)
     if @mpd.connected? and @mpd.playing?
-      seek = (e.x / widget.allocation.width) * @mpd.current_song.time.to_i
-      @mpd.seek(@mpd.current_song.pos, seek.to_i)
+      seek_to = (e.x / widget.allocation.width) * @mpd.current_song.time.to_i
+      @mpd.seek(@mpd.current_song.pos, seek_to.to_i)
+      refresh_pos(seek_to.to_i)
+      @queued.delete(:got_time)
     end
   end
 
