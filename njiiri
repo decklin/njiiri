@@ -36,6 +36,12 @@ class MPD
   def listallinfo(path=nil)
     songs(path)
   end
+  def playlist_len
+    self.status['playlistlength'].to_i  
+  end
+  def pos
+    self.status['song'].to_i  
+  end
   class Song
     def id; self['id']; end
   end
@@ -415,11 +421,14 @@ class Njiiri
     end
   end
 
-  def add_songs_from(tree, &block)
+  def add_songs_from(tree)
+    add_by_id = proc do |model, path, iter|
+      @mpd.add(iter[5])
+    end
     if tree.selection.selected_rows.empty?
-      tree.model.each &block
+      tree.model.each &add_by_id
     else
-      tree.selection.selected_each &block
+      tree.selection.selected_each &add_by_id
     end
   end
 
@@ -431,19 +440,23 @@ class Njiiri
       rescue RuntimeError
       end
     else
-      add_songs_from @widgets.files_tree do |model, path, iter|
-        @mpd.add(iter[5])
-      end
+      add_songs_from(@widgets.files_tree)
     end
   end
 
   def insert_songs_from(tree)
-    pos = @mpd.status['song'].to_i + 1
-    add_songs_from tree do |model, path, iter|
-      @mpd.add(iter[5])
-      @mpd.move(@mpd.playlist.length - 1, pos)
-      pos += 1
+    pos = @mpd.pos + 1
+    src = @mpd.playlist_len
+    add_songs_from(tree)
+    if src > 0
+      len = @mpd.playlist_len
+      while src < len
+        @mpd.move(src, pos)
+        pos += 1
+        src += 1
+      end
     end
+    pos
   end
 
   def on_insert_btn_clicked(widget)
@@ -451,8 +464,9 @@ class Njiiri
   end
 
   def on_jump_btn_clicked(widget)
+    pos = @mpd.playlist_len > 0 ? @mpd.pos + 1 : 0
     insert_songs_from(@widgets.files_tree)
-    @mpd.next
+    @mpd.play(pos)
   end
 
   def on_loc_btn_toggled(widget)
@@ -602,7 +616,7 @@ class Njiiri
         iter[1], iter[2], iter[3], iter[4] = Format.all(song, "-")
         iter[5] = song.id
       end
-      if last = @player_tree_store.get_iter(@mpd.status["playlistlength"])
+      if last = @player_tree_store.get_iter(@mpd.playlist_len.to_s)
         1 while @player_tree_store.remove(last)
       end
       @prev_version = version
@@ -643,7 +657,7 @@ class Njiiri
   def refresh_status
     if @mpd.connected?
       ptime = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
-      plen = @mpd.status['playlistlength'].to_i
+      plen = @mpd.playlist_len
       dbtime = @mpd.stats['db_playtime'].to_i
       dblen = @mpd.stats['songs'].to_i
       updated = Time.at(@mpd.stats['db_update'].to_i)
