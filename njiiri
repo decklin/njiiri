@@ -564,6 +564,7 @@ class Njiiri
   def_cb :got_song, MPD::CURRENT_SONG_CALLBACK do |current|
     refresh_info(current)
     refresh_playlist
+    refresh_pos(-1)
   end
 
   def_cb :got_state, MPD::STATE_CALLBACK do |state|
