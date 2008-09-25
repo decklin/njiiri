@@ -98,7 +98,8 @@ class Njiiri
     @status_msg = nil
     @prev_version = 0
     @btab = {}
-    @queued = {}
+    @tasks = {}
+    @mutex = Mutex.new
 
     @rend = Gtk::CellRendererText.new
     @rend.ellipsize = Pango::ELLIPSIZE_END
@@ -258,7 +259,7 @@ class Njiiri
       seek_to = (e.x / widget.allocation.width) * @mpd.current_song.time.to_i
       @mpd.seek(@mpd.current_song.pos, seek_to.to_i)
       refresh_pos(seek_to.to_i)
-      @queued.delete(:got_time)
+      schedule(:got_time) {}
     end
   end
 
@@ -329,11 +330,7 @@ class Njiiri
   end
 
   def on_volume_scale_value_changed(widget)
-    queue :change_volume, widget.value.to_i
-  end
-
-  def change_volume(vol)
-    @mpd.volume = vol
+    schedule(:got_volume) { @mpd.volume = widget.value.to_i }
   end
 
   # BROWSER WINDOW
@@ -532,13 +529,20 @@ class Njiiri
 
   # CALLBACKS
 
-  def queue(meth, *args)
-    @queued[meth] = args
+  def schedule(slot, &block)
+    @mutex.synchronize { @tasks[slot] = block }
   end
 
-  def refresh
-    @queued.each {|meth, args| send(meth, *args) }
-    @queued.clear
+  def pending
+    @mutex.synchronize do
+      blocks = @tasks.values
+      @tasks.clear
+      return blocks
+    end
+  end
+
+  def wake
+    pending.each {|block| block.call }
   end
 
   def self.def_cb(name, tag, &block)
@@ -546,7 +550,7 @@ class Njiiri
     class_eval do
       define_method name, &block
       define_method @@callbacks[tag] do |*args|
-        queue name, *args
+        schedule(name) { self.send(name, *args) }
       end
     end
   end
@@ -576,6 +580,7 @@ class Njiiri
 
   def_cb :got_volume, MPD::VOLUME_CALLBACK do |vol|
     @widgets.volume_scale.value = vol
+    schedule(:got_volume) {}
   end
 
   def_cb :got_time, MPD::TIME_CALLBACK do |elapsed, total|
@@ -751,6 +756,6 @@ if __FILE__ == $0
     njiiri.reset_pwd
   rescue
   end
-  Gtk.timeout_add(100) { njiiri.refresh }
+  Gtk.timeout_add(100) { njiiri.wake }
   Gtk.main
 end
