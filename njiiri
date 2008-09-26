@@ -176,7 +176,7 @@ class Njiiri
     @mpd = MPD.new(@conf.serv[:host], @conf.serv[:port])
     @@callbacks.each {|tag, name| @mpd.register_callback(method(name), tag) }
     begin
-      @mpd.connect(true)
+      @ack = @mpd.connect(true)
       @mpd.password(@conf.serv[:password]) if @conf.serv[:password]
       @widgets.connect_btn.stock_id = Gtk::Stock::DISCONNECT
     rescue
@@ -629,7 +629,11 @@ class Njiiri
   end
 
   def refresh_info(current)
-    title, artist, album, time, track = Format.all(current)
+    if current
+      title, artist, album, time, track = Format.all(current)
+    else
+      title, artist, album = '[stopped]', NAME, @ack.strip
+    end
     @widgets.title_label.label = Format.title(title)
     @widgets.artist_label.label = Format.artist(artist)
     @widgets.album_label.label = Format.album(album, track)
@@ -680,14 +684,12 @@ end
 class Format
   class << self
     def all(song, default=nil)
-      if song
-        dir, base = song.file =~ /^http:/ ? song.file : File.split(song.file)
-        [ a(song.title, base, default),
-          a(song.artist, song.name, default),
-          a(song.album, dir, default),
-          song.time ? pos(song.time.to_i) : '∞',
-          song.track ]
-      end
+      dir, base = song.file =~ /^http:/ ? song.file : File.split(song.file)
+      [ a(song.title, base, default),
+        a(song.artist, song.name, default),
+        a(song.album, dir, default),
+        song.time ? pos(song.time.to_i) : '∞',
+        song.track ]
     end
     def a(*l)
       l.find {|x| not (x.nil? or x.empty?) }
