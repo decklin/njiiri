@@ -707,14 +707,14 @@ class Format
       a(parts.compact.join(' - '), Njiiri::NAME)
     end
     def title(title)
-      "<big><big><b>#{h(title)}</b></big></big>"
+      "<big><b>#{h(title)}</b></big>"
     end
     def artist(artist)
       "<big>#{h(artist)}</big>"
     end
     def album(album, track = nil)
-      track = "track #{track}, " if track
-      "<small>#{track}<i>#{h(album)}</i></small>"
+      track = "track #{h(track)}, " if track
+      "#{track}<i>#{h(album)}</i>"
     end
   end
 end
