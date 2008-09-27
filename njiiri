@@ -632,7 +632,12 @@ class Njiiri
     if current
       title, artist, album, time, track = Format.all(current)
     else
-      title, artist, album = '[stopped]', NAME, @ack.strip
+      title = NAME
+      if @mpd.connected?
+        album = "connected: #{@ack.strip}"
+      else
+        album = "disconnected (#{@conf.serv[:host]}:#{@conf.serv[:port]})"
+      end
     end
     @widgets.title_label.label = Format.title(title)
     @widgets.artist_label.label = Format.artist(artist)
@@ -684,8 +689,8 @@ end
 class Format
   class << self
     def all(song, default=nil)
-      dir, base = song.file =~ /^http:/ ? song.file : File.split(song.file)
-      [ a(song.title, base, default),
+      dir, file = File.split(song.file)
+      [ a(song.title, file, default),
         a(song.artist, song.name, default),
         a(song.album, dir, default),
         song.time ? pos(song.time.to_i) : '∞',
