@@ -199,7 +199,7 @@ class Njiiri
   end
 
   def disconnected
-    @ack = "disconnected"
+    @ack = "no MPD"
     enable_toolbuttons(false)
     @widgets.connect_btn.stock_id = Gtk::Stock::CONNECT
     @player_tree_store.clear
@@ -634,7 +634,7 @@ class Njiiri
       title, artist, album, time, track = Format.all(current)
     else
       title = NAME
-      album = "#{@ack.strip} (#{@conf.serv[:host]}:#{@conf.serv[:port]})"
+      album = @ack.strip
     end
     @widgets.title_label.label = Format.title(title)
     @widgets.artist_label.label = Format.artist(artist)
@@ -666,20 +666,22 @@ class Njiiri
   end
 
   def refresh_status
+    serv = "#{@conf.serv[:host]}:#{@conf.serv[:port]}"
     if @mpd.connected?
-      ptime = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
-      plen = @mpd.playlist_len
-      dbtime = @mpd.stats['db_playtime'].to_i
-      dblen = @mpd.stats['songs'].to_i
-      updated = Time.at(@mpd.stats['db_update'].to_i)
-      items = [ "Playlist: #{Format.pos(ptime)} (#{plen} songs)",
-                "Library: #{Format.pos(dbtime)} (#{dblen} songs)",
-                "Updated: #{updated.strftime('%x %X')}" ]
+      pl_time = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
+      pl_len = @mpd.playlist_len
+      db_time = @mpd.stats['db_playtime'].to_i
+      db_len = @mpd.stats['songs'].to_i
+      db_update = Time.at(@mpd.stats['db_update'].to_i)
+      text = "connected (#{serv}) - " +
+             "playlist #{Format.pos(pl_time)} (#{pl_len} songs) - " +
+             "library #{Format.pos(db_time)} (#{db_len} songs) - " +
+             "updated #{db_update.strftime('%x %X')}"
     else
-      items = [ 'Disconnected' ]
+      text = "disconnected (#{serv})"
     end
     @widgets.player_status.remove(@status_ctx, @status_msg) if @status_msg
-    @status_msg = @widgets.player_status.push(@status_ctx, items.join(', '))
+    @status_msg = @widgets.player_status.push(@status_ctx, text)
   end
 end
 
