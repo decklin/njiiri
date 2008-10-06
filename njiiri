@@ -190,7 +190,7 @@ class Njiiri
     @widgets.connect_btn.stock_id = Gtk::Stock::DISCONNECT
     @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
     @widgets.repeat_btn.active = @mpd.repeat?
-    @widgets.shuffle_btn.active = @mpd.random?
+    @widgets.random_item.active = @mpd.random?
     @widgets.volume_scale.value = @mpd.volume
     refresh_info(@mpd.current_song)
     rebuild_playlist(@mpd.playlist_version, 0)
@@ -317,7 +317,15 @@ class Njiiri
     @mpd.repeat = widget.active?
   end
 
-  def on_shuffle_btn_toggled(widget)
+  def on_shuffle_btn_clicked(widget)
+    @mpd.shuffle
+  end
+
+  def on_shuffle_item_activate(widget)
+    @mpd.shuffle
+  end
+
+  def on_random_item_toggled(widget)
     @mpd.random = widget.active?
   end
 

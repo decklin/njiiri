@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Sat Sep 27 10:32:32 2008 -->
+<!--Generated with glade3 3.4.5 on Mon Oct  6 19:45:18 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -116,15 +116,17 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkToggleToolButton" id="shuffle_btn">
+              <widget class="GtkMenuToolButton" id="shuffle_btn">
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <property name="label" translatable="yes" context="yes">Shuffle</property>
                 <property name="icon_name">stock_shuffle</property>
-                <signal name="toggled" handler="on_shuffle_btn_toggled"/>
+                <property name="menu">shuffle_menu</property>
+                <signal name="clicked" handler="on_shuffle_btn_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -939,6 +941,26 @@
             <property name="pack_type">GTK_PACK_END</property>
           </packing>
         </child>
+      </widget>
+    </child>
+  </widget>
+  <widget class="GtkMenu" id="shuffle_menu">
+    <property name="visible">True</property>
+    <child>
+      <widget class="GtkMenuItem" id="shuffle_item">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes" context="yes">Shuffle</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_shuffle_item_activate"/>
+      </widget>
+    </child>
+    <child>
+      <widget class="GtkCheckMenuItem" id="random_item">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes" context="yes">Random Play</property>
+        <property name="use_underline">True</property>
+        <property name="draw_as_radio">True</property>
+        <signal name="toggled" handler="on_random_item_toggled"/>
       </widget>
     </child>
   </widget>
