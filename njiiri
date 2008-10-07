@@ -189,7 +189,6 @@ class Njiiri
     enable_toolbuttons(true)
     @widgets.connect_btn.stock_id = Gtk::Stock::DISCONNECT
     @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
-    @widgets.repeat_btn.active = @mpd.repeat?
     @widgets.random_item.active = @mpd.random?
     @widgets.volume_scale.value = @mpd.volume
     refresh_info(@mpd.current_song)
@@ -209,7 +208,7 @@ class Njiiri
   end
 
   def enable_toolbuttons(sensitive)
-    %w[play prev next open saveas clear repeat shuffle].each do |b|
+    %w[play prev next open saveas clear shuffle].each do |b|
       @widgets["#{b}_btn"].sensitive = sensitive
     end
   end
@@ -311,10 +310,6 @@ class Njiiri
 
   def on_clear_btn_clicked
     @mpd.clear
-  end
-
-  def on_repeat_btn_toggled(widget)
-    @mpd.repeat = widget.active?
   end
 
   def on_shuffle_btn_clicked(widget)
