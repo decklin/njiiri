@@ -186,6 +186,7 @@
                           <widget class="GtkLabel" id="title_label">
                             <property name="visible">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                            <property name="xalign">0</property>
                             <property name="label" translatable="yes" context="yes">&lt;big&gt;&lt;b&gt; &lt;/b&gt;&lt;/big&gt;</property>
                             <property name="use_markup">True</property>
                             <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
@@ -195,6 +196,7 @@
                           <widget class="GtkLabel" id="artist_label">
                             <property name="visible">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                            <property name="xalign">0</property>
                             <property name="label" translatable="yes" context="yes">&lt;big&gt; &lt;/big&gt;</property>
                             <property name="use_markup">True</property>
                             <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
@@ -207,6 +209,7 @@
                           <widget class="GtkLabel" id="album_label">
                             <property name="visible">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                            <property name="xalign">0</property>
                             <property name="label" translatable="yes" context="yes">&lt;i&gt; &lt;/i&gt;</property>
                             <property name="use_markup">True</property>
                             <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
