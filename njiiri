@@ -574,11 +574,13 @@ class Njiiri
   def refresh_state(state)
     case state
       when 'play'
-        @widgets.play_btn.visible = false
-        @widgets.pause_btn.visible = true
+        @widgets.play_btn.hide
+        @widgets.pause_btn.show
+        @widgets.prev_btn.width_request = -1
       when 'pause', 'stop'
-        @widgets.play_btn.visible = true
-        @widgets.pause_btn.visible = false
+        @widgets.pause_btn.hide
+        @widgets.play_btn.show
+        @widgets.prev_btn.width_request = @widgets.prev_btn.allocation.width + 1
         refresh_pos(nil)
     end
   end
