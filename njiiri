@@ -178,7 +178,6 @@ class Njiiri
     begin
       @ack = @mpd.connect(true)
       @mpd.password(@conf.serv[:password]) if @conf.serv[:password]
-      @widgets.connect_btn.stock_id = Gtk::Stock::DISCONNECT
     rescue
       disconnected
       throw
@@ -187,10 +186,9 @@ class Njiiri
 
   def connected
     enable_toolbuttons(true)
-    @widgets.connect_btn.stock_id = Gtk::Stock::DISCONNECT
-    @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PAUSE if @mpd.playing?
     @widgets.random_item.active = @mpd.random?
     @widgets.volume_scale.value = @mpd.volume
+    refresh_state(@mpd.status['state'])
     refresh_info(@mpd.current_song)
     rebuild_playlist(@mpd.playlist_version, 0)
     refresh_playlist
@@ -200,7 +198,6 @@ class Njiiri
   def disconnected
     @ack = "no MPD"
     enable_toolbuttons(false)
-    @widgets.connect_btn.stock_id = Gtk::Stock::CONNECT
     @player_tree_store.clear
     refresh_info(nil)
     refresh_pos(-1)
@@ -208,7 +205,7 @@ class Njiiri
   end
 
   def enable_toolbuttons(sensitive)
-    %w[play prev next open saveas clear shuffle].each do |b|
+    %w[play pause prev next shuffle open saveas clear].each do |b|
       @widgets["#{b}_btn"].sensitive = sensitive
     end
   end
@@ -280,16 +277,15 @@ class Njiiri
   # TOOLBAR
 
   def on_play_btn_clicked(widget)
-    if @mpd.stopped?
-      @mpd.play
-      widget.stock_id = Gtk::Stock::MEDIA_PAUSE
-    elsif @mpd.paused?
-      @mpd.pause = false
-      widget.stock_id = Gtk::Stock::MEDIA_PAUSE
-    else
-      @mpd.pause = true
-      widget.stock_id = Gtk::Stock::MEDIA_PLAY
-    end
+    @mpd.play
+  end
+
+  def on_pause_btn_clicked(widget)
+    @mpd.pause = true
+  end
+
+  def on_stop_item_activate(widget)
+    @mpd.stop
   end
 
   def on_prev_btn_clicked
@@ -325,12 +321,12 @@ class Njiiri
   end
 
   def on_connect_btn_clicked(widget)
-    if @mpd.connected?
-      @mpd.disconnect
-      disconnected
-    else
-      @widgets.connect_dlg.show
-    end
+    @widgets.connect_dlg.show
+  end
+
+  def on_disconnect_btn_activate(widget)
+    @mpd.disconnect
+    disconnected
   end
 
   def on_volume_scale_value_changed(widget)
@@ -526,6 +522,7 @@ class Njiiri
       @conf.serv[:password] = @widgets.password_entry.text
     end
     begin
+      @mpd.disconnect if @mpd.connected?
       connect
     rescue
     end
@@ -572,15 +569,7 @@ class Njiiri
   end
 
   def_cb :got_state, MPD::STATE_CALLBACK do |state|
-    case state
-      when 'play'
-        @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PAUSE
-      when 'pause'
-        @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PLAY
-      when 'stop'
-        @widgets.play_btn.stock_id = Gtk::Stock::MEDIA_PLAY
-        refresh_pos(-1)
-    end
+    refresh_state(state)
   end
 
   def_cb :got_volume, MPD::VOLUME_CALLBACK do |vol|
@@ -597,6 +586,18 @@ class Njiiri
   end
 
   # MISC
+
+  def refresh_state(state)
+    case state
+      when 'play'
+        @widgets.play_btn.visible = false
+        @widgets.pause_btn.visible = true
+      when 'pause', 'stop'
+        @widgets.play_btn.visible = true
+        @widgets.pause_btn.visible = false
+        refresh_pos(-1)
+    end
+  end
 
   def refresh_playlist
     if @mpd.connected?
@@ -729,7 +730,7 @@ class Conf
     { :server => { :host => 'localhost', :port => 6600, :password => nil },
       :geometry =>
         { :player =>
-            { :x => 0, :y => 0, :w => 620, :h => 400, :pane => 80 },
+            { :x => 0, :y => 0, :w => 600, :h => 400, :pane => 80 },
           :browser =>
             { :x => 0, :y => 0, :w => 600, :h => 400, :pane => 100 } } }
 
