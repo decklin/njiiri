@@ -131,12 +131,16 @@ class Njiiri
       end
     end
 
-    @host = @config.servers.first[:host]
-    @port = @config.servers.first[:port].to_s
-    @password = @config.servers.first[:password].to_s
-    @widgets.host_entry.text = @host
-    @widgets.port_entry.text = @port
-    @widgets.password_entry.text = @password
+    @config.servers.each do |srv|
+      item = Gtk::ImageMenuItem.new(Gtk::Stock::NETWORK)
+      item.child.label = srv[:host]
+      item.signal_connect("activate") do |widget, event|
+        @mpd.disconnect if @mpd.connected?
+        connect(srv)
+      end
+      @widgets.connect_menu.append(item)
+      item.show
+    end
 
     x, y, h, w = [:x, :y, :h, :w].collect {|d| @config.player[d] }
     @widgets.player_win.set_default_size(w, h)
@@ -161,12 +165,16 @@ class Njiiri
     end
   end
 
-  def connect
-    @mpd = MPD.new(@host, @port)
+  def connect(server=nil)
+    @server = server || @config.servers.first
+    @mpd = MPD.new(@server[:host], @server[:port])
     @@callbacks.each {|tag, name| @mpd.register_callback(method(name), tag) }
     begin
       @ack = @mpd.connect(true)
-      @mpd.password(@password) unless @password.empty?
+      @mpd.password(@server[:password]) unless @server[:password].empty?
+      @widgets.host_entry.text = @server[:host]
+      @widgets.port_entry.text = @server[:port].to_s
+      @widgets.password_entry.text = @server[:password]
     rescue => e
       STDERR.puts "Error connecting: #{e}"
       disconnected
@@ -501,15 +509,11 @@ class Njiiri
 
   def on_do_connect_btn_clicked
     @widgets.connect_dlg.hide
-    @host = @widgets.host_entry.text
-    @port = @widgets.port_entry.text.to_i
-    @password = @widgets.password_entry.text
-    @config << { :host => @host, :port => @port, :password => @password }
-    begin
-      @mpd.disconnect if @mpd.connected?
-      connect
-    rescue
-    end
+    @mpd.disconnect if @mpd.connected?
+    @config.add_server(:host => @widgets.host_entry.text,
+                       :port => @widgets.port_entry.text.to_i,
+                       :password => @widgets.password_entry.text)
+    connect(@config.servers.first)
   end
 
   # CALLBACKS
@@ -649,18 +653,16 @@ class Njiiri
   end
 
   def refresh_statusbar
+    text = "[#{@server[:host]}:#{@server[:port]}] "
     if @mpd.connected?
       pl_time = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
       pl_len = @mpd.playlist_len
       db_time = @mpd.stats['db_playtime'].to_i
       db_len = @mpd.stats['songs'].to_i
       db_update = Time.at(@mpd.stats['db_update'].to_i)
-      text = "connected (#{@host}:#{@port}) - " +
-             "playlist #{Format.pos(pl_time)} (#{pl_len} songs) - " +
-             "library #{Format.pos(db_time)} (#{db_len} songs) - " +
-             "updated #{db_update.strftime('%x %X')}"
-    else
-      text = "disconnected (#{@host}:#{@port})"
+      text += "playlist #{Format.pos(pl_time)} (#{pl_len} songs) - " +
+              "library #{Format.pos(db_time)} (#{db_len} songs) - " +
+              "updated #{db_update.strftime('%x %X')}"
     end
     @widgets.player_status.remove(@status_ctx, @status_msg) if @status_msg
     @status_msg = @widgets.player_status.push(@status_ctx, text)
@@ -736,7 +738,7 @@ class Conf
   def player; @rc[:geometry][:player]; end
   def browser; @rc[:geometry][:browser]; end
   def servers; @rc[:servers]; end
-  def <<(server)
+  def add_server(server)
     @rc[:servers].reject! {|srv| srv[:host] == server[:host] }
     @rc[:servers].unshift(server)
   end
