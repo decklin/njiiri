@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Oct  7 03:16:51 2008 -->
+<!--Generated with glade3 3.4.5 on Tue Oct  7 03:36:38 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -315,6 +315,7 @@
     <property name="title" translatable="yes" context="yes">Njiiri Browser</property>
     <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
     <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
+    <property name="transient_for">player_win</property>
     <property name="has_separator">False</property>
     <signal name="configure_event" handler="on_browser_win_configure_event"/>
     <signal name="key_press_event" handler="on_browser_win_key_press_event"/>
