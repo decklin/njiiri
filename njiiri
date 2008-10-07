@@ -68,7 +68,7 @@ class Njiiri
 
   # CLASS
 
-  @@callbacks = {}
+  @@callbacks = []
 
   def self.search(filename)
     %w[. /usr/local/share/njiiri /usr/share/njiiri].each do |dir|
@@ -175,7 +175,7 @@ class Njiiri
   def connect(server=nil)
     @server = server || @config.servers.first
     @mpd = MPD.new(@server[:host], @server[:port])
-    @@callbacks.each {|tag, name| @mpd.register_callback(method(name), tag) }
+    @@callbacks.each {|n, t, cb| @mpd.register_callback(method(cb), t) }
     begin
       @ack = @mpd.connect(true)
       @mpd.password(@server[:password]) unless @server[:password].empty?
@@ -532,7 +532,7 @@ class Njiiri
 
   def pending
     @mutex.synchronize do
-      blocks = @tasks.values
+      blocks = @@callbacks.collect {|n, t, cb| @tasks[n] }.compact
       @tasks.clear
       return blocks
     end
@@ -543,13 +543,27 @@ class Njiiri
   end
 
   def self.def_cb(name, tag, &block)
-    @@callbacks[tag] = "_cb_#{tag}"
+    cb = "_cb_#{tag}"
+    @@callbacks << [name, tag, cb]
     class_eval do
       define_method name, &block
-      define_method @@callbacks[tag] do |*args|
+      define_method cb do |*args|
         schedule(name) { self.send(name, *args) }
       end
     end
+  end
+
+  def_cb :got_time, MPD::TIME_CALLBACK do |elapsed, total|
+    refresh_pos(elapsed, total)
+  end
+
+  def_cb :got_song, MPD::CURRENT_SONG_CALLBACK do |current|
+    refresh_info(current)
+    refresh_playlist
+  end
+
+  def_cb :got_state, MPD::STATE_CALLBACK do |state|
+    refresh_state(state)
   end
 
   def_cb :got_playlist, MPD::PLAYLIST_CALLBACK do |version|
@@ -558,23 +572,9 @@ class Njiiri
     refresh_statusbar
   end
 
-  def_cb :got_song, MPD::CURRENT_SONG_CALLBACK do |current|
-    refresh_info(current)
-    refresh_playlist
-    refresh_pos(nil)
-  end
-
-  def_cb :got_state, MPD::STATE_CALLBACK do |state|
-    refresh_state(state)
-  end
-
   def_cb :got_volume, MPD::VOLUME_CALLBACK do |vol|
     @widgets.volume_scale.value = vol
     schedule(:got_volume) {}
-  end
-
-  def_cb :got_time, MPD::TIME_CALLBACK do |elapsed, total|
-    refresh_pos(elapsed, total)
   end
 
   def_cb :got_connection, MPD::CONNECTION_CALLBACK do |up|
@@ -584,16 +584,15 @@ class Njiiri
   # MISC
 
   def refresh_state(state)
-    case state
-      when 'play'
-        @widgets.play_btn.hide
-        @widgets.pause_btn.show
-        @widgets.prev_btn.width_request = -1
-      when 'pause', 'stop'
-        @widgets.pause_btn.hide
-        @widgets.play_btn.show
-        @widgets.prev_btn.width_request = @widgets.prev_btn.allocation.width + 1
-        refresh_pos(nil)
+    if state == 'play'
+      @widgets.play_btn.hide
+      @widgets.pause_btn.show
+      @widgets.prev_btn.width_request = -1
+    else
+      refresh_pos(nil) if state == 'stop'
+      @widgets.pause_btn.hide
+      @widgets.play_btn.show
+      @widgets.prev_btn.width_request = @widgets.prev_btn.allocation.width + 1
     end
   end
 
