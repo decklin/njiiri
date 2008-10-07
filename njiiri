@@ -191,7 +191,7 @@ class Njiiri
     @player_tree_store.clear
     @files_tree_store.clear
     refresh_info(nil)
-    refresh_pos(-1)
+    refresh_pos(nil)
     refresh_statusbar
   end
 
@@ -246,7 +246,6 @@ class Njiiri
     if @mpd.connected? and @mpd.playing?
       seek_to = (e.x / widget.allocation.width) * @mpd.current_song.time.to_i
       @mpd.seek(@mpd.current_song.pos, seek_to.to_i)
-      refresh_pos(seek_to.to_i)
       schedule(:got_time) {}
     end
   end
@@ -550,7 +549,7 @@ class Njiiri
   def_cb :got_song, MPD::CURRENT_SONG_CALLBACK do |current|
     refresh_info(current)
     refresh_playlist
-    refresh_pos(-1)
+    refresh_pos(nil)
   end
 
   def_cb :got_state, MPD::STATE_CALLBACK do |state|
@@ -580,7 +579,7 @@ class Njiiri
       when 'pause', 'stop'
         @widgets.play_btn.visible = true
         @widgets.pause_btn.visible = false
-        refresh_pos(-1)
+        refresh_pos(nil)
     end
   end
 
@@ -627,20 +626,17 @@ class Njiiri
     @widgets.player_win.title = Format.window(artist, title)
   end
 
-  def refresh_pos(elapsed, total = 0)
-    if @mpd.connected? and @mpd.current_song and total == 0
-      total = @mpd.current_song.time.to_i
-    end
+  def refresh_pos(elapsed, total=0)
     if total > 0
-      if elapsed >= 0
+      if elapsed
         @widgets.pos_bar.text = Format.pos(elapsed, total)
-        @widgets.pos_bar.fraction = [elapsed.to_f / total, 1].min
+        @widgets.pos_bar.fraction = [elapsed.to_f / total, 1.0].min
       else
         @widgets.pos_bar.text = Format.pos(total)
         @widgets.pos_bar.fraction = 0.0
       end
     else
-      if elapsed > 0
+      if elapsed
         @widgets.pos_bar.text = Format.pos(elapsed)
         @widgets.pos_bar.pulse
       else
