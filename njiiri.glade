@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Oct  7 03:36:38 2008 -->
+<!--Generated with glade3 3.4.5 on Tue Oct  7 05:00:20 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -947,6 +947,7 @@
         <property name="visible">True</property>
         <property name="label" translatable="yes" context="yes">Shuffle</property>
         <property name="use_underline">True</property>
+        <signal name="activate" handler="on_shuffle_item_activate"/>
         <child internal-child="image">
           <widget class="GtkImage" id="menu-item-image2">
             <property name="visible">True</property>
