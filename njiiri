@@ -206,7 +206,7 @@ class Njiiri
     @player_tree_store.clear
     @files_tree_store.clear
     refresh_info(nil)
-    refresh_pos(nil)
+    refresh_pos
     refresh_statusbar
   end
 
@@ -589,7 +589,7 @@ class Njiiri
       @widgets.pause_btn.show
       @widgets.prev_btn.width_request = -1
     else
-      refresh_pos(nil) if state == 'stop'
+      refresh_pos if state == 'stop'
       @widgets.pause_btn.hide
       @widgets.play_btn.show
       @widgets.prev_btn.width_request = @widgets.prev_btn.allocation.width + 1
@@ -639,11 +639,11 @@ class Njiiri
     @widgets.player_win.title = Format.window(artist, title)
   end
 
-  def refresh_pos(elapsed, total=0)
-    if total > 0
+  def refresh_pos(elapsed=nil, total=nil)
+    if total
       if elapsed
         @widgets.pos_bar.text = Format.pos(elapsed, total)
-        @widgets.pos_bar.fraction = [elapsed.to_f / total, 1.0].min
+        @widgets.pos_bar.fraction = [elapsed.to_f / total, 1.0].min rescue 0.0
       else
         @widgets.pos_bar.text = Format.pos(total)
         @widgets.pos_bar.fraction = 0.0
