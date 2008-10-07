@@ -212,7 +212,6 @@ class Njiiri
   # MAIN WINDOW
 
   def on_player_win_delete(widget, e)
-    @mpd.disconnect
     @config.save
     Gtk.main_quit
   end
