@@ -736,7 +736,7 @@ class Conf
   def servers; @rc[:servers]; end
   def <<(server)
     @rc[:servers].reject! {|srv| srv[:host] == server[:host] }
-    @rc[:servers] << server
+    @rc[:servers].unshift(server)
   end
 end
 
