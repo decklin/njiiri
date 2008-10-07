@@ -411,33 +411,30 @@ class Njiiri
     end
   end
 
-  def add_songs_from(tree)
-    add_by_id = proc do |model, path, iter|
-      @mpd.add(iter[5])
-    end
-    if tree.selection.selected_rows.empty?
-      tree.model.each &add_by_id
+  def add_songs
+    if @widgets.search_entry.text.empty?
+      add_by_id = proc do |model, path, iter|
+        @mpd.add(iter[5])
+      end
+      if @widgets.files_tree.selection.selected_rows.empty?
+        @widgets.files_tree.model.each &add_by_id
+      else
+        @widgets.files_tree.selection.selected_each &add_by_id
+      end
     else
-      tree.selection.selected_each &add_by_id
+      @mpd.add(@widgets.search_entry.text)
+      @widgets.search_entry.text = ''
     end
   end
 
   def on_add_btn_clicked(widget)
-    if @widgets.search_entry.has_focus?
-      begin
-        @mpd.add(@widgets.search_entry.text)
-        @widgets.search_entry.text = ''
-      rescue RuntimeError
-      end
-    else
-      add_songs_from(@widgets.files_tree)
-    end
+    add_songs
   end
 
-  def insert_songs_from(tree)
+  def insert_songs
     orig_pos = @mpd.status['state'] == 'stop' ? -1 : @mpd.pos
     orig_len = @mpd.playlist_len
-    add_songs_from(tree)
+    add_songs
     if orig_len != 0
       pos = orig_pos
       src = orig_len - 1
@@ -448,11 +445,11 @@ class Njiiri
   end
 
   def on_insert_btn_clicked(widget)
-    insert_songs_from(@widgets.files_tree)
+    insert_songs
   end
 
   def on_jump_btn_clicked(widget)
-    pos = insert_songs_from(@widgets.files_tree)
+    pos = insert_songs
     @mpd.play(pos)
   end
 
