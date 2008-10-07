@@ -34,15 +34,9 @@ class MPD
 end
 
 class GladeWrapper < GladeXML
-  DIRS = %w[. /usr/local/share/njiiri /usr/share/njiiri]
-  FILE = 'njiiri.glade'
-
   def initialize(obj)
-    DIRS.each do |dir|
-      path = "#{dir}/#{FILE}"
-      if File.exist?(path)
-        return super(path) {|handler| obj.method(handler) }
-      end
+    Njiiri.search('njiiri.glade') do |path|
+      super(path) {|handler| obj.method(handler) }
     end
   end
 
@@ -76,6 +70,15 @@ class Njiiri
 
   @@callbacks = {}
 
+  def self.search(filename)
+    %w[. /usr/local/share/njiiri /usr/share/njiiri].each do |dir|
+      path = "#{dir}/#{filename}"
+      if File.exist?(path)
+        return yield path
+      end
+    end
+  end
+
   def initialize(rc_path)
     @config = Conf.new(rc_path)
     @widgets = GladeWrapper.new(self)
@@ -86,6 +89,10 @@ class Njiiri
     @btab = {}
     @tasks = {}
     @mutex = Mutex.new
+
+    Njiiri.search('blank-album.png') do |path|
+      @cover = Gdk::Pixbuf.new(path)
+    end
 
     @rend = Gtk::CellRendererText.new
     @rend.ellipsize = Pango::ELLIPSIZE_END
@@ -222,6 +229,8 @@ class Njiiri
     else
       @widgets.cover_img.width_request = a.height
       @widgets.cover_img.height_request = a.height
+      @widgets.cover_img.pixbuf = @cover.scale(a.height, a.height,
+                                               Gdk::Pixbuf::INTERP_NEAREST)
     end
   end
 
