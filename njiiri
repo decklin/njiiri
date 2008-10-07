@@ -194,7 +194,7 @@ class Njiiri
     refresh_info(@mpd.current_song)
     rebuild_playlist(@mpd.playlist_version, 0)
     refresh_playlist
-    refresh_status
+    refresh_statusbar
   end
 
   def disconnected
@@ -204,7 +204,7 @@ class Njiiri
     @player_tree_store.clear
     refresh_info(nil)
     refresh_pos(-1)
-    refresh_status
+    refresh_statusbar
   end
 
   def enable_toolbuttons(sensitive)
@@ -562,7 +562,7 @@ class Njiiri
   def_cb :got_playlist, MPD::PLAYLIST_CALLBACK do |version|
     rebuild_playlist(version)
     refresh_playlist
-    refresh_status
+    refresh_statusbar
   end
 
   def_cb :got_song, MPD::CURRENT_SONG_CALLBACK do |current|
@@ -593,11 +593,7 @@ class Njiiri
   end
 
   def_cb :got_connection, MPD::CONNECTION_CALLBACK do |up|
-    if up
-      connected
-    else
-      disconnected
-    end
+    up ? connected : disconnected
   end
 
   # MISC
@@ -668,7 +664,7 @@ class Njiiri
     end
   end
 
-  def refresh_status
+  def refresh_statusbar
     serv = "#{@conf.serv[:host]}:#{@conf.serv[:port]}"
     if @mpd.connected?
       pl_time = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
