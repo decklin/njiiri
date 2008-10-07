@@ -167,9 +167,9 @@ class Njiiri
     begin
       @ack = @mpd.connect(true)
       @mpd.password(@password) unless @password.empty?
-    rescue
+    rescue => e
+      STDERR.puts "Error connecting: #{e}"
       disconnected
-      throw
     end
   end
 
@@ -182,12 +182,14 @@ class Njiiri
     rebuild_playlist(@mpd.playlist_version, 0)
     refresh_playlist
     refresh_statusbar
+    reset_pwd
   end
 
   def disconnected
     @ack = "no MPD"
     enable_toolbuttons(false)
     @player_tree_store.clear
+    @files_tree_store.clear
     refresh_info(nil)
     refresh_pos(-1)
     refresh_statusbar
@@ -748,11 +750,7 @@ end
 if __FILE__ == $0
   Gtk.init
   njiiri = Njiiri.new(File.expand_path('~/.njiirirc'))
-  begin
-    njiiri.connect
-    njiiri.reset_pwd
-  rescue
-  end
+  njiiri.connect 
   Gtk.timeout_add(100) { njiiri.wake }
   Gtk.main
 end
