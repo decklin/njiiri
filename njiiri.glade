@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Oct  7 16:54:41 2008 -->
+<!--Generated with glade3 3.4.5 on Thu Oct  9 11:32:46 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -16,8 +16,43 @@
           <widget class="GtkToolbar" id="player_toolbar">
             <property name="visible">True</property>
             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+            <signal name="popup_context_menu" handler="on_player_toolbar_popup_context_menu"/>
+            <child>
+              <widget class="GtkToolButton" id="open_btn">
+                <property name="visible">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="stock_id">gtk-open</property>
+                <signal name="clicked" handler="on_open_btn_clicked"/>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkToolButton" id="saveas_btn">
+                <property name="visible">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="stock_id">gtk-save-as</property>
+                <signal name="clicked" handler="on_saveas_btn_clicked"/>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkSeparatorToolItem" id="sep1">
+                <property name="visible">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">False</property>
+              </packing>
+            </child>
             <child>
               <widget class="GtkToolButton" id="play_btn">
+                <property name="visible">True</property>
+                <property name="is_important">True</property>
                 <property name="stock_id">gtk-media-play</property>
                 <signal name="clicked" handler="on_play_btn_clicked"/>
               </widget>
@@ -26,15 +61,14 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkMenuToolButton" id="pause_btn">
+              <widget class="GtkToolButton" id="pause_btn">
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="is_important">True</property>
                 <property name="stock_id">gtk-media-pause</property>
-                <property name="menu">pause_menu</property>
                 <signal name="clicked" handler="on_pause_btn_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">False</property>
               </packing>
             </child>
             <child>
@@ -60,50 +94,12 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkMenuToolButton" id="shuffle_btn">
+              <widget class="GtkSeparatorToolItem" id="sep2">
                 <property name="visible">True</property>
-                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                <property name="label" translatable="yes" context="yes">Shuffle</property>
-                <property name="icon_name">stock_shuffle</property>
-                <property name="menu">shuffle_menu</property>
-                <signal name="clicked" handler="on_shuffle_btn_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
                 <property name="homogeneous">False</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="GtkSeparatorToolItem" id="sep1">
-                <property name="visible">True</property>
-                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-              </widget>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">False</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="GtkToolButton" id="open_btn">
-                <property name="visible">True</property>
-                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                <property name="label" translatable="yes" context="yes">Open</property>
-                <property name="stock_id">gtk-open</property>
-                <signal name="clicked" handler="on_open_btn_clicked"/>
-              </widget>
-              <packing>
-                <property name="expand">False</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="GtkToolButton" id="saveas_btn">
-                <property name="visible">True</property>
-                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                <property name="stock_id">gtk-save-as</property>
-                <signal name="clicked" handler="on_saveas_btn_clicked"/>
-              </widget>
-              <packing>
-                <property name="expand">False</property>
               </packing>
             </child>
             <child>
@@ -118,7 +114,19 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkSeparatorToolItem" id="sep2">
+              <widget class="GtkToolButton" id="shuffle_btn">
+                <property name="visible">True</property>
+                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                <property name="label" translatable="yes" context="yes">Shuffle</property>
+                <property name="icon_name">stock_shuffle</property>
+                <signal name="clicked" handler="on_shuffle_btn_clicked"/>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkSeparatorToolItem" id="sep3">
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
               </widget>
@@ -134,6 +142,16 @@
                 <property name="stock_id">gtk-connect</property>
                 <property name="menu">connect_menu</property>
                 <signal name="clicked" handler="on_connect_btn_clicked"/>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkSeparatorToolItem" id="kludge_sep">
+                <property name="visible">True</property>
+                <property name="draw">False</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -946,43 +964,8 @@
       </widget>
     </child>
   </widget>
-  <widget class="GtkMenu" id="shuffle_menu">
+  <widget class="GtkMenu" id="toolbar_menu">
     <property name="visible">True</property>
-    <child>
-      <widget class="GtkImageMenuItem" id="shuffle_item">
-        <property name="visible">True</property>
-        <property name="label" translatable="yes" context="yes">Shuffle</property>
-        <property name="use_underline">True</property>
-        <signal name="activate" handler="on_shuffle_item_activate"/>
-        <child internal-child="image">
-          <widget class="GtkImage" id="menu-item-image2">
-            <property name="visible">True</property>
-            <property name="icon_name">stock_shuffle</property>
-          </widget>
-        </child>
-      </widget>
-    </child>
-    <child>
-      <widget class="GtkCheckMenuItem" id="random_item">
-        <property name="visible">True</property>
-        <property name="label" translatable="yes" context="yes">Random Play</property>
-        <property name="use_underline">True</property>
-        <property name="draw_as_radio">True</property>
-        <signal name="toggled" handler="on_random_item_toggled"/>
-      </widget>
-    </child>
-  </widget>
-  <widget class="GtkMenu" id="pause_menu">
-    <property name="visible">True</property>
-    <child>
-      <widget class="GtkImageMenuItem" id="pause_item">
-        <property name="visible">True</property>
-        <property name="label" translatable="yes" context="yes">gtk-media-pause</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-        <signal name="activate" handler="on_pause_btn_clicked"/>
-      </widget>
-    </child>
     <child>
       <widget class="GtkImageMenuItem" id="stop_item">
         <property name="visible">True</property>
@@ -990,6 +973,22 @@
         <property name="use_underline">True</property>
         <property name="use_stock">True</property>
         <signal name="activate" handler="on_stop_item_activate"/>
+      </widget>
+    </child>
+    <child>
+      <widget class="GtkCheckMenuItem" id="random_item">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes" context="yes">Random</property>
+        <property name="use_underline">True</property>
+        <signal name="toggled" handler="on_random_item_toggled"/>
+      </widget>
+    </child>
+    <child>
+      <widget class="GtkCheckMenuItem" id="repeat_item">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes" context="yes">Repeat</property>
+        <property name="use_underline">True</property>
+        <signal name="toggled" handler="on_repeat_item_toggled"/>
       </widget>
     </child>
   </widget>
