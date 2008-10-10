@@ -158,6 +158,7 @@ class Njiiri
     @widgets.files_pane.set_position(@config.browser[:pane])
 
     @widgets.player_win.move(@config.player[:x], @config.player[:y])
+    @widgets.player_win.focus = @widgets.kludge_sep
     @widgets.player_win.show
   end
 
