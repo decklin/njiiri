@@ -149,16 +149,15 @@ class Njiiri
       item.show
     end
 
-    x, y, h, w = [:x, :y, :h, :w].collect {|d| @config.player[d] }
-    @widgets.player_win.set_default_size(w, h)
-    @widgets.player_win.move(x, y)
+    @widgets.player_win.set_default_size(@config.player[:w],
+                                         @config.player[:h])
     @widgets.main_pane.set_position(@config.player[:pane])
 
-    x, y, h, w = [:x, :y, :h, :w].collect {|d| @config.browser[d] }
-    @widgets.browser_win.set_default_size(w, h)
-    @widgets.browser_win.move(x, y)
+    @widgets.browser_win.set_default_size(@config.browser[:w],
+                                          @config.browser[:h])
     @widgets.files_pane.set_position(@config.browser[:pane])
 
+    @widgets.player_win.move(@config.player[:x], @config.player[:y])
     @widgets.player_win.show
   end
 
@@ -304,6 +303,7 @@ class Njiiri
   end
 
   def on_open_btn_clicked
+    @widgets.browser_win.move(@config.browser[:x], @config.browser[:y])
     @widgets.browser_win.show
   end
 
