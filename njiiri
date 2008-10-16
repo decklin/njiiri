@@ -446,7 +446,7 @@ class Njiiri
         @widgets.files_tree.selection.selected_each &add_by_id
       end
     else
-      @mpd.add(@widgets.search_entry.text)
+      @mpd.add(@widgets.search_entry.text) rescue nil
       @widgets.search_entry.text = ''
     end
   end
