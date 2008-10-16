@@ -177,7 +177,7 @@ class Njiiri
     @mpd = MPD.new(@server[:host], @server[:port])
     @@callbacks.each {|n, t, cb| @mpd.register_callback(method(cb), t) }
     begin
-      @ack = @mpd.connect(true)
+      @ack = @mpd.connect(true).match(/^OK (.*)/)[1]
       @mpd.password(@server[:password]) unless @server[:password].empty?
       @widgets.host_entry.text = @server[:host]
       @widgets.port_entry.text = @server[:port].to_s
@@ -202,7 +202,6 @@ class Njiiri
   end
 
   def disconnected
-    @ack = "no MPD"
     enable_toolbuttons(false)
     @player_tree_store.clear
     @files_tree_store.clear
@@ -640,14 +639,21 @@ class Njiiri
   def refresh_info(current)
     if current
       title, artist, album, time, track = Format.all(current)
+      @widgets.player_win.title = [title, artist].join(' - ')
     else
-      title = NAME
-      album = @ack.strip
+      if @mpd.connected?
+        db_time = @mpd.stats['db_playtime'].to_i
+        db_len = @mpd.stats['songs'].to_i
+        db_update = Time.at(@mpd.stats['db_update'].to_i)
+        title = @ack
+        artist = "Library #{Format.pos(db_time)} (#{db_len} songs)"
+        album = "Last updated at #{db_update.strftime('%x %X')}"
+      end
+      @widgets.player_win.title = NAME
     end
     @widgets.title_label.label = Format.title(title)
     @widgets.artist_label.label = Format.artist(artist)
     @widgets.album_label.label = Format.album(album, track)
-    @widgets.player_win.title = Format.window(artist, title)
   end
 
   def refresh_pos(elapsed=0, total=0)
@@ -666,16 +672,13 @@ class Njiiri
   end
 
   def refresh_statusbar
-    text = "[#{@server[:host]}:#{@server[:port]}] "
+    srv = "#{@server[:host]}:#{@server[:port]}"
     if @mpd.connected?
       pl_time = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
       pl_len = @mpd.playlist_len
-      db_time = @mpd.stats['db_playtime'].to_i
-      db_len = @mpd.stats['songs'].to_i
-      db_update = Time.at(@mpd.stats['db_update'].to_i)
-      text += "playlist #{Format.pos(pl_time)} (#{pl_len} songs) - " +
-              "library #{Format.pos(db_time)} (#{db_len} songs) - " +
-              "updated #{db_update.strftime('%x %X')}"
+      text = "#{srv} - playlist #{Format.pos(pl_time)} (#{pl_len} songs)"
+    else
+      text = "disconnected from #{srv}"
     end
     @widgets.player_status.remove(@status_ctx, @status_msg) if @status_msg
     @status_msg = @widgets.player_status.push(@status_ctx, text)
@@ -705,9 +708,6 @@ class Format
     end
     def pos(*times)
       times.collect {|t| m(t) }.join(' / ')
-    end
-    def window(*parts)
-      a(parts.compact.join(' - '), Njiiri::NAME)
     end
     def title(title)
       "<big><b>#{h(title)}</b></big>"
