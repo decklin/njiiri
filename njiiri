@@ -650,23 +650,18 @@ class Njiiri
     @widgets.player_win.title = Format.window(artist, title)
   end
 
-  def refresh_pos(elapsed=nil, total=nil)
-    if total
-      if elapsed
+  def refresh_pos(elapsed=0, total=0)
+    if elapsed > 0
+      if total > 0
         @widgets.pos_bar.text = Format.pos(elapsed, total)
         @widgets.pos_bar.fraction = [elapsed.to_f / total, 1.0].min rescue 0.0
       else
-        @widgets.pos_bar.text = Format.pos(total)
-        @widgets.pos_bar.fraction = 0.0
-      end
-    else
-      if elapsed
         @widgets.pos_bar.text = Format.pos(elapsed)
         @widgets.pos_bar.pulse
-      else
-        @widgets.pos_bar.text = Format.pos()
-        @widgets.pos_bar.fraction = 0.0
       end
+    else
+      @widgets.pos_bar.text = total > 0 ? Format.pos(total) : ' '
+      @widgets.pos_bar.fraction = 0.0
     end
   end
 
@@ -709,7 +704,7 @@ class Format
       d, h = h.divmod(24); return '%dd %dh %dm' % [d, h, m]
     end
     def pos(*times)
-      a(times.collect {|t| m(t) }.join(' / '), ' ')
+      times.collect {|t| m(t) }.join(' / ')
     end
     def window(*parts)
       a(parts.compact.join(' - '), Njiiri::NAME)
