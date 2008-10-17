@@ -193,7 +193,7 @@ class Njiiri
   end
 
   def connected
-    @status_text = "#{@ack} on #{server_name(@server)}"
+    @widgets.status_label.label = "#{@ack} on #{server_name(@server)}"
     @widgets.random_btn.active = @mpd.random?
     @widgets.repeat_btn.active = @mpd.repeat?
     @widgets.volume_scale.value = @mpd.volume
@@ -208,7 +208,7 @@ class Njiiri
   end
 
   def disconnected
-    @status_text = "Disconnected from #{server_name(@server)}"
+    @widgets.status_label.label = "Disconnected from #{server_name(@server)}"
     @player_tree_store.clear
     @files_tree_store.clear
     enable_toolbuttons(false)
@@ -292,6 +292,10 @@ class Njiiri
     times = []
     @widgets.playlist_tree.selection.selected_each {|m, p, i| times << i[7] }
     refresh_selection(times)
+  end
+  
+  def on_status_exp_activate(widget)
+    @widgets.sel_label.visible = widget.expanded?
   end
 
   # TOOLBAR
@@ -689,14 +693,13 @@ class Njiiri
     end
   end
 
-  def refresh_selection(times=nil)
-    if times.nil? or times.size <= 1
-      times = @mpd.playlist.collect {|s| s.time.to_i }
+  def refresh_selection(times=[])
+    @widgets.sel_label.label = if @mpd.connected?
+      times = @mpd.playlist.collect {|s| s.time.to_i } if times.size <= 1
+      "#{Format.pl('song', times.size)}, #{Format.pos(times.sum)}"
     else
-      verb = 'selected '
+      ""
     end
-    @widgets.status_label.label = @status_text +
-      " (#{verb}#{Format.pl('song', times.size)}, #{Format.pos(times.sum)})"
   end
 
   def server_name(srv)
