@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Oct  9 22:43:03 2008 -->
+<!--Generated with glade3 3.4.5 on Fri Oct 17 15:12:37 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -40,7 +40,7 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkSeparatorToolItem" id="sep1">
+              <widget class="GtkSeparatorToolItem" id="tsep1">
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
               </widget>
@@ -94,7 +94,7 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkSeparatorToolItem" id="sep2">
+              <widget class="GtkSeparatorToolItem" id="tsep2">
                 <property name="visible">True</property>
               </widget>
               <packing>
@@ -126,7 +126,7 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkSeparatorToolItem" id="sep3">
+              <widget class="GtkSeparatorToolItem" id="tsep3">
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
               </widget>
@@ -321,10 +321,148 @@
           </packing>
         </child>
         <child>
-          <widget class="GtkStatusbar" id="player_status">
+          <widget class="GtkFrame" id="status_frame">
             <property name="visible">True</property>
-            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-            <property name="spacing">3</property>
+            <property name="label_xalign">0</property>
+            <property name="label_yalign">0</property>
+            <property name="shadow_type">GTK_SHADOW_IN</property>
+            <child>
+              <widget class="GtkExpander" id="status_exp">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <child>
+                  <widget class="GtkVBox" id="status_box">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkHSeparator" id="hsep1">
+                        <property name="visible">True</property>
+                      </widget>
+                      <packing>
+                        <property name="expand">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkHBox" id="more_box">
+                        <property name="visible">True</property>
+                        <property name="spacing">5</property>
+                        <child>
+                          <widget class="GtkLabel" id="more_label">
+                            <property name="visible">True</property>
+                            <property name="xalign">0</property>
+                            <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
+                          </widget>
+                          <packing>
+                            <property name="padding">5</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkVSeparator" id="vsep1">
+                            <property name="visible">True</property>
+                          </widget>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkLabel" id="xfade_label">
+                            <property name="visible">True</property>
+                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes" context="yes">Crossfade:</property>
+                          </widget>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkSpinButton" id="xfade_spin">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="max_length">2</property>
+                            <property name="width_chars">2</property>
+                            <property name="adjustment">0 0 99 1 10 10</property>
+                            <property name="snap_to_ticks">True</property>
+                            <property name="numeric">True</property>
+                          </widget>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">3</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkVSeparator" id="vsep2">
+                            <property name="visible">True</property>
+                          </widget>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">4</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkVBox" id="mode_box">
+                            <property name="visible">True</property>
+                            <child>
+                              <widget class="GtkCheckButton" id="random_btn">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="label" translatable="yes" context="yes">Random</property>
+                                <property name="response_id">0</property>
+                                <property name="draw_indicator">True</property>
+                                <signal name="toggled" handler="on_random_btn_toggled"/>
+                              </widget>
+                              <packing>
+                                <property name="fill">False</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <widget class="GtkCheckButton" id="repeat_btn">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="label" translatable="yes" context="yes">Repeat</property>
+                                <property name="response_id">0</property>
+                                <property name="draw_indicator">True</property>
+                                <signal name="toggled" handler="on_repeat_btn_toggled"/>
+                              </widget>
+                              <packing>
+                                <property name="fill">False</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </widget>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">5</property>
+                          </packing>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                  </widget>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="status_label">
+                    <property name="visible">True</property>
+                  </widget>
+                  <packing>
+                    <property name="type">label_item</property>
+                  </packing>
+                </child>
+              </widget>
+            </child>
+            <child>
+              <placeholder/>
+              <packing>
+                <property name="type">label_item</property>
+              </packing>
+            </child>
           </widget>
           <packing>
             <property name="expand">False</property>
@@ -973,22 +1111,6 @@
         <property name="use_underline">True</property>
         <property name="use_stock">True</property>
         <signal name="activate" handler="on_stop_item_activate"/>
-      </widget>
-    </child>
-    <child>
-      <widget class="GtkCheckMenuItem" id="random_item">
-        <property name="visible">True</property>
-        <property name="label" translatable="yes" context="yes">Random</property>
-        <property name="use_underline">True</property>
-        <signal name="toggled" handler="on_random_item_toggled"/>
-      </widget>
-    </child>
-    <child>
-      <widget class="GtkCheckMenuItem" id="repeat_item">
-        <property name="visible">True</property>
-        <property name="label" translatable="yes" context="yes">Repeat</property>
-        <property name="use_underline">True</property>
-        <signal name="toggled" handler="on_repeat_item_toggled"/>
       </widget>
     </child>
   </widget>

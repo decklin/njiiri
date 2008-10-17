@@ -83,8 +83,6 @@ class Njiiri
     @config = Conf.new(rc_path)
     @widgets = GladeWrapper.new(self)
 
-    @status_ctx = @widgets.player_status.get_context_id(NAME)
-    @status_msg = nil
     @prev_version = 0
     @btab = {}
     @tasks = {}
@@ -177,6 +175,7 @@ class Njiiri
     @mpd = MPD.new(@server[:host], @server[:port])
     @@callbacks.each {|n, t, cb| @mpd.register_callback(method(cb), t) }
     begin
+      @widgets.status_label.label = "Connecting..."
       @ack = @mpd.connect(true).match(/^OK (.*)/)[1]
       @mpd.password(@server[:password]) unless @server[:password].empty?
       @widgets.host_entry.text = @server[:host]
@@ -190,8 +189,9 @@ class Njiiri
 
   def connected
     enable_toolbuttons(true)
-    @widgets.random_item.active = @mpd.random?
-    @widgets.repeat_item.active = @mpd.repeat?
+    @widgets.status_label.label = "#{@ack} on #{server_name(@server)}"
+    @widgets.random_btn.active = @mpd.random?
+    @widgets.repeat_btn.active = @mpd.repeat?
     @widgets.volume_scale.value = @mpd.volume
     refresh_state(@mpd.status['state'])
     refresh_info(@mpd.current_song)
@@ -203,6 +203,7 @@ class Njiiri
 
   def disconnected
     enable_toolbuttons(false)
+    @widgets.status_label.label = "Disconnected from #{server_name(@server)}"
     @player_tree_store.clear
     @files_tree_store.clear
     refresh_info(nil)
@@ -323,11 +324,11 @@ class Njiiri
     @mpd.shuffle
   end
 
-  def on_random_item_toggled(widget)
+  def on_random_btn_toggled(widget)
     @mpd.random = widget.active?
   end
 
-  def on_repeat_item_toggled(widget)
+  def on_repeat_btn_toggled(widget)
     @mpd.repeat = widget.active?
   end
 
@@ -641,14 +642,6 @@ class Njiiri
       title, artist, album, time, track = Format.all(current)
       @widgets.player_win.title = [title, artist].join(' - ')
     else
-      if @mpd.connected?
-        db_time = @mpd.stats['db_playtime'].to_i
-        db_len = @mpd.stats['songs'].to_i
-        db_update = Time.at(@mpd.stats['db_update'].to_i)
-        title = @ack
-        artist = "Library #{Format.pos(db_time)} (#{db_len} songs)"
-        album = "Last updated at #{db_update.strftime('%x %X')}"
-      end
       @widgets.player_win.title = NAME
     end
     @widgets.title_label.label = Format.title(title)
@@ -672,16 +665,18 @@ class Njiiri
   end
 
   def refresh_statusbar
-    if @mpd.connected?
+    @widgets.more_label.label = if @mpd.connected?
       pl_time = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
-      pl_len = @mpd.playlist_len
-      text = "#{server_name(@server)} - " +
-             "playlist #{Format.pos(pl_time)} (#{pl_len} songs)"
+      db_update = Time.at(@mpd.stats['db_update'].to_i)
+      "Playlist: #{@mpd.playlist_len} songs, #{Format.pos(pl_time)}\n" +
+        "Library: #{@mpd.stats['songs']} songs, " +
+        "#{@mpd.stats['artists']} artists, " +
+        "#{@mpd.stats['albums']} albums, " +
+        "#{Format.pos(@mpd.stats['db_playtime'].to_i)}\n" +
+        "Last updated: #{db_update.ctime}"
     else
-      text = "disconnected from #{server_name(@server)}"
+      ""
     end
-    @widgets.player_status.remove(@status_ctx, @status_msg) if @status_msg
-    @status_msg = @widgets.player_status.push(@status_ctx, text)
   end
 
   def server_name(srv)
