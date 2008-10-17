@@ -140,7 +140,7 @@ class Njiiri
 
     @config.servers.each do |srv|
       item = Gtk::ImageMenuItem.new(Gtk::Stock::NETWORK)
-      item.child.label = srv[:host]
+      item.child.label = server_name(srv)
       item.signal_connect("activate") do |widget, event|
         @mpd.disconnect if @mpd.connected?
         connect(srv)
@@ -672,16 +672,20 @@ class Njiiri
   end
 
   def refresh_statusbar
-    srv = "#{@server[:host]}:#{@server[:port]}"
     if @mpd.connected?
       pl_time = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
       pl_len = @mpd.playlist_len
-      text = "#{srv} - playlist #{Format.pos(pl_time)} (#{pl_len} songs)"
+      text = "#{server_name(@server)} - " +
+             "playlist #{Format.pos(pl_time)} (#{pl_len} songs)"
     else
-      text = "disconnected from #{srv}"
+      text = "disconnected from #{server_name(@server)}"
     end
     @widgets.player_status.remove(@status_ctx, @status_msg) if @status_msg
     @status_msg = @widgets.player_status.push(@status_ctx, text)
+  end
+
+  def server_name(srv)
+    srv[:port] == 6600 ? srv[:host] : "#{srv[:host]}:#{srv[:port]}"
   end
 end
 
