@@ -664,9 +664,9 @@ class Njiiri
   def refresh_detail
     @widgets.detail_label.label = if @mpd.connected?
       db_update = Time.at(@mpd.stats['db_update'].to_i)
-      "Library: #{@mpd.stats['songs']} songs, " +
-        "#{@mpd.stats['artists']} artists, " +
-        "#{@mpd.stats['albums']} albums, " +
+      "Library: #{Format.pl('song', @mpd.stats['songs'].to_i)}, " +
+        "#{Format.pl('artist', @mpd.stats['artists'].to_i)}, " +
+        "#{Format.pl('album', @mpd.stats['albums'].to_i)}, " +
         "#{Format.pos(@mpd.stats['db_playtime'].to_i)}\n" +
         "Last updated: #{db_update.ctime}"
     else
@@ -675,9 +675,9 @@ class Njiiri
   end
 
   def refresh_selection
-    pl_time = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
+    p_time = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
     @widgets.status_label.label = @status_text + if @mpd.connected?
-      " (#{@mpd.playlist_len} songs, #{Format.pos(pl_time)})"
+      " (#{Format.pl('song', @mpd.playlist_len)}, #{Format.pos(p_time)})"
     else
       ""
     end
@@ -708,6 +708,9 @@ class Format
       m, s = t.divmod(60); return '%d:%02d' % [m, s] if m < 80
       h, m = m.divmod(60); return '%d:%02d:%02d' % [h, m, s] if h < 24
       d, h = h.divmod(24); return '%dd %dh %dm' % [d, h, m]
+    end
+    def pl(a, n)
+      "#{n} #{a}" + (n != 1 ? "s" : "")
     end
     def pos(*times)
       times.collect {|t| m(t) }.join(' / ')
