@@ -349,7 +349,7 @@ class Njiiri
     @widgets.connect_dlg.show
   end
 
-  def on_disconnect_btn_activate(widget)
+  def on_disconnect_item_activate(widget)
     @mpd.disconnect
     disconnected
   end

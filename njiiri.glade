@@ -1136,12 +1136,12 @@
   <widget class="GtkMenu" id="connect_menu">
     <property name="visible">True</property>
     <child>
-      <widget class="GtkImageMenuItem" id="disconnect_btn">
+      <widget class="GtkImageMenuItem" id="disconnect_item">
         <property name="visible">True</property>
         <property name="label" translatable="yes" context="yes">gtk-disconnect</property>
         <property name="use_underline">True</property>
         <property name="use_stock">True</property>
-        <signal name="activate" handler="on_disconnect_btn_activate"/>
+        <signal name="activate" handler="on_disconnect_item_activate"/>
       </widget>
     </child>
   </widget>
