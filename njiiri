@@ -185,27 +185,29 @@ class Njiiri
   end
 
   def connected
-    enable_toolbuttons(true)
-    @widgets.status_label.label = "#{@ack} on #{server_name(@server)}"
+    @status_text = "#{@ack} on #{server_name(@server)}"
     @widgets.random_btn.active = @mpd.random?
     @widgets.repeat_btn.active = @mpd.repeat?
     @widgets.volume_scale.value = @mpd.volume
+    enable_toolbuttons(true)
     refresh_state(@mpd.status['state'])
     refresh_info(@mpd.current_song)
     rebuild_playlist(@mpd.playlist_version, 0)
     refresh_playlist
-    refresh_statusbar
+    refresh_selection
+    refresh_detail
     reset_pwd
   end
 
   def disconnected
-    enable_toolbuttons(false)
-    @widgets.status_label.label = "Disconnected from #{server_name(@server)}"
+    @status_text = "Disconnected from #{server_name(@server)}"
     @player_tree_store.clear
     @files_tree_store.clear
+    enable_toolbuttons(false)
     refresh_info(nil)
     refresh_pos
-    refresh_statusbar
+    refresh_selection
+    refresh_detail
   end
 
   def enable_toolbuttons(sensitive)
@@ -556,6 +558,12 @@ class Njiiri
     end
   end
 
+  # yes, the order of these is important
+
+  def_cb :got_connection, MPD::CONNECTION_CALLBACK do |up|
+    up ? connected : disconnected
+  end
+
   def_cb :got_time, MPD::TIME_CALLBACK do |elapsed, total|
     refresh_pos(elapsed, total)
   end
@@ -572,16 +580,12 @@ class Njiiri
   def_cb :got_playlist, MPD::PLAYLIST_CALLBACK do |version|
     rebuild_playlist(version)
     refresh_playlist
-    refresh_statusbar
+    refresh_detail
   end
 
   def_cb :got_volume, MPD::VOLUME_CALLBACK do |vol|
     @widgets.volume_scale.value = vol
     schedule(:got_volume) {}
-  end
-
-  def_cb :got_connection, MPD::CONNECTION_CALLBACK do |up|
-    up ? connected : disconnected
   end
 
   # MISC
@@ -611,6 +615,7 @@ class Njiiri
           iter[6] = Pango::WEIGHT_NORMAL
         end
       end
+      refresh_selection
     end
   end
 
@@ -656,16 +661,23 @@ class Njiiri
     end
   end
 
-  def refresh_statusbar
-    @widgets.more_label.label = if @mpd.connected?
-      pl_time = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
+  def refresh_detail
+    @widgets.detail_label.label = if @mpd.connected?
       db_update = Time.at(@mpd.stats['db_update'].to_i)
-      "Playlist: #{@mpd.playlist_len} songs, #{Format.pos(pl_time)}\n" +
-        "Library: #{@mpd.stats['songs']} songs, " +
+      "Library: #{@mpd.stats['songs']} songs, " +
         "#{@mpd.stats['artists']} artists, " +
         "#{@mpd.stats['albums']} albums, " +
         "#{Format.pos(@mpd.stats['db_playtime'].to_i)}\n" +
         "Last updated: #{db_update.ctime}"
+    else
+      ""
+    end
+  end
+
+  def refresh_selection
+    pl_time = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
+    @widgets.status_label.label = @status_text + if @mpd.connected?
+      " (#{@mpd.playlist_len} songs, #{Format.pos(pl_time)})"
     else
       ""
     end
