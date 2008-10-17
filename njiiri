@@ -25,9 +25,6 @@ class MPD
   def playlist_len
     status['playlistlength'].to_i  
   end
-  def pos
-    status['song'].to_i  
-  end
   class Song
     def id; self['id']; end
   end
@@ -320,10 +317,6 @@ class Njiiri
     @mpd.shuffle
   end
 
-  def on_shuffle_item_activate(widget)
-    @mpd.shuffle
-  end
-
   def on_random_btn_toggled(widget)
     @mpd.random = widget.active?
   end
@@ -457,7 +450,7 @@ class Njiiri
   end
 
   def insert_songs
-    orig_pos = @mpd.status['state'] == 'stop' ? -1 : @mpd.pos
+    orig_pos = @mpd.status['state'] == 'stop' ? -1 : @mpd.status['song'].to_i
     orig_len = @mpd.playlist_len
     add_songs
     if orig_len != 0
@@ -594,7 +587,6 @@ class Njiiri
   # MISC
 
   def refresh_state(state)
-    #@widgets.player_toolbar.reallocate_redraws = true
     if state == 'play'
       @widgets.play_btn.hide
       @widgets.pause_btn.show
