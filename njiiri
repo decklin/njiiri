@@ -197,6 +197,7 @@ class Njiiri
     @widgets.random_btn.active = @mpd.random?
     @widgets.repeat_btn.active = @mpd.repeat?
     @widgets.volume_scale.value = @mpd.volume
+    @widgets.xfade_spin.value = @mpd.crossfade
     enable_toolbuttons(true)
     refresh_state(@mpd.status['state'])
     refresh_info(@mpd.current_song)
@@ -356,6 +357,10 @@ class Njiiri
 
   def on_volume_scale_value_changed(widget)
     schedule(:got_volume) { @mpd.volume = widget.value.to_i }
+  end
+
+  def on_xfade_spin_value_changed(widget)
+    schedule(:got_xfade) { @mpd.crossfade = widget.value.to_i }
   end
 
   def on_player_toolbar_popup_context_menu(x, y, button, user_data)
@@ -604,6 +609,11 @@ class Njiiri
   def_cb :got_volume, MPD::VOLUME_CALLBACK do |vol|
     @widgets.volume_scale.value = vol
     schedule(:got_volume) {}
+  end
+
+  def_cb :got_xfade, MPD::CROSSFADE_CALLBACK do |secs|
+    @widgets.xfade_spin.value = secs
+    schedule(:got_xfade) {}
   end
 
   # MISC
