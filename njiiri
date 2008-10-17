@@ -7,6 +7,10 @@ require 'libglade2'
 require 'cgi'
 require 'yaml'
 
+class Array
+  def sum; inject(0) {|a, b| a + b }; end
+end
+
 class MPD
   def lsinfo(path = '/', type = :files)
     response = send_command "lsinfo \"#{path}\""
@@ -52,7 +56,8 @@ class Njiiri
                   [ 3, 'Album', 140, String ],
                   [ 4, 'Time', 40, String ],
                   [ 5, :id, nil, String ],
-                  [ 6, :weight, nil, Integer ] ]
+                  [ 6, :weight, nil, Integer ],
+                  [ 7, :len, nil, Integer ] ]
   BROWSE_COLS = [ [ 0, '', 40, Symbol ],
                   [ 1, 'Title', 140, String ],
                   [ 2, 'Artist', 120, String ],
@@ -96,6 +101,9 @@ class Njiiri
     @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect{|x| x[3] })
     @widgets.playlist_tree.model = @player_tree_store
     @widgets.playlist_tree.selection.mode = Gtk::SELECTION_MULTIPLE
+    @widgets.playlist_tree.selection.signal_connect('changed') do
+      on_playlist_selection_changed
+    end
 
     PLAYER_COLS.each do |i, name, width, type|
       make_column(name, width, type, i, :weight => 6) do |col|
@@ -278,6 +286,12 @@ class Njiiri
         @mpd.deleteid(iter[5])
       end
     end
+  end
+
+  def on_playlist_selection_changed
+    times = []
+    @widgets.playlist_tree.selection.selected_each {|m, p, i| times << i[7] }
+    refresh_selection(times)
   end
 
   # TOOLBAR
@@ -626,6 +640,7 @@ class Njiiri
             || @player_tree_store.append(nil)
         iter[1], iter[2], iter[3], iter[4] = Format.all(song, '-')
         iter[5] = song.id
+        iter[7] = song.time.to_i
       end
       if last = @player_tree_store.get_iter(@mpd.playlist_len.to_s)
         1 while @player_tree_store.remove(last)
@@ -674,13 +689,14 @@ class Njiiri
     end
   end
 
-  def refresh_selection
-    p_time = @mpd.playlist.inject(0) {|m, s| m + s.time.to_i }
-    @widgets.status_label.label = @status_text + if @mpd.connected?
-      " (#{Format.pl('song', @mpd.playlist_len)}, #{Format.pos(p_time)})"
+  def refresh_selection(times=nil)
+    if times.nil? or times.size <= 1
+      times = @mpd.playlist.collect {|s| s.time.to_i }
     else
-      ""
+      verb = 'selected '
     end
+    @widgets.status_label.label = @status_text +
+      " (#{verb}#{Format.pl('song', times.size)}, #{Format.pos(times.sum)})"
   end
 
   def server_name(srv)
