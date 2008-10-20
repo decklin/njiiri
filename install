@@ -7,6 +7,6 @@ cp bin/* $prefix/bin
 mkdir -p $prefix/share/njiiri
 cp share/* $prefix/share/njiiri
 
-for i in /usr/lib/ruby/*; do
+for i in $prefix/lib/*ruby/1.*; do
     cp lib/* $i/
 done

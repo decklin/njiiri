@@ -1,3 +1,9 @@
+0.2.1 (2008-10-20)
+==================
+
+  * Fix install site_ruby path. (The install script is an ugly hack; it will
+    be replaced.)
+
 0.2.0 (2008-10-19)
 ==================
 
