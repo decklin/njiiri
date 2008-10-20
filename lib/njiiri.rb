@@ -49,6 +49,8 @@ end
 
 class Njiiri
   NAME = 'Njiiri'
+  SHARE_DIRS = %w[share /usr/local/share/njiiri /usr/share/njiiri
+                  /opt/local/usr/share/njiiri]
 
   PLAYER_COLS = [ [ 0, '', 40, Symbol ],
                   [ 1, 'Title', 180, String ],
@@ -73,7 +75,7 @@ class Njiiri
   @@callbacks = []
 
   def self.search(filename)
-    %w[share /usr/local/share/njiiri /usr/share/njiiri].each do |dir|
+    SHARE_DIRS.each do |dir|
       path = "#{dir}/#{filename}"
       if File.exist?(path)
         return yield path
