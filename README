@@ -15,12 +15,16 @@ a different location, give that as an argument, like
 
     ./install /opt/local/usr
 
+If you just want to try running it from this directory first, do
+
+    RUBYLIB=lib ./bin/njiiri
+
 Getting Dependencies
 ====================
 
 On Debian/Ubuntu:
 
-  apt-get install rubygems libglade2-ruby rubygems
+  apt-get install libglade2-ruby rubygems
   gem install librmpd
 
 On Mac OS X with MacPorts:
