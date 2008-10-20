@@ -1,0 +1,12 @@
+#!/bin/sh
+
+prefix=${1:-/usr/local}
+
+cp bin/* $prefix/bin
+
+mkdir -p $prefix/share/njiiri
+cp share/* $prefix/share/njiiri
+
+for i in /usr/lib/ruby/*; do
+    cp lib/* $i/
+done

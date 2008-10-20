@@ -1,0 +1,66 @@
+Njiiri
+======
+
+Njiiri is a graphical MPD client written in Ruby-GTK+.
+
+Installation
+============
+
+There isn't a "proper" installer at this point, but run
+
+    ./install
+
+as root to copy all the files to /usr/local. If you want to install into
+a different location, give that as an argument, like
+
+    ./install /opt/local/usr
+
+Getting Dependencies
+====================
+
+On Debian/Ubuntu:
+
+  apt-get install rubygems libglade2-ruby rubygems
+  gem install librmpd
+
+On Mac OS X with MacPorts:
+
+  port install rb-gnome
+  gem install librmpd
+
+I've gotten reports that Ruby-GNOME 0.15, in MacPorts, fails to build
+GTK+ bindings with their (more recent) version of GTK+. If this happens
+to you, you'll need to install its dependencies and then build 0.17 or
+newer from source.
+
+Controls
+========
+
+  * Click anywhere on the time-display progress bar to seek to that
+    point in the current track.
+
+  * Click the expander next to the status display to see library stats
+    and control crossfade/repeat/random settings.
+
+  * Grab the handle above the playlist display to resize the album art.
+    (Note: fetching album art is not implemented yet.)
+
+  * Select multiple songs to see a count of their total time instead of
+    the total time of the entire playlist.
+
+  * Use the drop-down menu next to the "Connect" button to reconnect to
+    recently-used servers.
+
+  * Double-click playlists in the browser to load them.
+
+  * Press the '/' key in the browser to type in an HTTP stream URL.
+
+  * Right-click the toolbar for a menu allowing you to stop playback
+    completely. (Note: This menu should be attached to the pause button,
+    but currently cannot be due to technical limitations.)
+
+Credits
+=======
+
+Njiiri was written by Decklin Foster <decklin@red-bean.com>. It is free
+software; please see LICENSE for terms and conditions.
