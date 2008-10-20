@@ -143,16 +143,7 @@ class Njiiri
       end
     end
 
-    @config.servers.each do |srv|
-      item = Gtk::ImageMenuItem.new(Gtk::Stock::NETWORK)
-      item.child.label = server_name(srv)
-      item.signal_connect("activate") do |widget, event|
-        @mpd.disconnect if @mpd.connected?
-        connect(srv)
-      end
-      @widgets.connect_menu.append(item)
-      item.show
-    end
+    build_server_menu
 
     @widgets.player_win.set_default_size(@config.player[:w],
                                          @config.player[:h])
@@ -177,6 +168,22 @@ class Njiiri
     end
   end
 
+  def build_server_menu
+    @widgets.connect_menu.children.each do |w|
+      @widgets.connect_menu.remove(w) unless w == @widgets.disconnect_item
+    end
+    @config.servers.each do |srv|
+      item = Gtk::ImageMenuItem.new(Gtk::Stock::NETWORK)
+      item.child.label = server_name(srv)
+      item.signal_connect("activate") do |widget, event|
+        @mpd.disconnect if @mpd.connected?
+        connect(srv)
+      end
+      @widgets.connect_menu.append(item)
+      item.show
+    end
+  end
+
   def connect(server=nil)
     @server = server || @config.servers.first
     @mpd = MPD.new(@server[:host], @server[:port])
@@ -188,6 +195,8 @@ class Njiiri
       @widgets.host_entry.text = @server[:host]
       @widgets.port_entry.text = @server[:port].to_s
       @widgets.password_entry.text = @server[:password]
+      @config.add_server(@server)
+      build_server_menu
     rescue => e
       STDERR.puts "Error connecting: #{e}"
       disconnected
@@ -548,10 +557,9 @@ class Njiiri
   def on_do_connect_btn_clicked
     @widgets.connect_dlg.hide
     @mpd.disconnect if @mpd.connected?
-    @config.add_server(:host => @widgets.host_entry.text,
-                       :port => @widgets.port_entry.text.to_i,
-                       :password => @widgets.password_entry.text)
-    connect(@config.servers.first)
+    connect(:host => @widgets.host_entry.text,
+            :port => @widgets.port_entry.text.to_i,
+            :password => @widgets.password_entry.text)
   end
 
   # CALLBACKS
@@ -794,7 +802,10 @@ class Conf
   def browser; @rc[:geometry][:browser]; end
   def servers; @rc[:servers]; end
   def add_server(server)
-    @rc[:servers].reject! {|srv| srv[:host] == server[:host] }
+    @rc[:servers].reject! do |srv|
+      srv[:host] == server[:host] && srv[:port] == server[:port]
+    end
     @rc[:servers].unshift(server)
+    @rc[:servers].slice!(0, 5)
   end
 end
