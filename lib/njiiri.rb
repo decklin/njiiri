@@ -476,8 +476,8 @@ class Njiiri
     add_songs
   end
 
-  def insert_songs
-    orig_pos = @mpd.status['state'] == 'stop' ? -1 : @mpd.status['song'].to_i
+  def insert_songs(default)
+    orig_pos = @mpd.stopped? ? default - 1 : @mpd.status['song'].to_i
     orig_len = @mpd.playlist_len
     add_songs
     if orig_len != 0
@@ -490,11 +490,11 @@ class Njiiri
   end
 
   def on_insert_btn_clicked(widget)
-    insert_songs
+    insert_songs(0)
   end
 
   def on_jump_btn_clicked(widget)
-    pos = insert_songs
+    pos = insert_songs(@mpd.playlist_len)
     @mpd.play(pos)
   end
 
