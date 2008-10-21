@@ -52,6 +52,8 @@ class Server < Struct.new(:host, :port, :password)
   end
 end
 
+class Geom < Struct.new(:x, :y, :w, :h, :pane); end
+
 class Njiiri
   NAME = 'Njiiri'
   SHARE_DIRS = %w[share /usr/local/share/njiiri /usr/share/njiiri
@@ -150,15 +152,13 @@ class Njiiri
 
     build_server_menu
 
-    @widgets.player_win.set_default_size(@config.player[:w],
-                                         @config.player[:h])
-    @widgets.main_pane.set_position(@config.player[:pane])
+    @widgets.player_win.set_default_size(@config.player.w, @config.player.h)
+    @widgets.main_pane.set_position(@config.player.pane)
 
-    @widgets.browser_win.set_default_size(@config.browser[:w],
-                                          @config.browser[:h])
-    @widgets.files_pane.set_position(@config.browser[:pane])
+    @widgets.browser_win.set_default_size(@config.browser.w, @config.browser.h)
+    @widgets.files_pane.set_position(@config.browser.pane)
 
-    @widgets.player_win.move(@config.player[:x], @config.player[:y])
+    @widgets.player_win.move(@config.player.x, @config.player.y)
     @widgets.player_win.focus = @widgets.kludge_sep
     @widgets.player_win.show
   end
@@ -260,26 +260,26 @@ class Njiiri
   end
 
   def on_player_win_size_allocate(widget, a)
-    @config.player[:w] = a.width
-    @config.player[:h] = a.height
+    @config.player.w = a.width
+    @config.player.h = a.height
     false
   end
 
   def on_player_win_configure_event(widget, e)
-    @config.player[:x] = e.x
-    @config.player[:y] = e.y
+    @config.player.x = e.x
+    @config.player.y = e.y
     false
   end
 
   def on_browser_win_size_allocate(widget, a)
-    @config.browser[:w] = a.width
-    @config.browser[:h] = a.height
+    @config.browser.w = a.width
+    @config.browser.h = a.height
     false
   end
 
   def on_browser_win_configure_event(widget, e)
-    @config.browser[:x] = e.x
-    @config.browser[:y] = e.y
+    @config.browser.x = e.x
+    @config.browser.y = e.y
     false
   end
 
@@ -338,7 +338,7 @@ class Njiiri
   end
 
   def on_open_btn_clicked
-    @widgets.browser_win.move(@config.browser[:x], @config.browser[:y])
+    @widgets.browser_win.move(@config.browser.x, @config.browser.y)
     @widgets.browser_win.show
   end
 
@@ -562,8 +562,7 @@ class Njiiri
   def on_do_connect_btn_clicked
     @widgets.connect_dlg.hide
     @mpd.disconnect if @mpd.connected?
-    connect(Server.new(@widgets.host_entry.text,
-                       @widgets.port_entry.text.to_i,
+    connect(Server.new(@widgets.host_entry.text, @widgets.port_entry.text.to_i,
                        @widgets.password_entry.text))
   end
 
@@ -777,8 +776,8 @@ class Conf
   DEFAULTS = {
     :servers => [ Server.new('localhost', 6600, '') ],
     :geometry => {
-      :player => { :x => 0, :y => 0, :w => 600, :h => 400, :pane => 80 },
-      :browser => { :x => 0, :y => 0, :w => 600, :h => 400, :pane => 100 }
+      :player => Geom.new(0, 0, 600, 500, 80),
+      :browser => Geom.new(0, 0, 600, 400, 100)
     }
   }
 
