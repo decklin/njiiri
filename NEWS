@@ -1,3 +1,18 @@
+0.3.0 (2008-10-21)
+==================
+
+  * Make "Play Now" push on to the end if we've already come to a stop, so
+    that we don't end up back at the beginning of the playlist later.
+
+  * Fix server menu; it now updates as you use it, with the most recent
+    server first, allows multiple ports on one host, and trims more than
+    5 entries.
+
+  * Save the sizes of playlist/browser columns (with the exception of Time,
+    which for obscure implementation reasons needs to be auto-sized).
+
+  * Fix time display at 0:00 within a normal (non-stream) song.
+
 0.2.1 (2008-10-20)
 ==================
 

@@ -6,7 +6,7 @@ Njiiri is a graphical MPD client written in Ruby-GTK+.
 Installation
 ============
 
-There isn't a "proper" installer at this point, but run
+There isn't a "proper" installer at this point, but run:
 
     ./install
 
@@ -15,7 +15,7 @@ a different location, give that as an argument, like
 
     ./install /opt/local/usr
 
-If you just want to try running it from this directory first, do
+If you just want to try running it from this directory first, do:
 
     RUBYLIB=lib ./bin/njiiri
 
@@ -36,6 +36,11 @@ I've gotten reports that Ruby-GNOME 0.15, in MacPorts, fails to build
 GTK+ bindings with their (more recent) version of GTK+. If this happens
 to you, you'll need to install its dependencies and then build 0.17 or
 newer from source.
+
+If you're not sure if your bindings are working correctly, load up irb
+and type:
+
+  require 'gtk2'
 
 Controls
 ========
@@ -61,7 +66,7 @@ Controls
 
   * Right-click the toolbar for a menu allowing you to stop playback
     completely. (Note: This menu should be attached to the pause button,
-    but currently cannot be due to technical limitations.)
+    but currently is not due to technical limitations.)
 
 Credits
 =======
