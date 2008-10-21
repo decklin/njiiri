@@ -215,31 +215,22 @@ class Njiiri
   end
 
   def connected
+    @tasks.clear
     @widgets.status_label.label = "#{@ack} on #{@server}"
     @widgets.random_btn.active = @mpd.random?
     @widgets.repeat_btn.active = @mpd.repeat?
     @widgets.volume_scale.value = @mpd.volume
     @widgets.xfade_spin.value = @mpd.crossfade
     enable_controls(true)
-    refresh_state(@mpd.status['state'])
-    refresh_info(@mpd.current_song)
-    refresh_pos(*@mpd.current_time)
-    rebuild_playlist(@mpd.playlist_version, 0)
-    refresh_playlist
-    refresh_selection
-    refresh_detail
     reset_pwd
   end
 
   def disconnected
+    @tasks.clear
     @widgets.status_label.label = "Disconnected from #{@server}"
     @player_tree_store.clear
     @files_tree_store.clear
     enable_controls(false)
-    refresh_info(nil)
-    refresh_pos
-    refresh_selection
-    refresh_detail
   end
 
   def enable_controls(sensitive)
