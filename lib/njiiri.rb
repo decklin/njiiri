@@ -29,6 +29,9 @@ class MPD
   def playlist_len
     status['playlistlength'].to_i  
   end
+  def current_time
+    status['time'].split(':').collect {|x| x.to_i } rescue [0, 0]
+  end
   class Song
     def id; self['id']; end
   end
@@ -220,6 +223,7 @@ class Njiiri
     enable_controls(true)
     refresh_state(@mpd.status['state'])
     refresh_info(@mpd.current_song)
+    refresh_pos(*@mpd.current_time)
     rebuild_playlist(@mpd.playlist_version, 0)
     refresh_playlist
     refresh_selection
@@ -624,6 +628,8 @@ class Njiiri
   def_cb :got_song, MPD::CURRENT_SONG_CALLBACK do |current|
     refresh_info(current)
     refresh_playlist
+    schedule(:got_time) {}
+    refresh_pos(*@mpd.current_time)
   end
 
   def_cb :got_state, MPD::STATE_CALLBACK do |state|
