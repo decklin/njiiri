@@ -257,6 +257,7 @@ class Njiiri
       @widgets.cover_img.pixbuf = @cover.scale(a.height, a.height,
                                                Gdk::Pixbuf::INTERP_NEAREST)
     end
+    @config.player.pane = a.height
   end
 
   def on_player_win_size_allocate(widget, a)
@@ -396,6 +397,10 @@ class Njiiri
       iter[0] = n
       iter[1] = p
     end
+  end
+
+  def on_bookmarks_sw_size_allocate(widget, a)
+    @config.browser.pane = a.width
   end
 
   def add_pwd(dir)
