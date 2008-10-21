@@ -52,30 +52,30 @@ class Server < Struct.new(:host, :port, :password)
   end
 end
 
-class Geom < Struct.new(:x, :y, :w, :h, :pane); end
+class Geom < Struct.new(:x, :y, :w, :h, :pane, :columns); end
 
 class Njiiri
   NAME = 'Njiiri'
   SHARE_DIRS = %w[share /usr/local/share/njiiri /usr/share/njiiri
                   /opt/local/usr/share/njiiri]
 
-  PLAYER_COLS = [ [ 0, '', 40, Symbol ],
-                  [ 1, 'Title', 180, String ],
-                  [ 2, 'Artist', 160, String ],
-                  [ 3, 'Album', 140, String ],
-                  [ 4, 'Time', 40, String ],
-                  [ 5, :id, nil, String ],
-                  [ 6, :weight, nil, Integer ],
-                  [ 7, :len, nil, Integer ] ]
-  BROWSE_COLS = [ [ 0, '', 40, Symbol ],
-                  [ 1, 'Title', 140, String ],
-                  [ 2, 'Artist', 120, String ],
-                  [ 3, 'Album', 100, String ],
-                  [ 4, 'Time', 40, String ],
-                  [ 5, :path, nil, String ],
-                  [ 6, :cb, nil, Proc ] ]
-  BOOKMK_COLS = [ [ 0, 'Places', 0, String ],
-                  [ 1, :cb, nil, Proc ] ]
+  PLAYER_COLS = [ [ '', Symbol ],
+                  [ 'Title', String ],
+                  [ 'Artist', String ],
+                  [ 'Album', String ],
+                  [ 'Time', String ],
+                  [ :id, String ],
+                  [ :weight, Integer ],
+                  [ :len, Integer ] ]
+  BROWSE_COLS = [ [ '', Symbol ],
+                  [ 'Title', String ],
+                  [ 'Artist', String ],
+                  [ 'Album', String ],
+                  [ 'Time', String ],
+                  [ :path, String ],
+                  [ :cb, Proc ] ]
+  BOOKMK_COLS = [ [ 'Places', String ],
+                  [ :cb, Proc ] ]
 
   # CLASS
 
@@ -107,17 +107,18 @@ class Njiiri
     @rend.ellipsize = Pango::ELLIPSIZE_END
     @rend_icon = Gtk::CellRendererPixbuf.new
 
-    @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect{|x| x[3] })
+    @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect{|n, t| t })
     @widgets.playlist_tree.model = @player_tree_store
     @widgets.playlist_tree.selection.mode = Gtk::SELECTION_MULTIPLE
     @widgets.playlist_tree.selection.signal_connect('changed') do
       on_playlist_selection_changed
     end
 
-    PLAYER_COLS.each do |i, name, width, type|
-      make_column(name, width, type, i, :weight => 6) do |col|
+    PLAYER_COLS.each_with_index do |spec, i|
+      name, type = spec
+      make_column(name, type, i, :weight => 6) do |col|
         col.sizing = Gtk::TreeViewColumn::FIXED
-        col.fixed_width = width
+        col.fixed_width = (name == 'Time') ? 40 : @config.player.columns[i]
         col.resizable = true
         @widgets.playlist_tree.append_column(col)
       end
@@ -127,24 +128,26 @@ class Njiiri
     @rend = Gtk::CellRendererText.new
     @rend.ellipsize = Pango::ELLIPSIZE_END
 
-    @files_tree_store = Gtk::TreeStore.new(*BROWSE_COLS.collect{|x| x[3] })
+    @files_tree_store = Gtk::TreeStore.new(*BROWSE_COLS.collect{|n, t| t })
     @widgets.files_tree.model = @files_tree_store
     @widgets.files_tree.selection.mode = Gtk::SELECTION_MULTIPLE
 
-    BROWSE_COLS.each do |i, name, width, type|
-      make_column(name, width, type, i) do |col|
+    BROWSE_COLS.each_with_index do |spec, i|
+      name, type = spec
+      make_column(name, type, i) do |col|
         col.sizing = Gtk::TreeViewColumn::FIXED
-        col.fixed_width = width
+        col.fixed_width = (name == 'Time') ? 40 : @config.browser.columns[i]
         col.resizable = true
         @widgets.files_tree.append_column(col)
       end
     end
 
-    @bookmarks_tree_store = Gtk::TreeStore.new(*BOOKMK_COLS.collect{|x| x[3] })
+    @bookmarks_tree_store = Gtk::TreeStore.new(*BOOKMK_COLS.collect{|n, t| t })
     @widgets.bookmarks_tree.model = @bookmarks_tree_store
 
-    BOOKMK_COLS.each do |i, name, width, type|
-      make_column(name, width, type, i) do |col|
+    BOOKMK_COLS.each_with_index do |spec, i|
+      name, type = spec
+      make_column(name, type, i) do |col|
         col.resizable = false
         @widgets.bookmarks_tree.append_column(col)
       end
@@ -163,8 +166,8 @@ class Njiiri
     @widgets.player_win.show
   end
 
-  def make_column(name, width, type, i, params={})
-    if width
+  def make_column(name, type, i, params={})
+    if name.class == String
       if type == String
         yield Gtk::TreeViewColumn.new(name, @rend, params.merge(:text => i))
       elsif type == Symbol
@@ -314,6 +317,10 @@ class Njiiri
 
   def on_status_exp_activate(widget)
     @widgets.mode_box.visible = !widget.expanded?
+  end
+
+  def on_playlist_tree_size_allocate(widget, a)
+    @config.player.columns = widget.columns.collect {|w| w.width }
   end
 
   # TOOLBAR
@@ -545,6 +552,10 @@ class Njiiri
     @widgets.search_hbox.show
     @widgets.search_label.label = label
     @widgets.search_entry.grab_focus
+  end
+  
+  def on_files_tree_size_allocate(widget, a)
+    @config.browser.columns = widget.columns.collect {|w| w.width }
   end
 
   # SAVE AS DIALOG
@@ -781,8 +792,8 @@ class Conf
   DEFAULTS = {
     :servers => [ Server.new('localhost', 6600, '') ],
     :geometry => {
-      :player => Geom.new(0, 0, 600, 500, 80),
-      :browser => Geom.new(0, 0, 600, 400, 100)
+      :player => Geom.new(0, 0, 600, 500, 80, [40, 180, 160, 140, 40]),
+      :browser => Geom.new(0, 0, 600, 400, 100, [40, 140, 120, 100, 40])
     }
   }
 
