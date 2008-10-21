@@ -46,6 +46,11 @@ class GladeWrapper < GladeXML
   end
 end
 
+class Server < Struct.new(:host, :port, :password)
+  def to_s
+    port == 6600 ? host : "#{host}:#{port}"
+  end
+end
 
 class Njiiri
   NAME = 'Njiiri'
@@ -174,7 +179,7 @@ class Njiiri
     end
     @config.servers.each do |srv|
       item = Gtk::ImageMenuItem.new(Gtk::Stock::NETWORK)
-      item.child.label = server_name(srv)
+      item.child.label = srv.to_s
       item.signal_connect("activate") do |widget, event|
         @mpd.disconnect if @mpd.connected?
         connect(srv)
@@ -186,15 +191,15 @@ class Njiiri
 
   def connect(server=nil)
     @server = server || @config.servers.first
-    @mpd = MPD.new(@server[:host], @server[:port])
+    @mpd = MPD.new(@server.host, @server.port)
     @@callbacks.each {|n, t, cb| @mpd.register_callback(method(cb), t) }
     begin
       @widgets.status_label.label = "Connecting..."
       @ack = @mpd.connect(true).match(/^OK (.*)/)[1]
-      @mpd.password(@server[:password]) unless @server[:password].empty?
-      @widgets.host_entry.text = @server[:host]
-      @widgets.port_entry.text = @server[:port].to_s
-      @widgets.password_entry.text = @server[:password]
+      @mpd.password(@server.password) unless @server.password.empty?
+      @widgets.host_entry.text = @server.host
+      @widgets.port_entry.text = @server.port.to_s
+      @widgets.password_entry.text = @server.password
       @config.add_server(@server)
       build_server_menu
     rescue => e
@@ -204,7 +209,7 @@ class Njiiri
   end
 
   def connected
-    @widgets.status_label.label = "#{@ack} on #{server_name(@server)}"
+    @widgets.status_label.label = "#{@ack} on #{@server}"
     @widgets.random_btn.active = @mpd.random?
     @widgets.repeat_btn.active = @mpd.repeat?
     @widgets.volume_scale.value = @mpd.volume
@@ -220,7 +225,7 @@ class Njiiri
   end
 
   def disconnected
-    @widgets.status_label.label = "Disconnected from #{server_name(@server)}"
+    @widgets.status_label.label = "Disconnected from #{@server}"
     @player_tree_store.clear
     @files_tree_store.clear
     enable_controls(false)
@@ -557,9 +562,9 @@ class Njiiri
   def on_do_connect_btn_clicked
     @widgets.connect_dlg.hide
     @mpd.disconnect if @mpd.connected?
-    connect(:host => @widgets.host_entry.text,
-            :port => @widgets.port_entry.text.to_i,
-            :password => @widgets.password_entry.text)
+    connect(Server.new(@widgets.host_entry.text,
+                       @widgets.port_entry.text.to_i,
+                       @widgets.password_entry.text))
   end
 
   # CALLBACKS
@@ -726,10 +731,6 @@ class Njiiri
                                  "#{Format.pos(times.sum)}"
     end
   end
-
-  def server_name(srv)
-    srv[:port] == 6600 ? srv[:host] : "#{srv[:host]}:#{srv[:port]}"
-  end
 end
 
 class Format
@@ -774,7 +775,7 @@ end
 
 class Conf
   DEFAULTS = {
-    :servers => [ { :host => 'localhost', :port => 6600, :password => '' } ],
+    :servers => [ Server.new('localhost', 6600, '') ],
     :geometry => {
       :player => { :x => 0, :y => 0, :w => 600, :h => 400, :pane => 80 },
       :browser => { :x => 0, :y => 0, :w => 600, :h => 400, :pane => 100 }
@@ -802,10 +803,7 @@ class Conf
   def browser; @rc[:geometry][:browser]; end
   def servers; @rc[:servers]; end
   def add_server(server)
-    @rc[:servers].reject! do |srv|
-      srv[:host] == server[:host] && srv[:port] == server[:port]
-    end
-    @rc[:servers].unshift(server)
-    @rc[:servers].slice!(0, 5)
+    @rc[:servers].reject! {|srv| srv.to_s == server.to_s }
+    @rc[:servers] = [server] + @rc[:servers][0..4]
   end
 end
