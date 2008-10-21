@@ -720,7 +720,7 @@ class Njiiri
   end
 
   def refresh_pos(elapsed=0, total=0)
-    if elapsed > 0
+    if @mpd.playing? or @mpd.paused?
       if total > 0
         @widgets.pos_bar.text = Format.pos(elapsed, total)
         @widgets.pos_bar.fraction = [elapsed.to_f / total, 1.0].min rescue 0.0
