@@ -88,7 +88,7 @@ class Njiiri
     SHARE_DIRS.each do |dir|
       path = "#{dir}/#{filename}"
       if File.exist?(path)
-        return yield path
+        return yield(path)
       end
     end
   end
