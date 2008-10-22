@@ -106,10 +106,6 @@ class Njiiri
       @cover = Gdk::Pixbuf.new(path)
     end
 
-    @rend = Gtk::CellRendererText.new
-    @rend.ellipsize = Pango::ELLIPSIZE_END
-    @rend_icon = Gtk::CellRendererPixbuf.new
-
     @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect{|n, t| t })
     @widgets.playlist_tree.model = @player_tree_store
     @widgets.playlist_tree.selection.mode = Gtk::SELECTION_MULTIPLE
@@ -126,10 +122,6 @@ class Njiiri
         @widgets.playlist_tree.append_column(col)
       end
     end
-
-    # replace with a new, non-weighted one (this is a dirty hack)
-    @rend = Gtk::CellRendererText.new
-    @rend.ellipsize = Pango::ELLIPSIZE_END
 
     @files_tree_store = Gtk::TreeStore.new(*BROWSE_COLS.collect{|n, t| t })
     @widgets.files_tree.model = @files_tree_store
@@ -172,9 +164,12 @@ class Njiiri
   def make_column(name, type, i, params={})
     if name.class == String
       if type == String
-        yield Gtk::TreeViewColumn.new(name, @rend, params.merge(:text => i))
+        rend = Gtk::CellRendererText.new
+        rend.ellipsize = Pango::ELLIPSIZE_END
+        yield Gtk::TreeViewColumn.new(name, rend, params.merge(:text => i))
       elsif type == Symbol
-        yield Gtk::TreeViewColumn.new(name, @rend_icon, :stock_id => i)
+        rend = Gtk::CellRendererPixbuf.new
+        yield Gtk::TreeViewColumn.new(name, rend, :stock_id => i)
       end
     end
   end
