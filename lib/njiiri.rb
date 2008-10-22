@@ -222,6 +222,7 @@ class Njiiri
     @widgets.volume_scale.value = @mpd.volume
     @widgets.xfade_spin.value = @mpd.crossfade
     enable_controls(true)
+    rebuild_playlist(0)
     reset_pwd
   end
 
