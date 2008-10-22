@@ -117,8 +117,11 @@ class Njiiri
       name, type = spec
       make_column(name, type, i, :weight => 6) do |col|
         col.sizing = Gtk::TreeViewColumn::FIXED
-        col.fixed_width = (name == 'Time') ? 40 : @config.player.columns[i]
-        col.resizable = true
+        col.fixed_width = @config.player.columns[i]
+        unless i == 0
+          col.resizable = true
+          col.expand = true
+        end
         @widgets.playlist_tree.append_column(col)
       end
     end
@@ -131,8 +134,11 @@ class Njiiri
       name, type = spec
       make_column(name, type, i) do |col|
         col.sizing = Gtk::TreeViewColumn::FIXED
-        col.fixed_width = (name == 'Time') ? 40 : @config.browser.columns[i]
-        col.resizable = true
+        col.fixed_width = @config.browser.columns[i]
+        unless i == 0
+          col.resizable = true
+          col.expand = true
+        end
         @widgets.files_tree.append_column(col)
       end
     end
