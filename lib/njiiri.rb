@@ -25,7 +25,7 @@ class MPD
     songs(path)
   end
   def playlist_len
-    status['playlistlength'].to_i  
+    status['playlistlength'].to_i
   end
   def current_time
     status['time'].split(':').collect {|x| x.to_i } rescue [0, 0]
@@ -55,30 +55,44 @@ end
 
 class Geom < Struct.new(:x, :y, :w, :h, :pane, :columns); end
 
+class Column < Struct.new(:name, :type); end
+
+class TreeTable
+  attr_accessor :store
+
+  def initialize(*cols)
+    @cols = cols
+    @store = Gtk::TreeStore.new(*@cols.collect {|c| c.type })
+  end
+
+  def create_columns(params={})
+    @cols.each_with_index do |c, i|
+      if c.name.class == String
+        if c.type == Symbol
+          rend = Gtk::CellRendererPixbuf.new
+          col = Gtk::TreeViewColumn.new(c.name, rend, :stock_id => i)
+        else
+          rend = Gtk::CellRendererText.new
+          rend.ellipsize = Pango::ELLIPSIZE_END
+          col = Gtk::TreeViewColumn.new(c.name, rend, params.merge(:text => i))
+          col.expand = true
+        end
+        col.sizing = Gtk::TreeViewColumn::FIXED
+        col.resizable = true
+        yield(col, i)
+      end
+    end
+  end
+
+  def [](name)
+    @cols.index {|c| c.name == name}
+  end
+end
+
 class Njiiri
   NAME = 'Njiiri'
   SHARE_DIRS = %w[share /usr/local/share/njiiri /usr/share/njiiri
                   /opt/local/usr/share/njiiri]
-
-  PLAYER_COLS = [ [ '', Symbol ],
-                  [ 'Title', String ],
-                  [ 'Artist', String ],
-                  [ 'Album', String ],
-                  [ 'Time', String ],
-                  [ :id, String ],
-                  [ :weight, Integer ],
-                  [ :len, Integer ] ]
-  BROWSE_COLS = [ [ '', Symbol ],
-                  [ 'Title', String ],
-                  [ 'Artist', String ],
-                  [ 'Album', String ],
-                  [ 'Time', String ],
-                  [ :path, String ],
-                  [ :cb, Proc ] ]
-  BOOKMK_COLS = [ [ 'Places', String ],
-                  [ :cb, Proc ] ]
-
-  # CLASS
 
   @@callbacks = []
 
@@ -95,61 +109,55 @@ class Njiiri
     @config = Conf.new(rc_path)
     @widgets = GladeWrapper.new(self)
 
-    @prev_version = 0
     @btab = {}
     @tasks = {}
     @mutex = Mutex.new
+    @prev_version = 0
 
     Njiiri.search('blank-album.png') do |path|
       @cover = Gdk::Pixbuf.new(path)
     end
 
-    @player_tree_store = Gtk::TreeStore.new(*PLAYER_COLS.collect{|n, t| t })
-    @widgets.playlist_tree.model = @player_tree_store
+    @player_tree = TreeTable.new(Column.new('', Symbol),
+                                 Column.new('Title', String),
+                                 Column.new('Artist', String),
+                                 Column.new('Album', String),
+                                 Column.new('Time', String),
+                                 Column.new(:id, String),
+                                 Column.new(:weight, Integer),
+                                 Column.new(:len, Integer))
+
+    @widgets.playlist_tree.model = @player_tree.store
     @widgets.playlist_tree.selection.mode = Gtk::SELECTION_MULTIPLE
+    @player_tree.create_columns(:weight => @player_tree[:weight]) do |col, i|
+      col.fixed_width = @config.player.columns[i]
+      @widgets.playlist_tree.append_column(col)
+    end
     @widgets.playlist_tree.selection.signal_connect('changed') do
       on_playlist_selection_changed
     end
 
-    PLAYER_COLS.each_with_index do |spec, i|
-      name, type = spec
-      make_column(name, type, i, :weight => 6) do |col|
-        col.sizing = Gtk::TreeViewColumn::FIXED
-        col.fixed_width = @config.player.columns[i]
-        unless i == 0
-          col.resizable = true
-          col.expand = true
-        end
-        @widgets.playlist_tree.append_column(col)
-      end
-    end
+    @files_tree = TreeTable.new(Column.new('', Symbol),
+                                Column.new('Title', String),
+                                Column.new('Artist', String),
+                                Column.new('Album', String),
+                                Column.new('Time', String),
+                                Column.new(:path, String),
+                                Column.new(:cb, Proc))
 
-    @files_tree_store = Gtk::TreeStore.new(*BROWSE_COLS.collect{|n, t| t })
-    @widgets.files_tree.model = @files_tree_store
+    @widgets.files_tree.model = @files_tree.store
     @widgets.files_tree.selection.mode = Gtk::SELECTION_MULTIPLE
-
-    BROWSE_COLS.each_with_index do |spec, i|
-      name, type = spec
-      make_column(name, type, i) do |col|
-        col.sizing = Gtk::TreeViewColumn::FIXED
-        col.fixed_width = @config.browser.columns[i]
-        unless i == 0
-          col.resizable = true
-          col.expand = true
-        end
-        @widgets.files_tree.append_column(col)
-      end
+    @files_tree.create_columns do |col, i|
+      col.fixed_width = @config.browser.columns[i]
+      @widgets.files_tree.append_column(col)
     end
 
-    @bookmarks_tree_store = Gtk::TreeStore.new(*BOOKMK_COLS.collect{|n, t| t })
-    @widgets.bookmarks_tree.model = @bookmarks_tree_store
+    @bookmarks_tree = TreeTable.new(Column.new('Places', String),
+                                    Column.new(:cb, Proc))
 
-    BOOKMK_COLS.each_with_index do |spec, i|
-      name, type = spec
-      make_column(name, type, i) do |col|
-        col.resizable = false
-        @widgets.bookmarks_tree.append_column(col)
-      end
+    @widgets.bookmarks_tree.model = @bookmarks_tree.store
+    @bookmarks_tree.create_columns do |col, i|
+      @widgets.bookmarks_tree.append_column(col)
     end
 
     build_server_menu
@@ -163,19 +171,6 @@ class Njiiri
     @widgets.player_win.move(@config.player.x, @config.player.y)
     @widgets.player_win.focus = @widgets.kludge_sep
     @widgets.player_win.show
-  end
-
-  def make_column(name, type, i, params={})
-    if name.class == String
-      if type == String
-        rend = Gtk::CellRendererText.new
-        rend.ellipsize = Pango::ELLIPSIZE_END
-        yield Gtk::TreeViewColumn.new(name, rend, params.merge(:text => i))
-      elsif type == Symbol
-        rend = Gtk::CellRendererPixbuf.new
-        yield Gtk::TreeViewColumn.new(name, rend, :stock_id => i)
-      end
-    end
   end
 
   def build_server_menu
@@ -228,8 +223,8 @@ class Njiiri
   def disconnected
     @tasks.clear
     @widgets.status_label.label = "Disconnected from #{@server}"
-    @player_tree_store.clear
-    @files_tree_store.clear
+    @player_tree.store.clear
+    @files_tree.store.clear
     enable_controls(false)
   end
 
@@ -291,7 +286,7 @@ class Njiiri
   end
 
   def on_playlist_tree_row_activated(widget, path, col)
-    iter = @player_tree_store.get_iter(path)
+    iter = @player_tree.store.get_iter(path)
     @mpd.seekid(iter[5], 0)
   end
 
@@ -393,9 +388,9 @@ class Njiiri
                   [ 'Search', proc { activate_search_entry('_Search:') } ],
                   [ '-', proc { } ] ] +
                 @mpd.playlists.collect { |pl| [ pl, proc { @mpd.load(pl) } ] }
-    @bookmarks_tree_store.clear
+    @bookmarks_tree.store.clear
     bookmarks.each do |n, p|
-      iter = @bookmarks_tree_store.append(nil)
+      iter = @bookmarks_tree.store.append(nil)
       iter[0] = n
       iter[1] = p
     end
@@ -425,11 +420,11 @@ class Njiiri
   end
 
   def load_pwd
-    @files_tree_store.clear
+    @files_tree.store.clear
     pwd = @pwd.join('/')
     @mpd.lsinfo(pwd, :directories).each do |path|
       dir = File.basename(path)
-      iter = @files_tree_store.append(nil)
+      iter = @files_tree.store.append(nil)
       iter[0] = Gtk::Stock::DIRECTORY
       iter[1], iter[2], iter[3], iter[4] = dir, '-', '-', '-'
       iter[5] = path
@@ -437,7 +432,7 @@ class Njiiri
     end
     @mpd.lsinfo(pwd, :files).each do |path|
       song = @mpd.listallinfo(path)[0]
-      iter = @files_tree_store.append(nil)
+      iter = @files_tree.store.append(nil)
       iter[0] = Gtk::Stock::FILE
       iter[1], iter[2], iter[3], iter[4] = Format.all(song, '-')
       iter[5] = path
@@ -456,12 +451,12 @@ class Njiiri
   end
 
   def on_bookmarks_tree_row_activated(widget, path, col)
-    iter = @bookmarks_tree_store.get_iter(path)
+    iter = @bookmarks_tree.store.get_iter(path)
     iter[1].call
   end
 
   def on_files_tree_row_activated(widget, path, col)
-    iter = @files_tree_store.get_iter(path)
+    iter = @files_tree.store.get_iter(path)
     iter[6].call
   end
 
@@ -548,7 +543,7 @@ class Njiiri
     @widgets.search_label.label = label
     @widgets.search_entry.grab_focus
   end
-  
+
   def on_files_tree_size_allocate(widget, a)
     @config.browser.columns = widget.columns.collect {|w| w.width }
   end
@@ -669,7 +664,7 @@ class Njiiri
   def refresh_playlist
     if @mpd.connected?
       cur_songid = @mpd.status['songid']
-      @player_tree_store.each do |model, path, iter|
+      @player_tree.store.each do |model, path, iter|
         if iter[5] == cur_songid
           iter[0] = Gtk::Stock::MEDIA_PLAY
           iter[6] = Pango::WEIGHT_BOLD
@@ -685,14 +680,14 @@ class Njiiri
   def rebuild_playlist(version, prev=@prev_version)
     if @mpd.connected?
       @mpd.playlist_changes(prev).each do |song|
-        iter = @player_tree_store.get_iter(song['pos']) \
-            || @player_tree_store.append(nil)
+        iter = @player_tree.store.get_iter(song['pos']) \
+            || @player_tree.store.append(nil)
         iter[1], iter[2], iter[3], iter[4] = Format.all(song, '-')
         iter[5] = song.id
         iter[7] = song.time.to_i
       end
-      if last = @player_tree_store.get_iter(@mpd.playlist_len.to_s)
-        1 while @player_tree_store.remove(last)
+      if last = @player_tree.store.get_iter(@mpd.playlist_len.to_s)
+        1 while @player_tree.store.remove(last)
       end
       @prev_version = version
     end
