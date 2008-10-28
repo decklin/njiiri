@@ -294,6 +294,7 @@ class Njiiri
     if e.keyval == Gdk::Keyval::GDK_Delete
       @widgets.playlist_tree.selection.selected_each do |model, path, iter|
         @widgets.playlist_tree.selection.unselect_iter(iter)
+        @mpd.stop if @mpd.current_song.id == iter[@player_tree[:id]]
         @mpd.deleteid(iter[@player_tree[:id]])
       end
     end
