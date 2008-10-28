@@ -742,7 +742,10 @@ class Njiiri
 
   def refresh_selection(times=[])
     if @mpd.connected?
-      times = @mpd.playlist.collect {|s| s.time.to_i } if times.size <= 1
+      if times.size <= 1
+        times = []
+        @widgets.playlist_tree.model.each {|m, p, i| times << i[7] }
+      end
       @widgets.sel_label.label = "#{Format.pl('song', times.size)}, " +
                                  "#{Format.pos(times.sum)}"
     end
