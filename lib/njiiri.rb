@@ -202,7 +202,7 @@ class Njiiri
       @widgets.password_entry.text = @server.password
       @config.add_server(@server)
       build_server_menu
-    rescue => e
+    rescue RuntimeError => e
       STDERR.puts "Error connecting: #{e}"
       disconnected
     end
@@ -278,7 +278,7 @@ class Njiiri
   end
 
   def on_pos_bar_button_press_event(widget, e)
-    if @mpd.connected? and (@mpd.playing? or @mpd.paused?)
+    if @mpd.playing? or @mpd.paused?
       seek_to = (e.x / widget.allocation.width) * @mpd.current_song.time.to_i
       @mpd.seek(@mpd.current_song.pos, seek_to.to_i)
       schedule(:got_time) {}
@@ -602,7 +602,13 @@ class Njiiri
     class_eval do
       define_method name, &block
       define_method cb do |*args|
-        schedule(name) { self.send(name, *args) }
+        schedule(name) do
+          begin
+            self.send(name, *args)
+          rescue RuntimeError => e
+            STDERR.puts "Stale callback: #{e}"
+          end
+        end
       end
     end
   end
@@ -668,39 +674,35 @@ class Njiiri
   end
 
   def refresh_playlist
-    if @mpd.connected?
-      cur_songid = @mpd.status['songid']
-      @player_tree.store.each do |model, path, iter|
-        if iter[@player_tree[:id]] == cur_songid
-          iter[@player_tree[:icon]] = Gtk::Stock::MEDIA_PLAY
-          iter[@player_tree[:weight]] = Pango::WEIGHT_BOLD
-        else
-          iter[@player_tree[:icon]] = nil
-          iter[@player_tree[:weight]] = Pango::WEIGHT_NORMAL
-        end
+    cur_songid = @mpd.status['songid']
+    @player_tree.store.each do |model, path, iter|
+      if iter[@player_tree[:id]] == cur_songid
+        iter[@player_tree[:icon]] = Gtk::Stock::MEDIA_PLAY
+        iter[@player_tree[:weight]] = Pango::WEIGHT_BOLD
+      else
+        iter[@player_tree[:icon]] = nil
+        iter[@player_tree[:weight]] = Pango::WEIGHT_NORMAL
       end
-      refresh_selection
     end
+    refresh_selection
   end
 
   def rebuild_playlist(version, prev=@prev_version)
-    if @mpd.connected?
-      @mpd.playlist_changes(prev).each do |song|
-        iter = @player_tree.store.get_iter(song['pos']) \
-            || @player_tree.store.append(nil)
-        title, artist, album, time, track = Format.all(song , '-')
-        iter[@player_tree[:title]] = title
-        iter[@player_tree[:artist]] = artist
-        iter[@player_tree[:album]] = album
-        iter[@player_tree[:time]] = time
-        iter[@player_tree[:id]] = song.id
-        iter[@player_tree[:len]] = song.time.to_i
-      end
-      if last = @player_tree.store.get_iter(@mpd.playlist_len.to_s)
-        1 while @player_tree.store.remove(last)
-      end
-      @prev_version = version
+    @mpd.playlist_changes(prev).each do |song|
+      iter = @player_tree.store.get_iter(song['pos']) \
+          || @player_tree.store.append(nil)
+      title, artist, album, time, track = Format.all(song , '-')
+      iter[@player_tree[:title]] = title
+      iter[@player_tree[:artist]] = artist
+      iter[@player_tree[:album]] = album
+      iter[@player_tree[:time]] = time
+      iter[@player_tree[:id]] = song.id
+      iter[@player_tree[:len]] = song.time.to_i
     end
+    if last = @player_tree.store.get_iter(@mpd.playlist_len.to_s)
+      1 while @player_tree.store.remove(last)
+    end
+    @prev_version = version
   end
 
   def refresh_info(current)
@@ -716,7 +718,7 @@ class Njiiri
   end
 
   def refresh_pos(elapsed=0, total=0)
-    if @mpd.connected? and (@mpd.playing? or @mpd.paused?)
+    if @mpd.playing? or @mpd.paused?
       if total > 0
         @widgets.pos_bar.text = Format.pos(elapsed, total)
         @widgets.pos_bar.fraction = [elapsed.to_f / total, 1.0].min rescue 0.0
@@ -731,25 +733,21 @@ class Njiiri
   end
 
   def refresh_detail
-    if @mpd.connected?
-      @widgets.detail_label.label = "Library: " +
-        "#{Format.pl('song', @mpd.stats['songs'].to_i)}, " +
-        "#{Format.pl('artist', @mpd.stats['artists'].to_i)}, " +
-        "#{Format.pl('album', @mpd.stats['albums'].to_i)}, " +
-        "#{Format.pos(@mpd.stats['db_playtime'].to_i)}\n" +
-        "Last updated: #{Time.at(@mpd.stats['db_update'].to_i).ctime}"
-    end
+    @widgets.detail_label.label = "Library: " +
+      "#{Format.pl('song', @mpd.stats['songs'].to_i)}, " +
+      "#{Format.pl('artist', @mpd.stats['artists'].to_i)}, " +
+      "#{Format.pl('album', @mpd.stats['albums'].to_i)}, " +
+      "#{Format.pos(@mpd.stats['db_playtime'].to_i)}\n" +
+      "Last updated: #{Time.at(@mpd.stats['db_update'].to_i).ctime}"
   end
 
   def refresh_selection(times=[])
-    if @mpd.connected?
-      if times.size <= 1
-        times = []
-        @widgets.playlist_tree.model.each {|m, p, i| times << i[7] }
-      end
-      @widgets.sel_label.label = "#{Format.pl('song', times.size)}, " +
-                                 "#{Format.pos(times.sum)}"
+    if times.size <= 1
+      times = []
+      @widgets.playlist_tree.model.each {|m, p, i| times << i[7] }
     end
+    @widgets.sel_label.label = "#{Format.pl('song', times.size)}, " +
+                               "#{Format.pos(times.sum)}"
   end
 end
 
