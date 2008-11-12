@@ -37,7 +37,7 @@ end
 
 class GladeWrapper < GladeXML
   def initialize(obj)
-    Njiiri.search('njiiri.glade') do |path|
+    Njiiri.find_share_path('njiiri.glade') do |path|
       super(path) {|handler| obj.method(handler) }
     end
   end
@@ -96,7 +96,7 @@ class Njiiri
 
   @@callbacks = []
 
-  def self.search(filename)
+  def self.find_share_path(filename)
     SHARE_DIRS.each do |dir|
       path = "#{dir}/#{filename}"
       if File.exist?(path)
@@ -114,7 +114,7 @@ class Njiiri
     @mutex = Mutex.new
     @prev_version = 0
 
-    Njiiri.search('blank-album.png') do |path|
+    Njiiri.find_share_path('blank-album.png') do |path|
       @cover = Gdk::Pixbuf.new(path)
     end
 
