@@ -395,10 +395,10 @@ class Njiiri
                       browse_input_toggle(:search, true)
                       @files_tree.store.clear
                     end ],
-                  [ '-', proc { } ] +
+                  [ '-', proc { } ] ] +
                   @mpd.playlists.collect do |pl|
                     [ pl, proc { @mpd.load(pl) } ]
-                  end ]
+                  end
     @bookmarks_tree.store.clear
     bookmarks.each do |n, p|
       iter = @bookmarks_tree.store.append(nil)
