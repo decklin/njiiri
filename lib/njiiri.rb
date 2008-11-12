@@ -413,7 +413,7 @@ class Njiiri
 
     btn = Gtk::Button.new(dir, false)
     @btab[btn] = @pwd.join('/')
-    btn.signal_connect('clicked') {|w| up_pwd(@btab[w].split('/')) }
+    btn.signal_connect('clicked') {|w| cd(@btab[w].split('/')) }
     @widgets.breadcrumb_box.add(btn)
     btn.show
 
@@ -450,7 +450,7 @@ class Njiiri
     load_pwd
   end
 
-  def up_pwd(wd)
+  def cd(wd)
     @pwd = wd;
     load_pwd
   end
