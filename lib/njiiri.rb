@@ -14,8 +14,6 @@ class Njiiri
   SHARE_DIRS = %w[share /usr/local/share/njiiri /usr/share/njiiri
                   /opt/local/usr/share/njiiri]
 
-  @@callbacks = []
-
   def self.find_share_path(filename)
     SHARE_DIRS.each do |dir|
       path = "#{dir}/#{filename}"
@@ -153,84 +151,6 @@ class Njiiri
     %w[open_btn saveas_btn play_btn pause_btn prev_btn next_btn shuffle_btn
        clear_btn volume_scale detail_label random_btn repeat_btn sel_label
        xfade_label xfade_spin].each {|w| @widgets[w].sensitive = sensitive }
-  end
-
-  def schedule(slot, &block)
-    @mutex.synchronize { @tasks[slot] = block }
-  end
-
-  def pending
-    @mutex.synchronize do
-      blocks = @@callbacks.collect {|n, t, cb| @tasks[n] }.compact
-      @tasks.clear
-      return blocks
-    end
-  end
-
-  def wake
-    pending.each {|block| block.call }
-  end
-
-  def self.def_cb(name, tag, &block)
-    cb = "_cb_#{tag}"
-    @@callbacks << [name, tag, cb]
-    class_eval do
-      define_method name, &block
-      define_method cb do |*args|
-        schedule(name) do
-          begin
-            self.send(name, *args)
-          rescue RuntimeError => e
-            STDERR.puts "Stale callback: #{e}"
-          end
-        end
-      end
-    end
-  end
-
-  # yes, the order of these is important. unfortunately.
-
-  def_cb :got_connection, MPD::CONNECTION_CALLBACK do |up|
-    up ? connected : disconnected
-  end
-
-  def_cb :got_time, MPD::TIME_CALLBACK do |elapsed, total|
-    refresh_pos(elapsed, total)
-  end
-
-  def_cb :got_song, MPD::CURRENT_SONG_CALLBACK do |current|
-    refresh_info(current)
-    refresh_playlist
-    schedule(:got_time) {}
-    refresh_pos(*@mpd.current_time)
-  end
-
-  def_cb :got_state, MPD::STATE_CALLBACK do |state|
-    refresh_state(state)
-  end
-
-  def_cb :got_playlist, MPD::PLAYLIST_CALLBACK do |version|
-    rebuild_playlist(version)
-    refresh_playlist
-    refresh_detail
-  end
-
-  def_cb :got_volume, MPD::VOLUME_CALLBACK do |vol|
-    @widgets.volume_scale.value = vol
-    schedule(:got_volume) {}
-  end
-
-  def_cb :got_xfade, MPD::CROSSFADE_CALLBACK do |secs|
-    @widgets.xfade_spin.value = secs
-    schedule(:got_xfade) {}
-  end
-
-  def_cb :got_random, MPD::RANDOM_CALLBACK do |random|
-    @widgets.random_btn.active = random
-  end
-
-  def_cb :got_repeat, MPD::REPEAT_CALLBACK do |repeat|
-    @widgets.repeat_btn.active = repeat
   end
 
   def refresh_state(state)
