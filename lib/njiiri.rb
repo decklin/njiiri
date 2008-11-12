@@ -91,6 +91,7 @@ end
 
 class Njiiri
   NAME = 'Njiiri'
+  BROWSE_INPUT_LABELS = { :add => "_Location:", :search => "_Search:" }
   SHARE_DIRS = %w[share /usr/local/share/njiiri /usr/share/njiiri
                   /opt/local/usr/share/njiiri]
 
@@ -113,6 +114,7 @@ class Njiiri
     @tasks = {}
     @mutex = Mutex.new
     @prev_version = 0
+    @browse_input_mode = nil
 
     Njiiri.find_share_path('blank-album.png') do |path|
       @cover = Gdk::Pixbuf.new(path)
@@ -385,10 +387,18 @@ class Njiiri
   # BROWSER WINDOW
 
   def on_browser_win_show
-    bookmarks = [ [ 'Library', proc { reset_pwd } ],
-                  [ 'Search', proc { activate_search_entry('_Search:') } ],
-                  [ '-', proc { } ] ] +
-                @mpd.playlists.collect { |pl| [ pl, proc { @mpd.load(pl) } ] }
+    bookmarks = [ [ 'Library', proc do
+                      browse_input_toggle(:add, false)
+                      reset_pwd
+                    end ],
+                  [ 'Search', proc do
+                      browse_input_toggle(:search, true)
+                      @files_tree.store.clear
+                    end ],
+                  [ '-', proc { } ] +
+                  @mpd.playlists.collect do |pl|
+                    [ pl, proc { @mpd.load(pl) } ]
+                  end ]
     @bookmarks_tree.store.clear
     bookmarks.each do |n, p|
       iter = @bookmarks_tree.store.append(nil)
@@ -422,27 +432,36 @@ class Njiiri
 
   def load_pwd
     @files_tree.store.clear
+    browse_input_toggle(:add, false)
     pwd = @pwd.join('/')
     @mpd.lsinfo(pwd, :directories).each do |path|
-      dir = File.basename(path)
-      iter = @files_tree.store.append(nil)
-      iter[@files_tree[:icon]] = Gtk::Stock::DIRECTORY
-      iter[1], iter[2], iter[3], iter[4] = dir, '-', '-', '-'
-      iter[@files_tree[:path]] = path
-      iter[@files_tree[:cb]] = proc { add_pwd(dir) }
+      browse_add_dir(path)
     end
     @mpd.lsinfo(pwd, :files).each do |path|
-      song = @mpd.listallinfo(path)[0]
-      iter = @files_tree.store.append(nil)
-      title, artist, album, time, track = Format.all(song , '-')
-      iter[@files_tree[:icon]] = Gtk::Stock::FILE
-      iter[@files_tree[:title]] = title
-      iter[@files_tree[:artist]] = artist
-      iter[@files_tree[:album]] = album
-      iter[@files_tree[:time]] = time
-      iter[@files_tree[:path]] = path
-      iter[@files_tree[:cb]] = proc { @mpd.add path }
+      browse_add_file(path)
     end
+  end
+
+  def browse_add_dir(path)
+    dir = File.basename(path)
+    iter = @files_tree.store.append(nil)
+    iter[@files_tree[:icon]] = Gtk::Stock::DIRECTORY
+    iter[1], iter[2], iter[3], iter[4] = dir, '-', '-', '-'
+    iter[@files_tree[:path]] = path
+    iter[@files_tree[:cb]] = proc { add_pwd(dir) }
+  end
+
+  def browse_add_file(path)
+    song = @mpd.listallinfo(path)[0]
+    iter = @files_tree.store.append(nil)
+    title, artist, album, time, track = Format.all(song , '-')
+    iter[@files_tree[:icon]] = Gtk::Stock::FILE
+    iter[@files_tree[:title]] = title
+    iter[@files_tree[:artist]] = artist
+    iter[@files_tree[:album]] = album
+    iter[@files_tree[:time]] = time
+    iter[@files_tree[:path]] = path
+    iter[@files_tree[:cb]] = proc { @mpd.add path }
   end
 
   def reset_pwd
@@ -467,9 +486,8 @@ class Njiiri
 
   def on_browser_win_key_press_event(widget, e)
     if !@widgets.search_entry.has_focus? and e.keyval == '/'[0]
-      @widgets.loc_btn.active = true
+      browse_input_toggle(:add, true)
       @widgets.search_entry.text = 'http://'
-      @widgets.search_entry.grab_focus
       @widgets.search_entry.position = -1
       true
     else
@@ -489,8 +507,22 @@ class Njiiri
         end
       end
     else
-      @mpd.add(@widgets.search_entry.text) rescue nil
+      case @browse_input_mode
+      when :add
+        @mpd.add(@widgets.search_entry.text) rescue nil
+      when :search
+        do_search(@widgets.search_entry.text)
+      end
       @widgets.search_entry.text = ''
+    end
+  end
+
+  def do_search(query)
+    @files_tree.store.clear
+    %w[title artist album].collect do |field|
+      @mpd.search(field, query)
+    end.flatten.each do |hit|
+      browse_add_file(hit['file'])
     end
   end
 
@@ -522,7 +554,7 @@ class Njiiri
 
   def on_loc_btn_toggled(widget)
     if widget.active?
-      activate_search_entry('_Location:')
+      @widgets.search_hbox.show
     else
       @widgets.search_hbox.hide
     end
@@ -544,10 +576,18 @@ class Njiiri
     @widgets.browser_win.hide
   end
 
-  def activate_search_entry(label)
-    @widgets.search_hbox.show
-    @widgets.search_label.label = label
-    @widgets.search_entry.grab_focus
+  def browse_input_toggle(mode, show)
+    @browse_input_mode = mode
+    @widgets.search_label.label = BROWSE_INPUT_LABELS[mode]
+    if show
+      @widgets.search_entry.text = ''
+      @widgets.loc_btn.active = true
+      @widgets.search_hbox.show
+      @widgets.search_entry.grab_focus
+    else
+      @widgets.loc_btn.active = false
+      @widgets.search_hbox.hide
+    end
   end
 
   def on_files_tree_size_allocate(widget, a)
