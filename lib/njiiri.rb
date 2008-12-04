@@ -121,7 +121,7 @@ class Njiiri
       @widgets.password_entry.text = @server.password
       @config.add_server(@server)
       build_server_menu
-    rescue RuntimeError => e
+    rescue SocketError, RuntimeError => e
       STDERR.puts "Error connecting: #{e}"
       disconnected
     end
