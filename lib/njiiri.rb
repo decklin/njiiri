@@ -121,9 +121,8 @@ class Njiiri
       @widgets.password_entry.text = @server.password
       @config.add_server(@server)
       build_server_menu
-    rescue SocketError, RuntimeError => e
-      STDERR.puts "Error connecting: #{e}"
-      disconnected
+    rescue Exception => e
+      disconnected(e)
     end
   end
 
@@ -139,9 +138,9 @@ class Njiiri
     reset_pwd
   end
 
-  def disconnected
+  def disconnected(reason)
     @tasks.clear
-    @widgets.status_label.label = "Disconnected from #{@server}"
+    @widgets.status_label.label = "Disconnected from #{@server} (#{reason})"
     @player_tree.store.clear
     @files_tree.store.clear
     enable_controls(false)

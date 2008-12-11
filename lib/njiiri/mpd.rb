@@ -84,7 +84,7 @@ class Njiiri
   # yes, the order of these is important. unfortunately.
 
   def_cb :got_connection, MPD::CONNECTION_CALLBACK do |up|
-    up ? connected : disconnected
+    up ? connected : disconnected('reset by peer')
   end
 
   def_cb :got_time, MPD::TIME_CALLBACK do |elapsed, total|

@@ -132,7 +132,7 @@ class Njiiri
 
   def on_disconnect_item_activate(widget)
     @mpd.disconnect
-    disconnected
+    disconnected('closed by user')
   end
 
   def on_do_connect_btn_clicked
