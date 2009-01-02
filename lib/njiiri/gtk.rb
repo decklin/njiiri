@@ -197,10 +197,6 @@ class Njiiri
     @mpd.play
   end
 
-  def on_player_toolbar_popup_context_menu(x, y, button, user_data)
-    @widgets.toolbar_menu.popup(nil, nil, button, Gtk.current_event_time)
-  end
-
   def on_player_win_configure_event(widget, e)
     @config.player.x = e.x
     @config.player.y = e.y

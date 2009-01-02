@@ -90,6 +90,11 @@ class Njiiri
     @widgets.player_win.move(@config.player.x, @config.player.y)
     @widgets.player_win.focus = @widgets.kludge_sep
     @widgets.player_win.show
+
+    # ugly hack to get the "icon and label" part of the menubutton
+    [@widgets.play_btn, @widgets.pause_btn].each do |b|
+      b.child.children[0].width_request = @widgets.open_btn.allocation.width
+    end
   end
 
   def build_server_menu
@@ -148,7 +153,7 @@ class Njiiri
 
   def enable_controls(sensitive)
     %w[open_btn saveas_btn play_btn pause_btn prev_btn next_btn shuffle_btn
-       clear_btn volume_scale detail_label random_btn repeat_btn sel_label
+       clear_btn volume_scale random_btn repeat_btn sel_label
        xfade_label xfade_spin].each {|w| @widgets[w].sensitive = sensitive }
   end
 
@@ -225,11 +230,12 @@ class Njiiri
   end
 
   def refresh_detail
-    @widgets.detail_label.label = "Library: " +
+    @widgets.sum_label.label = "Library: " +
       "#{Format.pl('song', @mpd.stats['songs'].to_i)}, " +
       "#{Format.pl('artist', @mpd.stats['artists'].to_i)}, " +
       "#{Format.pl('album', @mpd.stats['albums'].to_i)}, " +
-      "#{Format.pos(@mpd.stats['db_playtime'].to_i)}\n" +
+      "#{Format.pos(@mpd.stats['db_playtime'].to_i)}"
+    @widgets.update_btn.tooltip_text =
       "Last updated: #{Time.at(@mpd.stats['db_update'].to_i).ctime}"
   end
 
