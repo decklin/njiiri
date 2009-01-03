@@ -113,11 +113,6 @@ class Njiiri
     schedule(:got_volume) {}
   end
 
-  def_cb :got_xfade, MPD::CROSSFADE_CALLBACK do |secs|
-    @widgets.xfade_spin.value = secs
-    schedule(:got_xfade) {}
-  end
-
   def_cb :got_random, MPD::RANDOM_CALLBACK do |random|
     @widgets.random_btn.active = random
   end

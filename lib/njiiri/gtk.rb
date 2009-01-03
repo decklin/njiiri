@@ -295,8 +295,4 @@ class Njiiri
   def on_volume_scale_value_changed(widget)
     schedule(:got_volume) { @mpd.volume = widget.value.to_i }
   end
-
-  def on_xfade_spin_value_changed(widget)
-    schedule(:got_xfade) { @mpd.crossfade = widget.value.to_i }
-  end
 end

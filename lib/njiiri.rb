@@ -137,7 +137,6 @@ class Njiiri
     @widgets.random_btn.active = @mpd.random?
     @widgets.repeat_btn.active = @mpd.repeat?
     @widgets.volume_scale.value = @mpd.volume
-    @widgets.xfade_spin.value = @mpd.crossfade
     enable_controls(true)
     rebuild_playlist(0)
     reset_pwd
@@ -152,11 +151,10 @@ class Njiiri
   end
 
   def enable_controls(connected)
-    ws = %w[open_btn saveas_btn play_btn pause_btn prev_btn next_btn
-            shuffle_btn clear_btn volume_scale random_btn repeat_btn
-            sel_label xfade_label xfade_spin]
-
-    ws.each {|w| @widgets[w].sensitive = connected }
+    %w[open_btn saveas_btn play_btn pause_btn prev_btn next_btn shuffle_btn
+        clear_btn volume_scale random_btn repeat_btn sel_label].each do |w|
+      @widgets[w].sensitive = connected
+    end
 
     if connected
       @widgets.connect_btn.hide
