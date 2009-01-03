@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Fri Jan  2 15:34:41 2009 -->
+<!--Generated with glade3 3.4.5 on Fri Jan  2 19:08:56 2009 -->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -348,15 +348,46 @@
               <widget class="GtkHBox" id="status_box">
                 <property name="visible">True</property>
                 <child>
-                  <widget class="GtkMenuToolButton" id="connect_btn">
+                  <widget class="GtkButton" id="connect_btn">
                     <property name="visible">True</property>
-                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                    <property name="stock_id">gtk-connect</property>
-                    <property name="menu">connect_menu</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="relief">GTK_RELIEF_NONE</property>
+                    <property name="response_id">0</property>
                     <signal name="clicked" handler="on_connect_btn_clicked"/>
+                    <child>
+                      <widget class="GtkImage" id="connect_img">
+                        <property name="visible">True</property>
+                        <property name="stock">gtk-connect</property>
+                        <property name="icon_size">1</property>
+                      </widget>
+                    </child>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkButton" id="disconnect_btn">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="relief">GTK_RELIEF_NONE</property>
+                    <property name="response_id">0</property>
+                    <signal name="clicked" handler="on_disconnect_btn_clicked"/>
+                    <child>
+                      <widget class="GtkImage" id="disconnect_img">
+                        <property name="visible">True</property>
+                        <property name="stock">gtk-disconnect</property>
+                        <property name="icon_size">1</property>
+                      </widget>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">1</property>
                   </packing>
                 </child>
                 <child>
@@ -365,8 +396,41 @@
                     <property name="xalign">0</property>
                   </widget>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="padding">5</property>
-                    <property name="position">1</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkButton" id="recent_btn">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="relief">GTK_RELIEF_NONE</property>
+                    <property name="response_id">0</property>
+                    <signal name="clicked" handler="on_recent_btn_clicked"/>
+                    <child>
+                      <widget class="GtkArrow" id="recent_arrow">
+                        <property name="visible">True</property>
+                        <property name="arrow_type">GTK_ARROW_DOWN</property>
+                      </widget>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkAlignment" id="alignment1">
+                    <property name="visible">True</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="position">4</property>
                   </packing>
                 </child>
                 <child>
@@ -376,7 +440,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="padding">5</property>
-                    <property name="position">2</property>
+                    <property name="position">5</property>
                   </packing>
                 </child>
                 <child>
@@ -387,7 +451,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="padding">5</property>
-                    <property name="position">3</property>
+                    <property name="position">6</property>
                   </packing>
                 </child>
                 <child>
@@ -397,7 +461,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="padding">5</property>
-                    <property name="position">4</property>
+                    <property name="position">7</property>
                   </packing>
                 </child>
                 <child>
@@ -408,9 +472,8 @@
                   </widget>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">False</property>
                     <property name="padding">5</property>
-                    <property name="position">5</property>
+                    <property name="position">8</property>
                   </packing>
                 </child>
                 <child>
@@ -426,9 +489,8 @@
                   </widget>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">False</property>
                     <property name="padding">5</property>
-                    <property name="position">6</property>
+                    <property name="position">9</property>
                   </packing>
                 </child>
               </widget>
@@ -1110,16 +1172,7 @@
       </widget>
     </child>
   </widget>
-  <widget class="GtkMenu" id="connect_menu">
+  <widget class="GtkMenu" id="recent_menu">
     <property name="visible">True</property>
-    <child>
-      <widget class="GtkImageMenuItem" id="disconnect_item">
-        <property name="visible">True</property>
-        <property name="label" translatable="yes" context="yes">gtk-disconnect</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-        <signal name="activate" handler="on_disconnect_item_activate"/>
-      </widget>
-    </child>
   </widget>
 </glade-interface>

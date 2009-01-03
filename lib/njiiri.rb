@@ -98,8 +98,8 @@ class Njiiri
   end
 
   def build_server_menu
-    @widgets.connect_menu.children.each do |w|
-      @widgets.connect_menu.remove(w) unless w == @widgets.disconnect_item
+    @widgets.recent_menu.children.each do |w|
+      @widgets.recent_menu.remove(w) unless w == @widgets.disconnect_item
     end
     @config.servers.each do |srv|
       item = Gtk::ImageMenuItem.new(Gtk::Stock::NETWORK)
@@ -108,7 +108,7 @@ class Njiiri
         @mpd.disconnect if @mpd.connected?
         connect(srv)
       end
-      @widgets.connect_menu.append(item)
+      @widgets.recent_menu.append(item)
       item.show
     end
   end
@@ -151,10 +151,20 @@ class Njiiri
     enable_controls(false)
   end
 
-  def enable_controls(sensitive)
-    %w[open_btn saveas_btn play_btn pause_btn prev_btn next_btn shuffle_btn
-       clear_btn volume_scale random_btn repeat_btn sel_label
-       xfade_label xfade_spin].each {|w| @widgets[w].sensitive = sensitive }
+  def enable_controls(connected)
+    ws = %w[open_btn saveas_btn play_btn pause_btn prev_btn next_btn
+            shuffle_btn clear_btn volume_scale random_btn repeat_btn
+            sel_label xfade_label xfade_spin]
+
+    ws.each {|w| @widgets[w].sensitive = connected }
+
+    if connected
+      @widgets.connect_btn.hide
+      @widgets.disconnect_btn.show
+    else
+      @widgets.disconnect_btn.hide
+      @widgets.connect_btn.show
+    end
   end
 
   def refresh_state(state)

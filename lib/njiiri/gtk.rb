@@ -126,11 +126,15 @@ class Njiiri
     @widgets.connect_dlg.hide
   end
 
+  def on_recent_btn_clicked(widget)
+    @widgets.recent_menu.popup(nil, nil, 0, Gtk.current_event_time)
+  end
+
   def on_connect_btn_clicked(widget)
     @widgets.connect_dlg.show
   end
 
-  def on_disconnect_item_activate(widget)
+  def on_disconnect_btn_clicked(widget)
     @mpd.disconnect
     disconnected('closed by user')
   end
