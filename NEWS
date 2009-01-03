@@ -1,3 +1,13 @@
+0.3.1 (2009-01-02)
+==================
+
+  * Rearranged interface, making the menu with "Stop" more accessible.
+    No more expanding-statusbar clutter.
+
+  * Implemented search.
+
+  * Fixed crashes with stale callbacks and on connection failure.
+
 0.3.0 (2008-10-21)
 ==================
 

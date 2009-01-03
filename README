@@ -48,28 +48,22 @@ Controls
   * Click anywhere on the time-display progress bar to seek to that
     point in the current track.
 
-  * Click the expander next to the status display to see library stats
-    and control crossfade/repeat/random settings.
-
   * Grab the handle above the playlist display to resize the album art.
     (Note: fetching album art is not implemented yet.)
 
   * Select multiple songs to see a count of their total time instead of
     the total time of the entire playlist.
 
-  * Use the drop-down menu next to the "Connect" button to reconnect to
+  * Use the drop-down menu next to the server name to reconnect to
     recently-used servers.
 
-  * Double-click playlists in the browser to load them.
+  * Double-click playlists in the browser to load them. (This should
+    use a single click, but it's not implemented yet.)
 
   * Press the '/' key in the browser to type in an HTTP stream URL.
-
-  * Right-click the toolbar for a menu allowing you to stop playback
-    completely. (Note: This menu should be attached to the pause button,
-    but currently is not due to technical limitations.)
 
 Credits
 =======
 
 Njiiri was written by Decklin Foster <decklin@red-bean.com>. It is free
-software; please see LICENSE for terms and conditions.
+software; please see LICENSE for its copyright and terms and conditions.
