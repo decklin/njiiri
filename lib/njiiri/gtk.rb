@@ -126,8 +126,12 @@ class Njiiri
     @widgets.connect_dlg.hide
   end
 
-  def on_recent_btn_clicked(widget)
-    @widgets.recent_menu.popup(nil, nil, 0, Gtk.current_event_time)
+  def on_recent_btn_button_press_event(widget, event)
+    origin_x, origin_y = widget.parent_window.origin
+    alloc = widget.allocation
+    @widgets.recent_menu.popup(nil, widget, 0, Gtk.current_event_time) do
+      [origin_x + alloc.x, origin_y + alloc.y + alloc.height]
+    end
   end
 
   def on_connect_btn_clicked(widget)
