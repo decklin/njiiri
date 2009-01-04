@@ -92,6 +92,10 @@ class Njiiri
   end
 
   def_cb :got_song, MPD::CURRENT_SONG_CALLBACK do |current|
+    if @cue_next
+      @mpd.pause = true
+      @cue_next = false
+    end
     refresh_info(current)
     refresh_playlist
     schedule(:got_time) {}

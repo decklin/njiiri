@@ -288,8 +288,16 @@ class Njiiri
     @widgets.mode_box.visible = !widget.expanded?
   end
 
+  def on_cue_item_activate(widget)
+    @cue_next = true
+  end
+
   def on_stop_item_activate(widget)
     @mpd.stop
+  end
+
+  def on_top_item_activate(widget)
+    @mpd.play 0
   end
 
   def on_update_btn_clicked(widget)

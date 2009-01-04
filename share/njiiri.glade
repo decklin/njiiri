@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Sun Jan  4 14:08:15 2009 -->
+<!--Generated with glade3 3.4.5 on Sun Jan  4 14:52:17 2009 -->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -21,6 +21,7 @@
                 <property name="visible">True</property>
                 <property name="is_important">True</property>
                 <property name="stock_id">gtk-media-play</property>
+                <property name="menu">play_menu</property>
                 <signal name="clicked" handler="on_play_btn_clicked"/>
               </widget>
               <packing>
@@ -1112,6 +1113,19 @@
   <widget class="GtkMenu" id="pause_menu">
     <property name="visible">True</property>
     <child>
+      <widget class="GtkImageMenuItem" id="cue_item">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes" context="yes">Cue Next</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_cue_item_activate"/>
+        <child internal-child="image">
+          <widget class="GtkImage" id="menu-item-image1">
+            <property name="stock">gtk-goto-last</property>
+          </widget>
+        </child>
+      </widget>
+    </child>
+    <child>
       <widget class="GtkImageMenuItem" id="stop_item">
         <property name="visible">True</property>
         <property name="label" translatable="yes" context="yes">gtk-media-stop</property>
@@ -1123,5 +1137,22 @@
   </widget>
   <widget class="GtkMenu" id="recent_menu">
     <property name="visible">True</property>
+  </widget>
+  <widget class="GtkMenu" id="play_menu">
+    <property name="visible">True</property>
+    <child>
+      <widget class="GtkImageMenuItem" id="top_item">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes" context="yes">From Start</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_top_item_activate"/>
+        <child internal-child="image">
+          <widget class="GtkImage" id="menu-item-image2">
+            <property name="visible">True</property>
+            <property name="stock">gtk-goto-first</property>
+          </widget>
+        </child>
+      </widget>
+    </child>
   </widget>
 </glade-interface>

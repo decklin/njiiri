@@ -32,6 +32,7 @@ class Njiiri
     @mutex = Mutex.new
     @prev_version = 0
     @browse_input_mode = nil
+    @cue_next = false
 
     Njiiri.find_share_path('blank-album.png') do |path|
       @cover = Gdk::Pixbuf.new(path)
