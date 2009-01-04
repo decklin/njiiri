@@ -2,6 +2,7 @@
 
 require 'njiiri'
 require 'gtk2'
+
 Gtk.init
 
 njiiri = Njiiri.new(File.expand_path('~/.njiirirc'))
