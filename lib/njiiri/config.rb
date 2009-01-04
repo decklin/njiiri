@@ -4,8 +4,8 @@ class NjiiriConfig
   DEFAULTS = {
     :servers => [ Server.new('localhost', 6600, '') ],
     :geometry => {
-      :player => Geom.new(0, 0, 600, 500, 80, [28, 180, 160, 140, 40]),
-      :browser => Geom.new(0, 0, 600, 400, 100, [28, 140, 120, 100, 40])
+      :player => Geom.new(0, 0, 720, 400, 80, [28, 180, 160, 140, 40]),
+      :browser => Geom.new(0, 0, 720, 400, 100, [28, 140, 120, 100, 40])
     }
   }
 
