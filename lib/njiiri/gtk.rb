@@ -165,8 +165,7 @@ class Njiiri
     else
       @widgets.cover_img.width_request = a.height
       @widgets.cover_img.height_request = a.height
-      @widgets.cover_img.pixbuf = @cover.scale(a.height, a.height,
-                                               Gdk::Pixbuf::INTERP_NEAREST)
+      draw_cover
     end
     @config.player.pane = a.height
   end
@@ -306,5 +305,19 @@ class Njiiri
 
   def on_volume_scale_value_changed(widget)
     schedule(:got_volume) { @mpd.volume = widget.value.to_i }
+  end
+
+  def make_cover(color)
+    raw = @cover_tmpl.pixels.unpack('L*')
+    xor = raw.collect {|x| x ^ color }.pack('L*')
+    Gdk::Pixbuf.new(xor, @cover_tmpl.colorspace, true, 8,
+                    @cover_tmpl.width, @cover_tmpl.height,
+                    @cover_tmpl.rowstride).saturate_and_pixelate(0.5, false)
+  end
+
+  def draw_cover
+    @widgets.cover_img.pixbuf = @cover.scale(@widgets.cover_img.width_request,
+                                             @widgets.cover_img.width_request,
+                                             Gdk::Pixbuf::INTERP_NEAREST)
   end
 end

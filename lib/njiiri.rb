@@ -35,7 +35,7 @@ class Njiiri
     @cue_next = false
 
     Njiiri.find_share_path('blank-album.png') do |path|
-      @cover = Gdk::Pixbuf.new(path)
+      @cover = @cover_tmpl = Gdk::Pixbuf.new(path)
     end
 
     @player_tree = TreeTable.new(Column.new(:icon, Symbol, ''),
@@ -215,12 +215,16 @@ class Njiiri
     if current
       title, artist, album, time, track = Format.all(current)
       @widgets.player_win.title = [title, artist].join(' - ')
+      color = (artist + album).hash & 0xffffff
     else
       @widgets.player_win.title = NAME
+      color = 0
     end
     @widgets.title_label.label = Format.title(title)
     @widgets.artist_label.label = Format.artist(artist)
     @widgets.album_label.label = Format.album(album, track)
+    @cover = make_cover(color)
+    draw_cover
   end
 
   def refresh_pos(elapsed=0, total=0)
