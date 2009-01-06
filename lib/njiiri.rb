@@ -242,9 +242,9 @@ class Njiiri
 
   def refresh_detail
     @widgets.sum_label.label = "Library: " +
-      "#{Format.pl('song', @mpd.stats['songs'].to_i)}, " +
-      "#{Format.pl('artist', @mpd.stats['artists'].to_i)}, " +
-      "#{Format.pl('album', @mpd.stats['albums'].to_i)}, " +
+      "#{Format.pl(@mpd.stats['songs'].to_i, 'song')}, " +
+      "#{Format.pl(@mpd.stats['artists'].to_i, 'artist')}, " +
+      "#{Format.pl(@mpd.stats['albums'].to_i, 'album')}, " +
       "#{Format.pos(@mpd.stats['db_playtime'].to_i)}"
     @widgets.update_btn.tooltip_text =
       "Last updated: #{Time.at(@mpd.stats['db_update'].to_i).ctime}"
@@ -257,7 +257,7 @@ class Njiiri
       n = "#{times.size} selected"
     else
       @widgets.playlist_tree.model.each {|m, p, i| times << i[7] }
-      n = Format.pl('song', times.size)
+      n = Format.pl(times.size, 'song')
     end
     @widgets.sel_label.label = "#{n}, #{Format.pos(times.sum)}"
   end

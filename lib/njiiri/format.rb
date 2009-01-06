@@ -21,7 +21,7 @@ class Format
       h, m = m.divmod(60); return '%d:%02d:%02d' % [h, m, s] if h < 24
       d, h = h.divmod(24); return '%dd %dh %dm' % [d, h, m]
     end
-    def pl(a, n)
+    def pl(n, a)
       "#{n} #{a}" + (n != 1 ? "s" : "")
     end
     def pos(*times)
