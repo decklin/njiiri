@@ -250,12 +250,15 @@ class Njiiri
       "Last updated: #{Time.at(@mpd.stats['db_update'].to_i).ctime}"
   end
 
-  def refresh_selection(times=[])
-    if times.size <= 1
-      times = []
+  def refresh_selection
+    times = []
+    if @widgets.playlist_tree.selection.count_selected_rows > 1
+      @widgets.playlist_tree.selection.selected_each {|m, p, i| times << i[7] }
+      n = "#{times.size} selected"
+    else
       @widgets.playlist_tree.model.each {|m, p, i| times << i[7] }
+      n = Format.pl('song', times.size)
     end
-    @widgets.sel_label.label = "#{Format.pl('song', times.size)}, " +
-                               "#{Format.pos(times.sum)}"
+    @widgets.sel_label.label = "#{n}, #{Format.pos(times.sum)}"
   end
 end

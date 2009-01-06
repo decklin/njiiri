@@ -222,9 +222,7 @@ class Njiiri
   end
 
   def on_playlist_selection_changed
-    times = []
-    @widgets.playlist_tree.selection.selected_each {|m, p, i| times << i[7] }
-    refresh_selection(times)
+    refresh_selection
   end
 
   def on_playlist_tree_key_press_event(widget, e)
