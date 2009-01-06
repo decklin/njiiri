@@ -318,6 +318,6 @@ class Njiiri
   def draw_cover
     @widgets.cover_img.pixbuf = @cover.scale(@widgets.cover_img.width_request,
                                              @widgets.cover_img.width_request,
-                                             Gdk::Pixbuf::INTERP_NEAREST)
+                                             Gdk::Pixbuf::INTERP_BILINEAR)
   end
 end
