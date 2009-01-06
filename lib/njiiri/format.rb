@@ -37,5 +37,12 @@ class Format
       track = "track #{h(track)}, " if track
       "#{track}<i>#{h(album)}</i>"
     end
+    def color(artist = nil, album = nil)
+      if artist or album
+        [artist, album].hash & 0xffffff
+      else
+        0
+      end
+    end
   end
 end

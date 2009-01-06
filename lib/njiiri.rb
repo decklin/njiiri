@@ -215,15 +215,13 @@ class Njiiri
     if current
       title, artist, album, time, track = Format.all(current)
       @widgets.player_win.title = [title, artist].join(' - ')
-      color = (artist + album).hash & 0xffffff
     else
       @widgets.player_win.title = NAME
-      color = 0
     end
     @widgets.title_label.label = Format.title(title)
     @widgets.artist_label.label = Format.artist(artist)
     @widgets.album_label.label = Format.album(album, track)
-    @cover = make_cover(color)
+    @cover = make_cover(Format.color(artist, album))
     draw_cover
   end
 
