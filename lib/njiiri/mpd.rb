@@ -94,6 +94,7 @@ class Njiiri
   def_cb :got_song, MPD::CURRENT_SONG_CALLBACK do |current|
     if @cue_next
       @mpd.pause = true
+      @mpd.seek(current['pos'].to_i, 0)
       @cue_next = false
     end
     refresh_info(current)
