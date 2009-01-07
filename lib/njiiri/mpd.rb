@@ -3,6 +3,9 @@ require 'rubygems'
 require 'librmpd'
 
 class MPD
+  def add(path)
+    send_command "add \"#{path.gsub('"', '\\"')}\""
+  end
   def lsinfo(path = '/', type = :files)
     response = send_command "lsinfo \"#{path}\""
     case type
