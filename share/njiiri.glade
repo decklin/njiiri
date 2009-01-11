@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Sun Jan  4 14:52:17 2009 -->
+<!--Generated with glade3 3.4.5 on Sat Jan 10 21:19:31 2009 -->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -320,6 +320,8 @@
                         <property name="show_expanders">False</property>
                         <property name="rubber_banding">True</property>
                         <property name="enable_grid_lines">GTK_TREE_VIEW_GRID_LINES_VERTICAL</property>
+                        <signal name="popup_menu" handler="on_playlist_tree_popup_menu"/>
+                        <signal name="button_press_event" handler="on_playlist_tree_button_press_event"/>
                         <signal name="key_press_event" handler="on_playlist_tree_key_press_event"/>
                         <signal name="row_activated" handler="on_playlist_tree_row_activated"/>
                         <signal name="size_allocate" handler="on_playlist_tree_size_allocate"/>
@@ -1152,6 +1154,35 @@
             <property name="stock">gtk-goto-first</property>
           </widget>
         </child>
+      </widget>
+    </child>
+  </widget>
+  <widget class="GtkMenu" id="context_menu">
+    <property name="visible">True</property>
+    <child>
+      <widget class="GtkImageMenuItem" id="selectall_item">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes" context="yes">gtk-select-all</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+        <signal name="activate" handler="on_selectall_item_activate"/>
+      </widget>
+    </child>
+    <child>
+      <widget class="GtkMenuItem" id="invert_item">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes" context="yes">Invert Selection</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_invert_item_activate"/>
+      </widget>
+    </child>
+    <child>
+      <widget class="GtkImageMenuItem" id="remove_item">
+        <property name="visible">True</property>
+        <property name="label" translatable="yes" context="yes">gtk-remove</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+        <signal name="activate" handler="on_remove_item_activate"/>
       </widget>
     </child>
   </widget>

@@ -129,7 +129,7 @@ class Njiiri
   def on_recent_btn_button_press_event(widget, event)
     origin_x, origin_y = widget.parent_window.origin
     alloc = widget.allocation
-    @widgets.recent_menu.popup(nil, widget, 0, Gtk.current_event_time) do
+    @widgets.recent_menu.popup(nil, nil, event.button, event.time) do
       [origin_x + alloc.x, origin_y + alloc.y + alloc.height]
     end
   end
@@ -227,11 +227,7 @@ class Njiiri
 
   def on_playlist_tree_key_press_event(widget, e)
     if e.keyval == Gdk::Keyval::GDK_Delete
-      @widgets.playlist_tree.selection.selected_each do |model, path, iter|
-        @widgets.playlist_tree.selection.unselect_iter(iter)
-        @mpd.stop if @mpd.current_song.id == iter[@player_tree[:id]]
-        @mpd.deleteid(iter[@player_tree[:id]])
-      end
+      delete_sel(@widgets.playlist_tree.selection)
     end
   end
 
@@ -303,6 +299,46 @@ class Njiiri
 
   def on_volume_scale_value_changed(widget)
     schedule(:got_volume) { @mpd.volume = widget.value.to_i }
+  end
+
+  def on_playlist_tree_button_press_event(widget, event)
+    if event.kind_of? Gdk::EventButton and event.button == 3
+      @widgets.context_menu.popup(nil, nil, event.button, event.time)
+    end
+  end
+
+  def on_playlist_tree_popup_menu(widget)
+    @widgets.context_menu.popup(nil, nil, 0, Gtk.current_event_time)
+  end
+
+  def on_selectall_item_activate(widget)
+    @widgets.playlist_tree.selection.select_all
+  end
+
+  def on_invert_item_activate(widget)
+    @player_tree.store.each do |model, path, iter|
+      invert_path(@widgets.playlist_tree.selection, path)
+    end
+  end
+
+  def on_remove_item_activate(widget)
+    delete_sel(@widgets.playlist_tree.selection)
+  end
+
+  def invert_path(sel, path)
+    if sel.path_is_selected?(path)
+      sel.unselect_path(path)
+    else
+      sel.select_path(path)
+    end
+  end
+
+  def delete_sel(sel)
+    sel.selected_each do |model, path, iter|
+      sel.unselect_iter(iter)
+      @mpd.stop if @mpd.current_song.id == iter[@player_tree[:id]]
+      @mpd.deleteid(iter[@player_tree[:id]])
+    end
   end
 
   def make_cover(color)
