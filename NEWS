@@ -1,3 +1,18 @@
+0.3.2 (2009-01-10)
+==================
+
+  * Generate fake "album art" color swatches based on a hash of the artist
+    and album. When fetching cover images is finally implemented, this will
+    be the fallback. For now, I rather like it.
+
+  * Added a simple, hacky version of the "Cue Next" function. Because we
+    operate by repeatedly polling MPD, sometimes the next song starts
+    playing for a fraction of a second before we can pause and rewind it.
+
+  * Fix a librmpd crash when adding songs containing quotes.
+
+  * Add a context menu for the playlist to select and delete songs.
+
 0.3.1 (2009-01-02)
 ==================
 
