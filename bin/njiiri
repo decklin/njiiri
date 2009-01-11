@@ -3,10 +3,8 @@
 require 'njiiri'
 require 'gtk2'
 
-Gtk.init
-
 njiiri = Njiiri.new(File.expand_path('~/.njiirirc'))
-njiiri.connect 
+njiiri.connect
 
 Gtk.timeout_add(100) { njiiri.wake }
 Gtk.main
