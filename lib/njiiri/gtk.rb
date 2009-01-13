@@ -335,8 +335,8 @@ class Njiiri
     end
 
     offset = 0
-    sources.each do |i, song_id|
-      if orig_dest > i
+    sources.each do |index, song_id|
+      if orig_dest > index
         # if moving ahead, all the subsequent indexes decrease by 1
         dest = orig_dest + offset - 1
       else
@@ -346,24 +346,24 @@ class Njiiri
       end
 
       # now fixup
-      sources.each do |pair|
-        if dest < i
-          # we moved it back, so all indexes inbetween increased by 1
-          if dest < pair[0] and pair[0] < i
-            pair[0] += 1
-          end
-        else
-          # we moved it ahead, so all indexes inbetween decreased by 1
-          if i < pair[0] and pair[0] < dest
-            pair[0] -= 1
-          end
+      if dest < index
+        # we moved it back, so all indexes inbetween increased by 1
+        sources.select {|i,s| (dest+1..index).member?(i) }.each do |i,s|
+          i += 1
+        end
+      else
+        # we moved it ahead, so all indexes inbetween decreased by 1
+        sources.select {|i,s| (index+1..dest).member?(i) }.each do |i,s|
+          i -= 1
         end
       end
 
       @mpd.moveid(song_id, dest)
     end
 
+    # lame
     @widgets.playlist_tree.selection.unselect_all
+
     ctx.drop_finish(true, time)
   end
 
