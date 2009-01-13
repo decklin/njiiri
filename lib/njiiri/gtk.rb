@@ -311,6 +311,62 @@ class Njiiri
     @widgets.context_menu.popup(nil, nil, 0, Gtk.current_event_time)
   end
 
+  def on_playlist_tree_drag_data_get(widget, ctx, data, info, time)
+    sources = []
+    @widgets.playlist_tree.selection.selected_each do |model, path, iter|
+      sources << [path.indices[0], iter[@player_tree[:id]]]
+    end
+    data.text = YAML::dump(sources)
+  end
+
+  def on_playlist_tree_drag_data_received(widget, ctx, x, y, data, info, time)
+    sources = YAML::load(data.text)
+    path, disposition = @widgets.playlist_tree.get_dest_row(x, y)
+
+    if path.nil? or disposition.nil?
+      # i have no idea why it does this for drag-beyond-end
+      orig_dest = @mpd.playlist_len
+    else
+      orig_dest = path.indices[0]
+      # we treat all of BEFORE, INTO_OR_BEFORE, INTO_OR_AFTER as 'before'
+      if disposition == Gtk::TreeView::DropPosition::AFTER
+        orig_dest += 1
+      end
+    end
+
+    offset = 0
+    sources.each do |i, song_id|
+      if orig_dest > i
+        # if moving ahead, all the subsequent indexes decrease by 1
+        dest = orig_dest + offset - 1
+      else
+        # if moving back, next one will need to go after it
+        dest = orig_dest + offset
+        offset += 1
+      end
+
+      # now fixup
+      sources.each do |pair|
+        if dest < i
+          # we moved it back, so all indexes inbetween increased by 1
+          if dest < pair[0] and pair[0] < i
+            pair[0] += 1
+          end
+        else
+          # we moved it ahead, so all indexes inbetween decreased by 1
+          if i < pair[0] and pair[0] < dest
+            pair[0] -= 1
+          end
+        end
+      end
+
+      @mpd.moveid(song_id, dest)
+    end
+
+    @widgets.playlist_tree.selection.unselect_all
+    ctx.drop_finish(true, time)
+  end
+
   def on_selectall_item_activate(widget)
     @widgets.playlist_tree.selection.select_all
   end

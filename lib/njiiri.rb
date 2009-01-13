@@ -80,6 +80,14 @@ class Njiiri
       @widgets.bookmarks_tree.append_column(col)
     end
 
+    # The text is actually YAML
+    table = [["text/plain", Gtk::Drag::TARGET_SAME_WIDGET, 0]]
+    act = Gdk::DragContext::ACTION_DEFAULT | Gdk::DragContext::ACTION_MOVE
+
+    @widgets.playlist_tree.enable_model_drag_source(Gdk::Window::BUTTON1_MASK,
+                                                    table, act)
+    @widgets.playlist_tree.enable_model_drag_dest(table, act)
+
     build_server_menu
 
     @widgets.player_win.set_default_size(@config.player.w, @config.player.h)
