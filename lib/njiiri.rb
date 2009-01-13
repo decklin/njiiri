@@ -51,6 +51,7 @@ class Njiiri
     @widgets.playlist_tree.selection.mode = Gtk::SELECTION_MULTIPLE
     @player_tree.create_columns(:weight => @player_tree[:weight]) do |col, i|
       col.fixed_width = @config.player.columns[i]
+      col.expand = false if i == @player_tree[:time]
       @widgets.playlist_tree.append_column(col)
     end
     @widgets.playlist_tree.selection.signal_connect('changed') do
@@ -69,6 +70,7 @@ class Njiiri
     @widgets.files_tree.selection.mode = Gtk::SELECTION_MULTIPLE
     @files_tree.create_columns do |col, i|
       col.fixed_width = @config.browser.columns[i]
+      col.expand = false if i == @files_tree[:time]
       @widgets.files_tree.append_column(col)
     end
 

@@ -44,7 +44,7 @@ class TreeTable
   end
 
   def [](name)
-    @cols.index {|c| c.name == name}
+    @cols.index {|c| c.name == name }
   end
 end
 
