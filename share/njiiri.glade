@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Sun Jan 11 21:49:36 2009 -->
+<!--Generated with glade3 3.4.5 on Thu Jan 22 15:34:51 2009 -->
 <glade-interface>
   <widget class="GtkWindow" id="player_win">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
@@ -201,11 +201,11 @@
                     <signal name="size_allocate" handler="on_info_box_size_allocate"/>
                     <child>
                       <widget class="GtkImage" id="cover_img">
-                        <property name="width_request">1</property>
-                        <property name="height_request">1</property>
+                        <property name="width_request">75</property>
+                        <property name="height_request">75</property>
                         <property name="visible">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                        <property name="stock">gtk-missing-image</property>
+                        <property name="pixbuf">blank-album.png</property>
                         <property name="icon_size">6</property>
                       </widget>
                       <packing>
