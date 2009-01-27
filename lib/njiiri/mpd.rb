@@ -95,15 +95,16 @@ class Njiiri
   end
 
   def_cb :got_song, MPD::CURRENT_SONG_CALLBACK do |current|
-    if @cue_next
+    if @cue_next and current
       @mpd.pause = true
       @mpd.seek(current['pos'].to_i, 0)
-      @cue_next = false
     end
+    @cue_next = false
+    schedule(:got_time) {}
     refresh_info(current)
     refresh_playlist
-    schedule(:got_time) {}
     refresh_pos(*@mpd.current_time)
+    refresh_state(@mpd.status['state'])
   end
 
   def_cb :got_state, MPD::STATE_CALLBACK do |state|
