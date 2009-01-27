@@ -99,7 +99,7 @@ class Njiiri
       @mpd.pause = true
       @mpd.seek(current['pos'].to_i, 0)
     end
-    @cue_next = false
+    @cue_next = @widgets.cue_btn.active = false
     schedule(:got_time) {}
     refresh_info(current)
     refresh_playlist

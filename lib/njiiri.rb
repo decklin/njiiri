@@ -101,11 +101,6 @@ class Njiiri
     @widgets.player_win.move(@config.player.x, @config.player.y)
     @widgets.player_win.focus = @widgets.kludge_sep
     @widgets.player_win.show
-
-    # ugly hack to get the "icon and label" part of the menubutton
-    [@widgets.play_btn, @widgets.pause_btn].each do |b|
-      b.child.children[0].width_request = @widgets.open_btn.allocation.width
-    end
   end
 
   def build_server_menu
@@ -162,8 +157,9 @@ class Njiiri
   end
 
   def enable_controls(connected)
-    %w[open_btn saveas_btn play_btn pause_btn prev_btn next_btn shuffle_btn
-        clear_btn volume_scale random_btn repeat_btn sel_label].each do |w|
+    %w[volume_scale open_btn saveas_btn clear_btn play_btn pause_btn stop_btn
+       prev_btn next_btn cue_btn repeat_btn random_btn shuffle_btn sel_label].
+    each do |w|
       @widgets[w].sensitive = connected
     end
 
@@ -177,16 +173,25 @@ class Njiiri
   end
 
   def refresh_state(state)
-    if state == 'play'
+    case state
+    when 'play', 'pause'
+      @widgets.pause_btn.active = (state == 'pause')
       @widgets.play_btn.hide
-      @widgets.pause_btn.show
-      @widgets.kludge_sep.width_request = -1
-    else
-      refresh_pos if state == 'stop'
+      if @mpd.current_song['time'].to_i > 0
+        @widgets.stop_btn.hide
+        @widgets.pause_btn.show
+      else
+        @widgets.pause_btn.hide
+        @widgets.stop_btn.show
+      end
+    when 'stop'
+      @widgets.pause_btn.active = false
       @widgets.pause_btn.hide
+      @widgets.stop_btn.hide
       @widgets.play_btn.show
-      @widgets.kludge_sep.width_request = 1
+      refresh_pos
     end
+    @widgets.kludge_sep.width_request = -1 * @widgets.kludge_sep.width_request
   end
 
   def refresh_playlist

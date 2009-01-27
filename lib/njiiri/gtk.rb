@@ -196,12 +196,20 @@ class Njiiri
     @widgets.browser_win.show
   end
 
-  def on_pause_btn_clicked(widget)
-    @mpd.pause = true
-  end
-
   def on_play_btn_clicked(widget)
     @mpd.play
+  end
+
+  def on_pause_btn_toggled(widget)
+    @mpd.pause = widget.active?
+  end
+
+  def on_cue_btn_toggled(widget)
+    @cue_next = widget.active?
+  end
+
+  def on_stop_btn_clicked(widget)
+    @mpd.stop
   end
 
   def on_player_win_configure_event(widget, e)
@@ -279,18 +287,6 @@ class Njiiri
 
   def on_status_exp_activate(widget)
     @widgets.mode_box.visible = !widget.expanded?
-  end
-
-  def on_cue_item_activate(widget)
-    @cue_next = true
-  end
-
-  def on_stop_item_activate(widget)
-    @mpd.stop
-  end
-
-  def on_top_item_activate(widget)
-    @mpd.play 0
   end
 
   def on_update_btn_clicked(widget)
