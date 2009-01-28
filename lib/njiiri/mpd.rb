@@ -96,8 +96,12 @@ class Njiiri
 
   def_cb :got_song, MPD::CURRENT_SONG_CALLBACK do |current|
     if @cue_next and current
-      @mpd.pause = true
-      @mpd.seek(current['pos'].to_i, 0)
+      if current['time'].to_i > 0
+        @mpd.pause = true
+        @mpd.seek(current['pos'].to_i, 0)
+      else
+        @mpd.stop
+      end
     end
     @cue_next = @widgets.cue_btn.active = false
     schedule(:got_time) {}
