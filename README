@@ -1,18 +1,67 @@
 Njiiri
 ======
 
-Njiiri is a graphical MPD client written in Ruby-GTK+. Once upon a time,
-its author hacked on Pygmy; it's sort of in the spirit of that, but
-considerably simpler than Pygmy's official successor Sonata.
+Njiiri is a graphical MPD client written in Ruby-GTK+. Once upon a
+time, its author hacked on Pygmy; it's sort of in the spirit of that,
+but considerably simpler than Pygmy's official successor Sonata.
 
-Everything is meant to be nondescript (if you use GTK+ apps all day) and
-self-explanatory. If you need to change your connection settings, use the
-statusbar; that's the only configuration.
+Everything is meant to be nondescript (if you use GTK+ apps a lot) and
+self-explanatory. If you need to change your connection settings,
+click the connect/disconnect button on the statusbar; that's the only
+configuration.
+
+Wherever possible, flexibility has been traded for simplicity. Njiiri
+doesn't make every command accessable all of the time; I always have a
+terminal open next to it where I can use mpc. The idea is to only do
+what GUIs can do better.
+
+Controls
+========
+
+Despite my best attempt to be utterly boring, a few things are notable
+or not immediately obvious. Njiiri also has one non-standard feature,
+auto-cueing (inspired by the same function on many professional CD
+players).
+
+  * One button serves as either a "pause" toggle for normal songs, or
+    "stop" for streams. Computers aren't tape decks, and leaving
+    something paused doesn't wear out your memory; the distinction
+    between the two commands is normally irrelevant. The only
+    exception is that MPD does not stop downloading and buffering when
+    a stream is paused, which is rarely desirable for "live" radio.
+
+  * If you press the "cue" button, Njiiri will pause MPD when the next
+    song starts. If you're listening to a stream, this function is
+    disabled (since any advancing to the next track would presumably
+    be accidental). It doesn't work perfectly since we must wait for
+    librmpd's status to change.
+
+  * Click anywhere on the time-display progress bar to seek to that
+    point in the current track. This is arguably an abuse of the
+    progress-bar control, but I got very used to it from Pygmy.
+
+  * Grab the handle above the playlist display to resize the "album
+    art". (Note: fetching album covers is not implemented yet. You'll
+    just see a generated default image, with a customized palette for
+    your album. The colors are taken from a hash of the artist and
+    album name.)
+
+  * Select multiple songs to see a count of their total time instead of
+    the total time of the entire playlist.
+
+  * Use the drop-down menu next to the connect button to reconnect to
+    recently-used servers.
+
+  * Double-click playlists in the browser to load them. (This is a
+    temporary hack; they ought to fill in the files pane with their
+    contents.)
+
+  * Press the '/' key in the browser to type in an HTTP stream URL.
 
 Installation
 ============
 
-There isn't a "proper" installer at this point, but run:
+There isn't a proper installer at this point, but run:
 
     ./install
 
@@ -47,32 +96,6 @@ If you're not sure if your bindings are working correctly, load up irb
 and type:
 
   require 'gtk2'
-
-Controls
-========
-
-  * Use the drop-down menu next to the pause button to stop, or to cue
-    the next song (pause when the current song finishes). I wanted to
-    remove "stop" entirely, because I don't believe it makes sense for
-    non-physical media, but MPD doesn't pause streams gracefully.
-
-  * Click anywhere on the time-display progress bar to seek to that
-    point in the current track.
-
-  * Grab the handle above the playlist display to resize the "album art".
-    (Note: fetching album covers is not implemented yet. You'll just see
-    a default image, with a customized palette for your album.)
-
-  * Select multiple songs to see a count of their total time instead of
-    the total time of the entire playlist.
-
-  * Use the drop-down menu next to the server name to reconnect to
-    recently-used servers.
-
-  * Double-click playlists in the browser to load them. (This should
-    use a single click, but it's not implemented yet.)
-
-  * Press the '/' key in the browser to type in an HTTP stream URL.
 
 Credits
 =======

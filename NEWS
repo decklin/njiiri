@@ -1,3 +1,13 @@
+0.3.9 (2009-03-18)
+==================
+
+  * Drag-and-drop support!
+
+  * Simplified toolbar and moved the cue function to its own button (for
+    now). Fixed a few minor cueing bugs.
+
+  * Prevent the time column in the browser from getting too big.
+
 0.3.2 (2009-01-10)
 ==================
 
