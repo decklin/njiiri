@@ -180,9 +180,11 @@ class Njiiri
       if @mpd.current_song['time'].to_i > 0
         @widgets.stop_btn.hide
         @widgets.pause_btn.show
+        @widgets.cue_btn.sensitive = true
       else
         @widgets.pause_btn.hide
         @widgets.stop_btn.show
+        @widgets.cue_btn.sensitive = false
       end
     when 'stop'
       @widgets.pause_btn.active = false
