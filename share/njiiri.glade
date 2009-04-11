@@ -24,7 +24,7 @@
                 <signal name="clicked" handler="on_open_btn_clicked"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -35,7 +35,7 @@
                 <signal name="clicked" handler="on_saveas_btn_clicked"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -43,10 +43,6 @@
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
               </widget>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">False</property>
-              </packing>
             </child>
             <child>
               <widget class="GtkToolButton" id="play_btn">
@@ -56,7 +52,7 @@
                 <signal name="clicked" handler="on_play_btn_clicked"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -66,7 +62,7 @@
                 <signal name="toggled" handler="on_pause_btn_toggled"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -76,7 +72,7 @@
                 <signal name="clicked" handler="on_stop_btn_clicked"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -88,7 +84,7 @@
                 <signal name="clicked" handler="on_prev_btn_clicked"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -99,17 +95,13 @@
                 <signal name="clicked" handler="on_next_btn_clicked"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
               <widget class="GtkSeparatorToolItem" id="tsep2">
                 <property name="visible">True</property>
               </widget>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">False</property>
-              </packing>
             </child>
             <child>
               <widget class="GtkToolButton" id="clear_btn">
@@ -119,7 +111,7 @@
                 <signal name="clicked" handler="on_clear_btn_clicked"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -131,17 +123,13 @@
                 <signal name="clicked" handler="on_shuffle_btn_clicked"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
               <widget class="GtkSeparatorToolItem" id="tsep3">
                 <property name="visible">True</property>
               </widget>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">False</property>
-              </packing>
             </child>
             <child>
               <widget class="GtkToggleToolButton" id="cue_btn">
@@ -153,7 +141,7 @@
                 <signal name="toggled" handler="on_cue_btn_toggled"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -163,7 +151,7 @@
                 <property name="icon_name">stock_repeat</property>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -173,7 +161,7 @@
                 <property name="icon_name">stock_shuffle</property>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -182,10 +170,6 @@
                 <property name="can_focus">True</property>
                 <property name="draw">False</property>
               </widget>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">False</property>
-              </packing>
             </child>
           </widget>
           <packing>
