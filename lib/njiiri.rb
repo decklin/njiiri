@@ -104,8 +104,8 @@ class Njiiri
   end
 
   def build_server_menu
-    @widgets.recent_menu.children.each do |w|
-      @widgets.recent_menu.remove(w) unless w == @widgets.disconnect_item
+    @widgets.connect_menu.children.each do |w|
+      @widgets.connect_menu.remove(w) unless w == @widgets.new_conn_item
     end
     @config.servers.each do |srv|
       item = Gtk::ImageMenuItem.new(Gtk::Stock::NETWORK)
@@ -114,7 +114,7 @@ class Njiiri
         @mpd.disconnect if @mpd.connected?
         connect(srv)
       end
-      @widgets.recent_menu.append(item)
+      @widgets.connect_menu.append(item)
       item.show
     end
   end
