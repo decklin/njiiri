@@ -93,7 +93,7 @@ class Njiiri
                       @files_tree.store.clear
                     end ],
                   [ '-', proc { } ] ] +
-                  @mpd.playlists.collect do |pl|
+                  @mpd.playlists.sort.collect do |pl|
                     [ pl, proc { @mpd.load(pl) } ]
                   end
     @bookmarks_tree.store.clear
