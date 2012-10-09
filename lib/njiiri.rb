@@ -25,7 +25,7 @@ class Njiiri
 
   def initialize(rc_path)
     @config = NjiiriConfig.new(rc_path)
-    @widgets = GladeWrapper.new(self)
+    @widgets = BuilderWrapper.new(self)
 
     @btab = {}
     @tasks = {}

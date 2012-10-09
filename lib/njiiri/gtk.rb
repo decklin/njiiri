@@ -1,13 +1,15 @@
-require 'libglade2'
+require 'gtk2'
 
 class Geom < Struct.new(:x, :y, :w, :h, :pane, :columns); end
 
 class Column < Struct.new(:name, :type, :title); end
 
-class GladeWrapper < GladeXML
+class BuilderWrapper < Gtk::Builder
   def initialize(obj)
-    Njiiri.find_share_path('njiiri.glade') do |path|
-      super(path) {|handler| obj.method(handler) }
+    Njiiri.find_share_path('njiiri.ui') do |path|
+      super()
+      add_from_file(path)
+      connect_signals {|handler| obj.method(handler) }
     end
   end
 
